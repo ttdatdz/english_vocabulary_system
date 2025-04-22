@@ -1,10 +1,7 @@
-
+import MainRoutes from "./routes";
 function App() {
   return (
-    <div className="App">
-      Hệ thống học từ vựng
-    </div>
+    <MainRoutes />
   );
 }
-
 export default App;
