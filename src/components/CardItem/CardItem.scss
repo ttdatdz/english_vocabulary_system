@@ -1,0 +1,23 @@
+.CardItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #FFF;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    padding: 10px 0px;
+
+    &__Content {
+        margin-left: 20px;
+
+    }
+
+    &__Title {
+        font-size: 14px;
+    }
+
+    &__Quantity {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+}

@@ -2,6 +2,11 @@ import React from 'react';
 import CustomerLayout from '../layouts/CustomerLayout';
 import AdminLayout from '../layouts/AdminLayout';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import DashBoard from '../pages/DashBoard';
+import UserManagement from '../pages/UserManagement';
+import BlogManagement from '../pages/BlogManagement';
+import ToeicTestManagement from '../pages/ToeicTestManagement';
+import PersonalInformation from '../pages/PersonalInformation';
 
 function MainRoutes() {
     return (
@@ -13,6 +18,12 @@ function MainRoutes() {
                 </Route>
                 {/* Layout quản trị viên */}
                 <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<DashBoard />} />
+                    <Route path='DashBoard' element={<DashBoard />} />
+                    <Route path='UserManagement' element={<UserManagement />} />
+                    <Route path='BlogManagement' element={<BlogManagement />} />
+                    <Route path='ToeicTestManagement' element={<ToeicTestManagement />} />
+                    <Route path='PersonalInformation' element={<PersonalInformation />} />
                 </Route>
                 {/* Route cho trang Forbidden*/}
                 {/* <Route path="/forbidden" element={<Forbidden />} /> */}
