@@ -1,0 +1,28 @@
+.Title {
+    margin-bottom: 20px;
+}
+
+.Seach_Bar {
+    margin-bottom: 20px;
+    height: 40px;
+    width: 30%;
+}
+
+.Action {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+
+
+    &__Detail {
+        margin-right: 15px;
+        color: #03A9F4;
+        cursor: pointer;
+    }
+
+    &__Delete {
+        color: #FF5722;
+        font-size: 18px;
+        cursor: pointer;
+    }
+}
