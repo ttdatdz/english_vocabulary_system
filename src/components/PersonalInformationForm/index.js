@@ -1,18 +1,25 @@
+import "./PersonalInformationForm.scss";
 import { useState } from 'react';
 import { PlusOutlined, EditOutlined } from '@ant-design/icons';
-import "./DetailUserForm.scss";
 import { Button, Col, DatePicker, Form, Input, Row, Select, Upload } from 'antd';
+import { showSuccess } from "../../utils/alertHelper";
 const { Option } = Select;
-export default function DetailUserForm(props) {
-    const { onOk, confirmLoading } = props;
+export default function PersonalInformationForm(props) {
     const [isEditing, setIsEditing] = useState(false);
     const [fileList, setFileList] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [form] = Form.useForm();
 
     const onFinish = values => {
-        console.log('Success:', values);
-        setIsEditing(false); // Gửi xong thì quay lại chế độ xem
+        setLoading(true);
+
+        setTimeout(() => {
+            setLoading(false);
+            setIsEditing(false); // quay lại chế độ xem
+            showSuccess('Cập nhật thông tin thành công!'); // Hiển thị thông báo thành công
+        }, 2000);
+
     };
 
     const onCancel = () => {
@@ -38,30 +45,30 @@ export default function DetailUserForm(props) {
 
     return (
         <>
-            <Form className='UserForm'
+            <Form className='PersonalInformationForm'
                 form={form}
                 name="basic"
                 labelAlign="left"
-                labelCol={{ span: 8 }}
-                wrapperCol={{ span: 16 }}
-                style={{ maxWidth: 750 }}
+                labelCol={{ span: 7 }}
+                wrapperCol={{ span: 17 }}
+                style={{ maxWidth: 1300 }}
                 initialValues={{}}
                 onFinish={onFinish}
                 autoComplete="off"
-                disabled={!isEditing} // Khóa tất cả input khi không chỉnh sửa
+            // Khóa tất cả input khi không chỉnh sửa
             >
                 <Row gutter={24}>
                     <Col span={14}>
                         <Form.Item label="Họ và tên" name="fullName"
                             rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
                         >
-                            <Input />
+                            <Input disabled={!isEditing} />
                         </Form.Item>
 
                         <Form.Item label="Giới tính" name="gender"
                             rules={[{ required: true, message: 'Vui lòng chọn giới tính!' }]}
                         >
-                            <Select placeholder="Chọn giới tính" onChange={onGenderChange} allowClear>
+                            <Select disabled={!isEditing} placeholder="Chọn giới tính" onChange={onGenderChange} allowClear>
                                 <Option value="male">Nam</Option>
                                 <Option value="female">Nữ</Option>
                                 <Option value="other">Khác</Option>
@@ -71,37 +78,25 @@ export default function DetailUserForm(props) {
                         <Form.Item label="Ngày sinh" name="birthDate"
                             rules={[{ required: true, message: 'Vui lòng chọn ngày sinh!' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} />
+                            <DatePicker disabled={!isEditing} style={{ width: '100%' }} />
                         </Form.Item>
 
                         <Form.Item label="Số điện thoại" name="phoneNumber"
                             rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
                         >
-                            <Input />
+                            <Input disabled={!isEditing} />
                         </Form.Item>
 
                         <Form.Item label="Địa chỉ" name="address"
                             rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }]}
                         >
-                            <Input />
+                            <Input disabled={!isEditing} />
                         </Form.Item>
 
                         <Form.Item label="Email" name="email"
                             rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
                         >
-                            <Input />
-                        </Form.Item>
-
-                        <Form.Item label="Tài khoản" name="username"
-                            rules={[{ required: true, message: 'Vui lòng nhập tài khoản!' }]}
-                        >
-                            <Input />
-                        </Form.Item>
-
-                        <Form.Item label="Mật khẩu" name="password"
-                            rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
-                        >
-                            <Input.Password />
+                            <Input disabled={!isEditing} />
                         </Form.Item>
 
 
@@ -157,27 +152,30 @@ export default function DetailUserForm(props) {
                                     <Button className='UserForm__Cancel' danger onClick={onCancel}>
                                         Hủy
                                     </Button>
-                                    <Button loading={confirmLoading} className='UserForm__Accept' type="primary" htmlType="submit">
+                                    <Button loading={loading} className='UserForm__Accept' type="primary" htmlType="submit">
                                         Xác nhận
                                     </Button>
                                 </div>
                             </Form.Item>
                         </Col>
-
                     )}
+                    {!isEditing && (
+                        <Col span={24}>
+                            <Button
+                                className='ButtonIsEdit'
+                                icon={<EditOutlined />}
+                                onClick={() => setIsEditing(true)}
+
+                            >
+                                Chỉnh sửa thông tin
+                            </Button>
+                        </Col>
+                    )}
+
                 </Row>
             </Form>
 
-            {!isEditing && (
-                <Button
-                    className='ButtonIsEdit'
-                    icon={<EditOutlined />}
-                    onClick={() => setIsEditing(true)}
 
-                >
-                    Chỉnh sửa thông tin
-                </Button>
-            )}
         </>
 
     );

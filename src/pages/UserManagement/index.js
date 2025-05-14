@@ -7,6 +7,7 @@ import './UserManagement.scss';
 import { useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import DetailUserForm from "../../components/DetailUserForm";
+import { confirmDelete } from "../../utils/alertHelper";
 
 export default function UserManagement() {
     const [selectedUser, setSelectedUser] = useState(null); // lấy thông tin người dùng đưa vào modal
@@ -63,7 +64,7 @@ export default function UserManagement() {
             render: (_, record) => (
                 <div className="Action">
                     <IoEye className="Action__Detail" onClick={() => showModal(record)} />
-                    <MdDelete className="Action__Delete" />
+                    <MdDelete className="Action__Delete" onClick={() => confirmDelete()} />
                 </div>
             ),
         },
@@ -118,7 +119,7 @@ export default function UserManagement() {
     };
     return (
         <>
-            <h2 className="Title">UserManagement</h2>
+            <h2 className="Title">User Management</h2>
             <Input className="Seach_Bar" suffix={<SearchOutlined />} placeholder="Nhập tên hoặc số điện thoại cần tìm" allowClear />
             <BaseTable columns={columns} data={data} onChange={onChange} />
 

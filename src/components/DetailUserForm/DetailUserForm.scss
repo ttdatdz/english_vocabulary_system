@@ -54,6 +54,14 @@
 
     &__ChangeAvatarBtn {
         font-size: 14px;
+        border-color: #F66233;
+        color: #F66233;
+
+        &:hover {
+            background-color: #F66233 !important;
+            color: #fff !important;
+            border-color: #F66233 !important;
+        }
     }
 
     &__AvatarColumn {
@@ -61,6 +69,23 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+    }
+
+    &__Cancel {
+        background-color: #D51F2A;
+
+        &:hover {
+            background-color: #D51F2A !important;
+            color: #fff !important;
+        }
+    }
+
+    &__Accept {
+        background-color: #F66233;
+
+        &:hover {
+            background-color: #F66233 !important;
+        }
     }
 }
 

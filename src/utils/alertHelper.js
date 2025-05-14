@@ -16,7 +16,8 @@ export const confirmDelete = async (title = 'Bạn có chắc muốn xóa?') => 
             Swal.fire({
                 title: "Deleted!",
                 text: "Your file has been deleted.",
-                icon: "success"
+                icon: "success",
+                allowOutsideClick: false,
             });
         }
     });
@@ -26,8 +27,8 @@ export const showSuccess = (text = 'Thành công!') => {
     Swal.fire({
         icon: 'success',
         title: text,
-        timer: 1500,
-        showConfirmButton: false,
+        // timer: 3500,
+        // showConfirmButton: false,
         allowOutsideClick: false,
     });
 };
@@ -37,5 +38,6 @@ export const showErrorMessage = (message = 'Đã xảy ra lỗi!') => {
         title: 'Lỗi',
         text: message,
         confirmButtonText: 'Đóng',
+
     });
 };
