@@ -2,7 +2,7 @@ import { Button, Modal } from "antd";
 import "./BaseModal.scss"
 
 export default function BaseModal(props) {
-    const { open, onOk, onCancel, confirmLoading, children, title } = props;
+    const { open, onCancel, children, title } = props;
     return (
         <>
             <Modal
@@ -10,10 +10,10 @@ export default function BaseModal(props) {
                 open={open}
                 onCancel={onCancel}
                 footer={[
-                    <Button key="ok" type="primary" onClick={onOk} loading={confirmLoading}>
-                        OK
-                    </Button>,
+                    null
                 ]}
+                centered
+                width={800}
             >
                 {children}
             </Modal>

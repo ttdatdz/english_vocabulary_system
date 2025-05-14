@@ -6,6 +6,7 @@ import BaseTable from "../../components/BaseTable";
 import './UserManagement.scss';
 import { useState } from "react";
 import BaseModal from "../../components/BaseModal";
+import DetailUserForm from "../../components/DetailUserForm";
 
 export default function UserManagement() {
     const [selectedUser, setSelectedUser] = useState(null); // lấy thông tin người dùng đưa vào modal
@@ -121,15 +122,10 @@ export default function UserManagement() {
             <Input className="Seach_Bar" suffix={<SearchOutlined />} placeholder="Nhập tên hoặc số điện thoại cần tìm" allowClear />
             <BaseTable columns={columns} data={data} onChange={onChange} />
 
-            <BaseModal open={open} onCancel={handleClose} onOk={handleOk} confirmLoading={confirmLoading}
-                title="Chi tiết người dùng">
+            <BaseModal open={open} onCancel={handleClose}
+                title={<div style={{ fontSize: 24, fontWeight: 'bold' }}>Chi tiết người dùng</div>}>
                 {selectedUser ? (
-                    <div>
-                        <p><strong>Tên:</strong> {selectedUser.name}</p>
-                        <p><strong>Chinese:</strong> {selectedUser.chinese}</p>
-                        <p><strong>Math:</strong> {selectedUser.math}</p>
-                        <p><strong>English:</strong> {selectedUser.english}</p>
-                    </div>
+                    <DetailUserForm onOk={handleOk} confirmLoading={confirmLoading} />
                 ) : null}
             </BaseModal>
 

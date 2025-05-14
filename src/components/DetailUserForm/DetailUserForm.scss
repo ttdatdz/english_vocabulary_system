@@ -1,0 +1,86 @@
+.UserForm {
+    margin-top: 20px;
+
+    &__Contain-Button {
+        display: flex;
+        justify-content: flex-end;
+        // padding-top: 16px;
+        gap: 12px; // khoảng cách giữa các nút
+        // margin-top: 20px;
+    }
+
+    &__Accept {
+        min-width: 100px;
+        height: 36px;
+    }
+
+    &__Cancel {
+        min-width: 100px;
+        height: 36px;
+    }
+
+    &__Avatar-Col {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    &__Avatar-FormItem {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 0; // bỏ margin mặc định Form.Item
+
+    }
+
+    &__Avatar-EditBlock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        // justify-content: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    &__Avatar-Img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        display: block;
+
+    }
+
+    &__ChangeAvatarBtn {
+        font-size: 14px;
+    }
+
+    &__AvatarColumn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+
+
+
+.ButtonIsEdit {
+
+    // Đổi màu icon (icon là thẻ SVG)
+    .anticon {
+        color: #BA9264; // ví dụ: xanh Ant Design
+    }
+
+    // Nếu muốn đổi màu khi hover
+    &:hover {
+        .anticon {
+            color: #BA9264;
+        }
+
+        color: #BA9264 !important;
+        border-color: #BA9264 !important;
+    }
+}
