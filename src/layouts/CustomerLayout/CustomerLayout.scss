@@ -1,0 +1,57 @@
+.Header-Customer {
+    background-color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .12);
+
+    &__Nav {
+        display: flex;
+        align-items: center;
+        gap: 50px;
+    }
+
+    &__NavItem {
+        font-size: 16px;
+        color: black;
+        font-weight: 500;
+        // text-decoration: none;
+        padding: 3px 20px;
+        // border-radius: 5px;
+        transition: background-color 0.3s;
+
+        &:hover {
+            // background-color: #fff;
+            color: #ff8059;
+        }
+    }
+
+    &__logo {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    &__imgLogo {
+        width: 150px;
+        height: auto;
+    }
+
+    &__btnLogin {
+        color: #ff8059;
+        font-size: 16px;
+        font-weight: 500;
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #ff8059;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #ff6a4d !important;
+            color: white !important;
+            border-color: #ff6a4d !important;
+        }
+    }
+
+}
