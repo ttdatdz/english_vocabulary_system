@@ -2,19 +2,19 @@ import React from 'react';
 import './CustomerLayout.scss';
 import { FaFacebookSquare } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
-import { Button, Card, Flex, Layout } from 'antd';
+import { Button, Layout } from 'antd';
 import Logo from '../../assets/images/logo.jpg';
-import { Link } from 'react-router-dom';
-import SwiperBanner from '../../components/SwiperBanner';
-import CardItemExam from '../../components/CardItemExam';
-import CardItemFlashCard from '../../components/CardItemFlashCard';
-import SwiperComment from '../../components/SwiperComment';
-
+import { Link, Outlet } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 const { Header, Footer, Content } = Layout;
 function CustomerLayout() {
+    const navigate = useNavigate();
+
+    const handleLogin = () => {
+        navigate('/login'); // điều hướng không reload trang
+    };
     return (
         <Layout >
-
             <Header className='Header-Customer' >
                 <div className="MainContainer">
                     <div className='Header-Customer__logo'>
@@ -26,43 +26,12 @@ function CustomerLayout() {
                         <Link className='Header-Customer__NavItem'>Lịch học</Link>
                         <Link className='Header-Customer__NavItem'>Blog</Link>
                         <Link className='Header-Customer__NavItem'>Đánh giá</Link>
-                        <Button className='Header-Customer__btnLogin'>Đăng nhập</Button>
+                        <Button className='Header-Customer__btnLogin' onClick={handleLogin}>Đăng nhập</Button>
                     </div>
                 </div>
             </Header>
-
-
             <Content className='Content-Customer'>
-                <SwiperBanner />
-                <div className="MainContainer">
-                    <div className='Container-listExams'>
-                        <h2 className='Container-listExams__Title'>Bộ đề thi mới nhất</h2>
-                        <div className='Container-listExams__listExams'>
-                            <CardItemExam />
-                            <CardItemExam />
-                            <CardItemExam />
-                            <CardItemExam />
-                            <CardItemExam />
-                        </div>
-                    </div>
-
-                    <div className='Container-listFlashcards'>
-                        <h2 className='Container-listFlashcards__Title'>Bộ từ vựng phổ biến</h2>
-                        <div className='Container-listFlashcards__listFlashcards'>
-                            <CardItemFlashCard />
-                            <CardItemFlashCard />
-                            <CardItemFlashCard />
-                            <CardItemFlashCard />
-                            <CardItemFlashCard />
-                        </div>
-                    </div>
-                    <div className='Container-listComments'>
-                        <h2 className='Container-listComments__Title'>Người dùng nói gì về VocaLearn</h2>
-                        <SwiperComment />
-                    </div>
-
-                </div>
-
+                <Outlet />
             </Content>
             <Footer className='Footer-Customer'>
                 <div className='MainContainer'>

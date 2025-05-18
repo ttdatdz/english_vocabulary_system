@@ -1,0 +1,123 @@
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    margin: 100px 0px;
+
+    &__container {
+        display: flex;
+        width: 100%;
+        max-width: 1000px;
+        height: 600px;
+        background-color: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        border: 1px solid #ddd;
+    }
+
+    &__left {
+        width: 55%;
+        background-image: url('../../assets/images/posterLogin.png'); // đổi thành path đúng
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    &__right {
+        width: 45%;
+        padding: 48px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #ED5F31;
+    }
+
+    &__title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        text-align: center;
+        color: #fff;
+    }
+
+
+    &__form-item {
+
+        .ant-input,
+        .ant-input-password {
+            &::placeholder {
+                color: #ED5F31; // màu placeholder
+                opacity: 1;
+            }
+        }
+
+    }
+
+    &__InputPassword {
+        border-color: #ED5F31 !important; // màu viền khi active
+
+    }
+
+    &__InputUserName {
+        border-color: #ED5F31 !important; // màu viền khi active
+    }
+
+    &__options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+
+        .login-page__forgot {
+            font-size: 14px;
+            color: #fff;
+        }
+    }
+
+    &__submit {
+        width: 100%;
+        background-color: #FFC000;
+        border: none;
+        height: 40px;
+        font-weight: 600;
+
+        &:hover {
+            // opacity: 0.9;
+            background-color: #FFC000 !important;
+        }
+    }
+
+    &__register {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #fff;
+
+        a {
+            color: #fff;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+    }
+
+    // Responsive
+    @media (max-width: 768px) {
+        &__container {
+            flex-direction: column;
+            height: auto;
+            max-height: none;
+        }
+
+        &__left {
+            display: none;
+        }
+
+        &__right {
+            width: 100%;
+            padding: 32px 24px;
+        }
+    }
+}

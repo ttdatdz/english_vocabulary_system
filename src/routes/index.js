@@ -7,6 +7,8 @@ import UserManagement from '../pages/UserManagement';
 import BlogManagement from '../pages/BlogManagement';
 import ToeicTestManagement from '../pages/ToeicTestManagement';
 import PersonalInformation from '../pages/PersonalInformation';
+import Home from '../pages/Home';
+import Login from '../pages/Login';
 
 function MainRoutes() {
     return (
@@ -14,7 +16,8 @@ function MainRoutes() {
             <Routes>
                 {/* Layout khách hàng */}
                 <Route path="/" element={<CustomerLayout />}>
-
+                    <Route index element={<Home />} />
+                    <Route path='Login' element={<Login />} />
                 </Route>
                 {/* Layout quản trị viên */}
                 <Route path="/admin" element={<AdminLayout />}>
