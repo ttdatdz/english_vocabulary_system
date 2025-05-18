@@ -1,0 +1,52 @@
+.swiper-comment-wrapper {
+    max-width: 1400px; // Khớp với MainContainer
+    margin: 0 auto;
+    position: relative; // Quan trọng để button định vị theo wrapper
+    overflow: hidden; // Cho phép button tràn ra
+    padding: 0 24px; // Nếu muốn thêm khoảng cách 2 bên
+}
+
+.Container-listComments__Swiper {
+    padding-bottom: 40px;
+    overflow: visible;
+    width: 100%;
+    // max-width: 1000px;
+    min-height: 360px; // Đảm bảo không mất border khi scale
+
+    .swiper-slide {
+        transition: transform 0.4s ease;
+        transform: scale(0.85);
+        transform-origin: center center;
+    }
+
+    .swiper-slide-active {
+        transform: scale(1);
+        z-index: 2;
+    }
+
+    .swiper-button-prev,
+    .swiper-button-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-130%);
+        color: #ff8059;
+        z-index: 10;
+    }
+
+    .swiper-button-prev {
+        left: -20px;
+    }
+
+    .swiper-button-next {
+        right: -20px;
+    }
+
+    .swiper-pagination-bullet {
+        background: #ccc;
+        opacity: 1;
+
+        &-active {
+            background: #ff8059;
+        }
+    }
+}

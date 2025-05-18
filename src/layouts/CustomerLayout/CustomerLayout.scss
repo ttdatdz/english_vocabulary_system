@@ -1,30 +1,24 @@
+// === MAIN CONTAINER ===
+.MainContainer {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 74px; // thêm padding ngang giúp không dính sát lề
+}
+
+// === HEADER ===
 .Header-Customer {
     background-color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 70px;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .12);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 
-    &__Nav {
+    .MainContainer {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 50px;
-    }
-
-    &__NavItem {
-        font-size: 16px;
-        color: black;
-        font-weight: 500;
-        // text-decoration: none;
-        padding: 3px 20px;
-        // border-radius: 5px;
-        transition: background-color 0.3s;
-
-        &:hover {
-            // background-color: #fff;
-            color: #ff8059;
-        }
+        height: 65px;
+        padding: 0 24px;
     }
 
     &__logo {
@@ -38,14 +32,32 @@
         height: auto;
     }
 
+    &__Nav {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+    }
+
+    &__NavItem {
+        font-size: 16px;
+        color: black;
+        font-weight: 500;
+        padding: 6px 12px;
+        transition: color 0.3s;
+
+        &:hover {
+            color: #ff8059;
+        }
+    }
+
     &__btnLogin {
         color: #ff8059;
         font-size: 16px;
         font-weight: 500;
-        padding: 20px;
+        padding: 8px 16px;
         border-radius: 5px;
         border: 1px solid #ff8059;
-        transition: background-color 0.3s;
+        transition: all 0.3s;
 
         &:hover {
             background-color: #ff6a4d !important;
@@ -53,5 +65,122 @@
             border-color: #ff6a4d !important;
         }
     }
+}
 
+// === CONTENT ===
+.Content-Customer {
+    background-color: #f9fbfd;
+    padding-bottom: 40px;
+}
+
+// === LIST EXAMS ===
+.Container-listExams {
+    margin-top: 40px;
+
+    &__Title {
+        font-size: 24px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    &__listExams {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+    }
+}
+
+// === LIST FLASHCARDS ===
+.Container-listFlashcards {
+    margin-top: 40px;
+
+    &__Title {
+        font-size: 24px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    &__listFlashcards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+    }
+}
+
+.Container-listComments {
+    margin-top: 40px;
+
+    &__Title {
+        font-size: 24px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+}
+
+// === FOOTER ===
+.Footer-Customer {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    font-size: 14px;
+    border-top: 1px solid #eaeaea;
+    // box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.12); // Thêm dòng này
+    // //    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+
+    // color: #888;
+    .MainContainer {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 20px;
+        padding: 20px 54px;
+    }
+
+    &__aboutUs,
+    &__policies {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        gap: 10px;
+    }
+
+    &__contactUs {
+        display: flex;
+        align-items: start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__Container-contactUs-item {
+        display: flex;
+        justify-content: start;
+        gap: 10px;
+    }
+
+    &__aboutUs-item,
+    &__policies-item {
+        font-size: 15px;
+        color: black;
+
+        &:hover {
+            color: #ff8059;
+        }
+    }
+
+    &__contactUs-item {
+        font-size: 20px;
+    }
+
+    &__iconFB {
+        color: #1677FF;
+
+        &:hover {
+            color: #1677FF;
+        }
+    }
 }

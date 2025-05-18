@@ -1,0 +1,16 @@
+.btnDetail {
+    color: #ff8059;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid #ff8059;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+
+    &:hover {
+        background-color: #ff6a4d !important;
+        color: white !important;
+        border-color: #ff6a4d !important;
+    }
+}

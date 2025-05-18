@@ -1,0 +1,48 @@
+.card-item-comment {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #ddd;
+    padding: 20px;
+    max-width: 400px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+        // transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    &__avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 12px;
+        border: 3px solid #f0f0f0;
+    }
+
+    &__name {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #333;
+    }
+
+    &__time {
+        font-size: 14px;
+        color: #999;
+        margin-bottom: 10px;
+    }
+
+    &__rating {
+        margin-bottom: 12px;
+    }
+
+    &__text {
+        font-size: 15px;
+        color: #555;
+        line-height: 1.5;
+        font-style: italic;
+    }
+}
