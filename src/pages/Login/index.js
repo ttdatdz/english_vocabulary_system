@@ -51,7 +51,7 @@ export default function Login() {
                             </Form.Item>
                         </Form>
                         <div className="login-page__register">
-                            Không có tài khoản? <a href="/register">Đăng ký</a>
+                            Không có tài khoản? <Link to={"/Register"}>Đăng ký</Link>
                         </div>
                     </div>
                 </div>
