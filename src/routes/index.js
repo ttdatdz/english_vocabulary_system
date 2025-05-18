@@ -9,6 +9,8 @@ import ToeicTestManagement from '../pages/ToeicTestManagement';
 import PersonalInformation from '../pages/PersonalInformation';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
+import ForgotPassword from '../pages/ForgotPassword';
+import Register from '../pages/Register';
 
 function MainRoutes() {
     return (
@@ -18,6 +20,8 @@ function MainRoutes() {
                 <Route path="/" element={<CustomerLayout />}>
                     <Route index element={<Home />} />
                     <Route path='Login' element={<Login />} />
+                    <Route path='ForgotPassword' element={<ForgotPassword />} />
+                    <Route path='Register' element={<Register />} />
                 </Route>
                 {/* Layout quản trị viên */}
                 <Route path="/admin" element={<AdminLayout />}>

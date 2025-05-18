@@ -1,6 +1,7 @@
 import "./Login.scss";
 import Poster from "../../assets/images/posterLogin.png";
 import { Form, Input, Button, Checkbox } from 'antd';
+import { Link } from "react-router-dom";
 export default function Login() {
     const onFinish = (values) => {
         console.log('Success:', values);
@@ -40,7 +41,7 @@ export default function Login() {
                                 <Form.Item className="login-page__form-item" name="remember" valuePropName="checked" noStyle>
                                     <Checkbox style={{ color: '#fff' }}>Nhớ mật khẩu</Checkbox>
                                 </Form.Item>
-                                <a className="login-page__forgot" href="/forgot-password">Quên mật khẩu</a>
+                                <Link className="login-page__forgot" to={"/ForgotPassword"}>Quên mật khẩu</Link>
                             </div>
 
                             <Form.Item>
