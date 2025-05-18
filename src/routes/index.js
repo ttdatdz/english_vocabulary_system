@@ -11,6 +11,7 @@ import Home from '../pages/Home';
 import Login from '../pages/Login';
 import ForgotPassword from '../pages/ForgotPassword';
 import Register from '../pages/Register';
+import Feedback from '../pages/Feedback';
 
 function MainRoutes() {
     return (
@@ -22,6 +23,7 @@ function MainRoutes() {
                     <Route path='Login' element={<Login />} />
                     <Route path='ForgotPassword' element={<ForgotPassword />} />
                     <Route path='Register' element={<Register />} />
+                    <Route path='Feedback' element={<Feedback />} />
                 </Route>
                 {/* Layout quản trị viên */}
                 <Route path="/admin" element={<AdminLayout />}>

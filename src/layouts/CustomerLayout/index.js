@@ -25,7 +25,7 @@ function CustomerLayout() {
                         <Link className='Header-Customer__NavItem'>Flashcards</Link>
                         <Link className='Header-Customer__NavItem'>Lịch học</Link>
                         <Link className='Header-Customer__NavItem'>Blog</Link>
-                        <Link className='Header-Customer__NavItem'>Đánh giá</Link>
+                        <Link to={"/Feedback"} className='Header-Customer__NavItem'>Đánh giá</Link>
                         <Button className='Header-Customer__btnLogin' onClick={handleLogin}>Đăng nhập</Button>
                     </div>
                 </div>
