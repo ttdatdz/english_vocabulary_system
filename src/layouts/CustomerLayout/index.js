@@ -22,7 +22,7 @@ function CustomerLayout() {
                     </div>
                     <div className='Header-Customer__Nav'>
                         <Link className='Header-Customer__NavItem'>Luyện thi</Link>
-                        <Link className='Header-Customer__NavItem'>Flashcards</Link>
+                        <Link to={"/VocabularyTopics"} className='Header-Customer__NavItem'>Flashcards</Link>
                         <Link className='Header-Customer__NavItem'>Lịch học</Link>
                         <Link className='Header-Customer__NavItem'>Blog</Link>
                         <Link to={"/Feedback"} className='Header-Customer__NavItem'>Đánh giá</Link>

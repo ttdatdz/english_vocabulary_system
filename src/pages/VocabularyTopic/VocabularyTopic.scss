@@ -1,0 +1,50 @@
+.VocabularyTopic-page {
+    &__header {
+        background: linear-gradient(to right, #FDA98E, #f9cccc);
+        padding: 20px 0;
+
+        .MainContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+        }
+
+        &-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .ant-tabs-nav {
+            margin-bottom: 0;
+        }
+
+        .ant-tabs-tab {
+            background-color: #fff;
+            padding: 5px 16px;
+            border-radius: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .ant-tabs-tab-active {
+            background-color: #E8F2FF !important;
+            color: #4285F4 !important;
+        }
+
+        .ant-tabs-ink-bar {
+            display: none !important;
+            list-style: none;
+        }
+
+        .ant-tabs-nav::before {
+            display: none !important;
+        }
+    }
+
+    &__listTopic {
+        margin-top: 20px;
+        min-height: 350px;
+    }
+}

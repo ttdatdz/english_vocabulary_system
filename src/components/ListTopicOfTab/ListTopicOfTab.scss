@@ -1,0 +1,80 @@
+.create-topic-button {
+    background-color: #f97316;
+    border: none;
+    float: right;
+    width: 150px;
+
+    &:hover {
+        background-color: #ea580c !important;
+    }
+}
+
+.flashcard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.flashcard-item {
+    display: flex;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    &__index {
+        background-color: #f97316;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        text-align: center;
+        line-height: 24px;
+        font-size: 14px;
+        font-weight: bold;
+        margin-right: 16px;
+    }
+
+    &__title {
+        flex: 1;
+        font-size: 16px;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        margin-left: 12px;
+
+        .anticon {
+            font-size: 16px;
+            cursor: pointer;
+        }
+    }
+
+    &__info {
+        font-size: 16px;
+        color: #3b82f6;
+        margin-left: 12px;
+        cursor: pointer;
+    }
+
+    .btnApply {
+        border: 1px solid #3b82f6;
+        margin-left: 12px !important;
+
+        &:hover {
+            background-color: #3b82f6 !important;
+            color: #fff !important;
+        }
+    }
+}
+
+.ant-pagination {
+    margin-top: 24px;
+    text-align: center;
+}
