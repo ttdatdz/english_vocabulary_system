@@ -40,20 +40,20 @@ export default function ListTopicOfTab(props) {
                 </div>
             )}
 
-            <div className="flashcard-list">
+            <div className="topic-list">
                 {list.map((item, index) => (
-                    <div key={item.id} className="flashcard-item">
-                        <div className="flashcard-item__index">{index + 1}</div>
-                        <div className="flashcard-item__title">{item.title}</div>
+                    <div key={item.id} className="topic-item">
+                        <div className="topic-item__index">{index + 1}</div>
+                        <div className="topic-item__title">{item.title}</div>
 
                         {activeTab === 1 && (
-                            <div className="flashcard-item__actions">
+                            <div className="topic-item__actions">
                                 <EditOutlined onClick={() => showModal(item)} style={{ color: "#f59e0b" }} />
                                 <DeleteOutlined onClick={() => confirmDelete()} style={{ color: "#ef4444", marginLeft: 10 }} />
                             </div>
                         )}
 
-                        <InfoCircleOutlined className="flashcard-item__info" />
+                        <InfoCircleOutlined className="topic-item__info" />
 
                         {activeTab === 3 && (
                             <Button className="btnApply" type="link" style={{ marginLeft: "auto" }}>

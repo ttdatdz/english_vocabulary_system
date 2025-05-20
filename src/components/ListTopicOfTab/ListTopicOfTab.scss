@@ -9,14 +9,14 @@
     }
 }
 
-.flashcard-list {
+.topic-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
     margin-top: 20px;
 }
 
-.flashcard-item {
+.topic-item {
     display: flex;
     align-items: center;
     border: 1px solid #e5e7eb;
