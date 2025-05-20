@@ -1,11 +1,11 @@
-import "./VocabularyTopic.scss";
+import "./DetailTopic.scss";
 import { Tabs } from 'antd';
 import { useState } from "react";
-import ListTopicOfTab from "../../components/ListTopicOfTab";
+import ListFlashCardOfTab from "../../components/ListFlashCardOfTab";
 
 const { TabPane } = Tabs;
 
-export default function VocabularyTopic() {
+export default function DetailTopic() {
     const myVocabList = [
         { id: 1, title: 'TOEIC Vocab ETS 2024 - Listening' },
         { id: 2, title: 'TOEIC Vocab ETS 2024 - Listening' },
@@ -32,26 +32,26 @@ export default function VocabularyTopic() {
 
     const [activeTab, setActiveTab] = useState('1');
 
-    const renderTopicList = () => {
+    const renderFlashcardList = () => {
         switch (activeTab) {
             case '1':
-                return <ListTopicOfTab list={myVocabList} activeTab={1} />;
+                return <ListFlashCardOfTab list={myVocabList} activeTab={1} />;
             case '2':
-                return <ListTopicOfTab list={studyingList} activeTab={2} />;
+                return <ListFlashCardOfTab list={studyingList} activeTab={2} />;
             case '3':
-                return <ListTopicOfTab list={exploreList} activeTab={3} />;
+                return <ListFlashCardOfTab list={exploreList} activeTab={3} />;
             default:
                 return [];
         }
     };
 
     return (
-        <div className="VocabularyTopic-page">
-            <div className="VocabularyTopic-page__header">
+        <div className="DetailTopic-page">
+            <div className="DetailTopic-page__header">
                 <div className="MainContainer">
-                    <h2 className="VocabularyTopic-page__header-title">📖 Topics</h2>
+                    <h2 className="DetailTopic-page__header-title">📖 FlashCards</h2>
                     <Tabs defaultActiveKey="1" onChange={setActiveTab}>
-                        <TabPane tab="Bộ từ vựng của tôi" key="1" />
+                        <TabPane tab="Danh sách từ vựng" key="1" />
                         <TabPane tab="Đang học" key="2" />
                         <TabPane tab="Khám phá" key="3" />
                     </Tabs>
@@ -59,7 +59,7 @@ export default function VocabularyTopic() {
             </div>
 
             <div className="MainContainer">
-                <div className="VocabularyTopic-page__listTopic">{renderTopicList()}</div>
+                <div className="DetailTopic-page__listFlashcards">{renderFlashcardList()}</div>
             </div>
         </div>
     );

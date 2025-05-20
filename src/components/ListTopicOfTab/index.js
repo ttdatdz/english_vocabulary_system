@@ -5,9 +5,12 @@ import BaseModal from "../BaseModal";
 import { useState } from "react";
 import { confirmDelete } from "../../utils/alertHelper";
 import AddAndEditTopicForm from "../AddAndEditTopicForm";
+import { useNavigate } from "react-router-dom";
 
 export default function ListTopicOfTab(props) {
     const { list, activeTab } = props;
+    const navigate = useNavigate();
+
 
     const [editingTopic, setEditingTopic] = useState(null);
     const [open, setOpen] = useState(false);
@@ -29,6 +32,9 @@ export default function ListTopicOfTab(props) {
     const handleClose = () => {
         setOpen(false);
     };
+    const handleClick = () => {
+        navigate('/VocabularyTopics/DetailTopic');
+    }
 
     return (
         <>
@@ -42,7 +48,7 @@ export default function ListTopicOfTab(props) {
 
             <div className="topic-list">
                 {list.map((item, index) => (
-                    <div key={item.id} className="topic-item">
+                    <div key={item.id} className="topic-item" onClick={handleClick}>
                         <div className="topic-item__index">{index + 1}</div>
                         <div className="topic-item__title">{item.title}</div>
 
