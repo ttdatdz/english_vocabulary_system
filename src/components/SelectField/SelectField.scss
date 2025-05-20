@@ -1,0 +1,13 @@
+.SelectField {
+    display: flex;
+    gap: 20px;
+
+    &__select {
+        width: 200px !important;
+    }
+
+    .ant-select-selector {
+        border-color: #F66233 !important;
+        box-shadow: none !important;
+    }
+}

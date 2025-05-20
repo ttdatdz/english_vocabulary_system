@@ -21,7 +21,7 @@ function CustomerLayout() {
                         <img src={Logo} alt="Logo" className='Header-Customer__imgLogo' />
                     </div>
                     <div className='Header-Customer__Nav'>
-                        <Link className='Header-Customer__NavItem'>Luyện thi</Link>
+                        <Link to={"/ToiecTests"} className='Header-Customer__NavItem'>Luyện thi</Link>
                         <Link to={"/VocabularyTopics"} className='Header-Customer__NavItem'>Flashcards</Link>
                         <Link className='Header-Customer__NavItem'>Lịch học</Link>
                         <Link className='Header-Customer__NavItem'>Blog</Link>
