@@ -14,6 +14,7 @@ import Register from '../pages/Register';
 import Feedback from '../pages/Feedback';
 import VocabularyTopic from '../pages/VocabularyTopic';
 import ToeicTests from '../pages/ToeicTests';
+import Blogs from '../pages/Blogs';
 
 function MainRoutes() {
     return (
@@ -28,6 +29,7 @@ function MainRoutes() {
                     <Route path='Feedback' element={<Feedback />} />
                     <Route path='VocabularyTopics' element={<VocabularyTopic />} />
                     <Route path='ToiecTests' element={<ToeicTests />} />
+                    <Route path='Blogs' element={<Blogs />} />
                 </Route>
                 {/* Layout quản trị viên */}
                 <Route path="/admin" element={<AdminLayout />}>

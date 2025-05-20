@@ -1,4 +1,4 @@
-import { Input } from "antd";
+import { Input, Pagination } from "antd";
 
 import "./ToeicTest.scss";
 import { SearchOutlined, InfoCircleOutlined } from "@ant-design/icons"
@@ -77,7 +77,9 @@ export default function ToiecTests() {
                                 </div>
                             ))}
                         </div>
+                        <Pagination align="center" defaultCurrent={1} total={50} />
                     </div>
+
                 </div>
             </div>
         </>

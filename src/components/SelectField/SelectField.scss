@@ -1,6 +1,7 @@
 .SelectField {
     display: flex;
     gap: 20px;
+    align-items: center;
 
     &__select {
         width: 200px !important;

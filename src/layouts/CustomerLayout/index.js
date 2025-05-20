@@ -13,18 +13,21 @@ function CustomerLayout() {
     const handleLogin = () => {
         navigate('/login'); // điều hướng không reload trang
     };
+    const handleClick = () => {
+        navigate('/');
+    }
     return (
         <Layout >
             <Header className='Header-Customer' >
                 <div className="MainContainer">
-                    <div className='Header-Customer__logo'>
+                    <div className='Header-Customer__logo' onClick={handleClick}>
                         <img src={Logo} alt="Logo" className='Header-Customer__imgLogo' />
                     </div>
                     <div className='Header-Customer__Nav'>
+                        <Link to={"/"} className='Header-Customer__NavItem'>Trang chủ</Link>
                         <Link to={"/ToiecTests"} className='Header-Customer__NavItem'>Luyện thi</Link>
                         <Link to={"/VocabularyTopics"} className='Header-Customer__NavItem'>Flashcards</Link>
-                        <Link className='Header-Customer__NavItem'>Lịch học</Link>
-                        <Link className='Header-Customer__NavItem'>Blog</Link>
+                        <Link to={"/Blogs"} className='Header-Customer__NavItem'>Blog</Link>
                         <Link to={"/Feedback"} className='Header-Customer__NavItem'>Đánh giá</Link>
                         <Button className='Header-Customer__btnLogin' onClick={handleLogin}>Đăng nhập</Button>
                     </div>
