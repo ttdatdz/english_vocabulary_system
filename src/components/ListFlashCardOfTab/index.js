@@ -8,10 +8,11 @@ import { confirmDelete } from "../../utils/alertHelper";
 import { MdCheckBoxOutlineBlank } from "react-icons/md";
 import AddAndEditListFlashCardForm from "../AddAndEditListFlashCardForm";
 import BtnDetail from "../BtnDetail";
+import { useNavigate } from "react-router-dom";
 
 export default function ListFlashCardOfTab(props) {
     const { list, activeTab } = props;
-
+    const navigate = useNavigate();
     const [editingListFlashCard, setEditingListFlashCard] = useState(null);
     const [open, setOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
@@ -32,7 +33,9 @@ export default function ListFlashCardOfTab(props) {
     const handleClose = () => {
         setOpen(false);
     };
-
+    const handleClick = () => {
+        navigate('/VocabularyTopics/DetailTopic/DetailListFlashCard')
+    }
     return (
         <>
             {activeTab === 1 && (
@@ -77,7 +80,7 @@ export default function ListFlashCardOfTab(props) {
                         </div>
 
                         <div className="listFlashcard-card__footer">
-                            <BtnDetail>Chi tiết</BtnDetail>
+                            <BtnDetail onClick={handleClick}>Chi tiết</BtnDetail>
                         </div>
                     </div>
                 ))}

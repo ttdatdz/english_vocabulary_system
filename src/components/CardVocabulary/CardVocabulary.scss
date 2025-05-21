@@ -1,0 +1,96 @@
+.vocab-card {
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    padding: 20px;
+    background-color: #fff;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-family: Arial, sans-serif;
+
+    &__container {
+        display: flex;
+        gap: 20px;
+    }
+
+    &__right {
+        flex: 1;
+    }
+
+    &__left {
+        width: 85%;
+    }
+
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    &__word,
+    &__phonetic,
+    &__pos {
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        flex: 1;
+        gap: 10px;
+        margin-left: auto;
+    }
+
+    &__icon {
+        cursor: pointer;
+        font-size: 22px;
+
+        &--pronounce {
+            color: #4285F4;
+
+            &:hover {
+                color: #4285F4;
+            }
+        }
+
+        &--edit {
+            color: #F66233;
+            font-size: 20px;
+        }
+
+        &--delete {
+            color: #FF0000;
+            font-size: 20px;
+        }
+    }
+
+
+    &__body {
+        margin-top: 8px;
+    }
+
+    &__definition,
+    &__example,
+    &__note {
+        margin-bottom: 8px;
+
+        strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        p,
+        li {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+    }
+
+    &__listExample {
+        margin-left: 25px;
+    }
+}

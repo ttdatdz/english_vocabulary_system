@@ -16,6 +16,7 @@ import VocabularyTopic from '../pages/VocabularyTopic';
 import ToeicTests from '../pages/ToeicTests';
 import Blogs from '../pages/Blogs';
 import DetailTopic from '../pages/DetailTopic';
+import DetailListFalshCard from '../pages/DetailListFlashCard';
 
 function MainRoutes() {
     return (
@@ -32,6 +33,7 @@ function MainRoutes() {
                     <Route path='ToiecTests' element={<ToeicTests />} />
                     <Route path='Blogs' element={<Blogs />} />
                     <Route path='VocabularyTopics/DetailTopic' element={<DetailTopic />} />
+                    <Route path='VocabularyTopics/DetailTopic/DetailListFlashCard' element={<DetailListFalshCard />} />
                 </Route>
                 {/* Layout quản trị viên */}
                 <Route path="/admin" element={<AdminLayout />}>
