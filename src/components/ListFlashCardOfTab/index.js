@@ -43,40 +43,40 @@ export default function ListFlashCardOfTab(props) {
                 </div>
             )}
 
-            <div className="flashcard-list">
+            <div className="listFlashcard-list">
                 {list.map((item, index) => (
-                    <div className="flashcard-card" key={index}>
-                        <div className="flashcard-card__header">
-                            <h3 className="flashcard-card__title">600 TOEIC Words</h3>
+                    <div className="listFlashcard-card" key={index}>
+                        <div className="listFlashcard-card__header">
+                            <h3 className="listFlashcard-card__title">600 TOEIC Words</h3>
                             {activeTab === 1 && (
-                                <div className="flashcard-card__icons">
-                                    <EditOutlined onClick={() => showModal(item)} className="flashcard-card__icon flashcard-card__icon--edit" />
-                                    <DeleteOutlined onClick={() => confirmDelete()} className="flashcard-card__icon flashcard-card__icon--delete" />
+                                <div className="listFlashcard-card__icons">
+                                    <EditOutlined onClick={() => showModal(item)} className="listFlashcard-card__icon listFlashcard-card__icon--edit" />
+                                    <DeleteOutlined onClick={() => confirmDelete()} className="listFlashcard-card__icon listFlashcard-card__icon--delete" />
                                 </div>
                             )}
                             {activeTab === 3 && (
-                                <div className="flashcard-card__icons">
-                                    <MdCheckBoxOutlineBlank className="flashcard-card__icon flashcard-card__icon--apply" />
+                                <div className="listFlashcard-card__icons">
+                                    <MdCheckBoxOutlineBlank className="listFlashcard-card__icon listFlashcard-card__icon--apply" />
                                 </div>
                             )}
                         </div>
 
-                        <div className="flashcard-card__info">
-                            <p className="flashcard-card__info-item">
-                                <HiOutlineSquare2Stack className="flashcard-card__info-icon" />
+                        <div className="listFlashcard-card__info">
+                            <p className="listFlashcard-card__info-item">
+                                <HiOutlineSquare2Stack className="listFlashcard-card__info-icon" />
                                 <span>35 từ</span>
                             </p>
                             {activeTab === 3 ? (
-                                <p className="flashcard-card__info-item">
-                                    <UserOutlined className="flashcard-card__info-icon" />
+                                <p className="listFlashcard-card__info-item">
+                                    <UserOutlined className="listFlashcard-card__info-icon" />
                                     <span>120001 Lượt truy cập</span>
                                 </p>
                             ) : (
-                                <p className="flashcard-card__info-item">Ôn lại 10/3/2025</p>
+                                <p className="listFlashcard-card__info-item">Ôn lại 10/3/2025</p>
                             )}
                         </div>
 
-                        <div className="flashcard-card__footer">
+                        <div className="listFlashcard-card__footer">
                             <BtnDetail>Chi tiết</BtnDetail>
                         </div>
                     </div>

@@ -9,14 +9,14 @@
     }
 }
 
-.flashcard-list {
+.listFlashcard-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 16px;
     margin-top: 20px;
 }
 
-.flashcard-card {
+.listFlashcard-card {
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
