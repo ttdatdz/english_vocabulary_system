@@ -3,7 +3,11 @@ import { HiMiniSpeakerWave } from "react-icons/hi2";
 import { BiEdit } from "react-icons/bi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { Image } from "antd";
-export default function CardVocabulary() {
+export default function CardVocabulary(props) {
+    const { showModal } = props;
+    // const handleOpenModal = () => {
+    //     showModal();
+    // }
     return (
         <>
             <div className="vocab-card">
@@ -14,7 +18,7 @@ export default function CardVocabulary() {
                             <span className="vocab-card__phonetic">/əˈlaɪnmənt/</span>
                             <div className="vocab-card__actions">
                                 <HiMiniSpeakerWave className="vocab-card__icon vocab-card__icon--pronounce" title="Nghe phát âm" />
-                                <BiEdit className="vocab-card__icon vocab-card__icon--edit" />
+                                <BiEdit onClick={() => showModal(1)} className="vocab-card__icon vocab-card__icon--edit" />
                                 <RiDeleteBin6Line className="vocab-card__icon vocab-card__icon--delete" />
 
                             </div>
