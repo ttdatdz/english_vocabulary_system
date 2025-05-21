@@ -1,0 +1,13 @@
+.UserForm {
+    &__Note {
+        padding: 10px 20px;
+        background-color: #FEEBE5;
+        border-radius: 5px;
+    }
+
+    &__ContainerTimeRepeat {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+}

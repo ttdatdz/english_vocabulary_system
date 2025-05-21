@@ -33,11 +33,18 @@ export default function AddAndEditListFlashCardForm(props) {
                 >
                     <Input />
                 </Form.Item>
+                <Form.Item name="timeRepeat" wrapperCol={{ offset: 6, span: 18 }}
+                >
+                    <p className='UserForm__Note'>Lưu ý: Nhập 1,2,3... tương ứng 1 ngày, 2 ngày, 3 ngày cho khoảng thời gian lặp lại</p>
+                </Form.Item>
                 <Form.Item label="Khoảng thời gian lặp lại" name="timeRepeat" wrapperCol={{ span: 18 }}
                     rules={[{ required: true, message: 'Vui lòng nhập khoảng thời gian lặp lại!' }]}
                 >
-                    <p>Lưu ý: Nhập 1,2,3... tương ứng 1 ngày, 2 ngày, 3 ngày cho khoảng thời gian lặp lại</p>
-                    <Input />
+                    <div className='UserForm__ContainerTimeRepeat'>
+                        <Input />
+                        <span>Ngày</span>
+                    </div>
+
                 </Form.Item>
                 <Form.Item label="Description" name="description" wrapperCol={{ span: 18 }}
                     rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
