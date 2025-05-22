@@ -4,7 +4,9 @@ import CardVocabulary from "../../components/CardVocabulary/index,";
 import BaseModal from "../../components/BaseModal";
 import AddAndEditVocabForm from "../../components/AddAndEditVocabForm";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 export default function DetailListFalshCard() {
+    const navigate = useNavigate();
     const [editingVocab, setEditingVocab] = useState(null);
     const [open, setOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
@@ -12,7 +14,9 @@ export default function DetailListFalshCard() {
         setEditingVocab(vocab);
         setOpen(true);
     };
-
+    const handleClick = () => {
+        navigate("/PracticeFlashCard");
+    }
     const handleOk = () => {
         setConfirmLoading(true);
         setTimeout(() => {
@@ -38,7 +42,7 @@ export default function DetailListFalshCard() {
                     </div>
                     <div className="DetailListFlashCard__Content">
                         <div>
-                            <Button className="DetailListFlashCard__btnPractice">Luyện tập flashcards</Button>
+                            <Button className="DetailListFlashCard__btnPractice" onClick={handleClick}>Luyện tập flashcards</Button>
                         </div>
                         <div className="DetailListFlashCard__listFlashCard">
                             <CardVocabulary showModal={showModal} />
