@@ -93,3 +93,28 @@
         }
     }
 }
+
+.Card-remember {
+    background-color: #fff;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    justify-content: space-between;
+
+    &__delete {
+        font-size: 18px;
+        color: #FF0000;
+        cursor: pointer;
+    }
+}
+
+.note {
+    margin-bottom: 20px;
+    font-size: 16px;
+    padding: 10px 20px;
+    background-color: #F9E8E3;
+    border-radius: 7px;
+}
