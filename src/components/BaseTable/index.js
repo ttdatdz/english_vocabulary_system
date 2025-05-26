@@ -1,4 +1,4 @@
-import { Button, Space, Table } from "antd";
+import {  Table } from "antd";
 import "./BaseTable.scss";
 export default function BaseTable(props) {
     const { columns, data, onChange } = props;

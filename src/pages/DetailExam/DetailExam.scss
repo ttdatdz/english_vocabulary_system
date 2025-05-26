@@ -1,0 +1,142 @@
+.detail-exam {
+  &__header {
+    margin-bottom: 24px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 20px 0px;
+  }
+
+  &__description {
+    font-size: 18px;
+    color: gray;
+  }
+
+  &__results {
+    margin-bottom: 32px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+  }
+
+  &__subtitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  &__tab-practice {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+
+  &__tab-header {
+    margin-bottom: 24px;
+  }
+  .ant-tabs-nav {
+    margin-bottom: 0;
+  }
+
+  .ant-tabs-tab {
+    background-color: #fff;
+    padding: 5px 16px;
+    border-radius: 16px;
+    font-weight: 500;
+    color: gray;
+    font-size: 16px;
+  }
+
+  .ant-tabs-tab-active {
+    color: #4285f4 !important;
+  }
+
+  .ant-tabs-nav::before {
+    display: none !important;
+  }
+  &__tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &__note {
+    margin-bottom: 20px;
+    font-size: 16px;
+    padding: 10px 20px;
+    background-color: #f9e8e3;
+    border-radius: 7px;
+  }
+
+  &__practice-btn {
+    padding: 20px;
+    background-color: #ff8159;
+    border-color: #ff8159;
+    font-weight: 600;
+    color: #fff;
+    font-size: 17px;
+    width: 200px;
+
+    &:hover {
+      background-color: #ff8159 !important;
+      color: #fff !important;
+      border-color: #ff8159 !important;
+    }
+  }
+  &__comment-btn {
+    padding: 10px;
+    background-color: #ff8159;
+    border-color: #ff8159;
+    font-weight: 600;
+    color: #fff;
+    font-size: 17px;
+    width: 100px;
+    border-radius: 0px 5px 5px 0px;
+
+    &:hover {
+      background-color: #ff8159 !important;
+      color: #fff !important;
+      border-color: #ff8159 !important;
+    }
+  }
+  &__inputfeedback {
+    border-color: #f66233 !important;
+    box-shadow: none !important;
+    border-radius: 5px 0px 0px 5px;
+  }
+  &__comments {
+    margin-bottom: 32px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    &-header {
+      margin-bottom: 20px;
+    }
+
+    &-content {
+      overflow-y: auto;
+    }
+  }
+  &__loadmore-btn {
+    color: #ff8059;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 16px 16px;
+    border-radius: 5px;
+    border: 1px solid #ff8059;
+    transition: all 0.3s;
+    width: 100%;
+
+    &:hover {
+      background-color: #ff6a4d !important;
+      color: white !important;
+      border-color: #ff6a4d !important;
+    }
+  }
+}

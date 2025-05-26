@@ -1,0 +1,29 @@
+.list-part-section {
+  display: flex;
+  //   flex-direction: column;
+  flex-wrap: wrap;
+  gap: 18px;
+
+  .part-card {
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    width: 260px;
+    background-color: #fff;
+
+    &__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+  }
+
+  &__note {
+    font-size: 16px;
+    padding: 10px 20px;
+    background-color: #f9e8e3;
+    border-radius: 7px;
+    width: 100%;
+  }
+}

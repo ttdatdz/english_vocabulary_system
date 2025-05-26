@@ -1,0 +1,146 @@
+.comment-item {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fff;
+  margin-bottom: 1rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  &__name {
+    font-weight: bold;
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  &__date {
+    font-size: 0.875rem;
+    color: #888;
+    margin: 0;
+  }
+
+  &__body {
+    width: 100%;
+    & > .comment-item__text {
+      margin: 0 0 0.5rem;
+    }
+
+    & > .comment-item__image {
+      width: 120px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+      display: block;
+    }
+  }
+
+  &__actions {
+    width: 100%;
+  }
+
+  &__reply {
+    color: #35509a;
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: bold;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__reply-box {
+    margin-top: 1rem;
+
+    .comment-item {
+      background-color: #f9f9f9;
+    }
+  }
+  &__reply-input {
+    margin-top: 8px;
+
+    .comment-item__reply-buttons {
+      display: flex;
+      gap: 8px;
+    }
+  }
+  &__textarea {
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    padding: 8px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    border: 1px solid #f66233;
+    border-radius: 4px;
+    &:focus,
+    &:hover,
+    &:active {
+      border-color: #f66233 !important;
+      box-shadow: none !important;
+    }
+  }
+  &__icon {
+    margin-top: 4px;
+    cursor: pointer;
+    font-size: 18px;
+
+    &--pronounce {
+      color: #4285f4;
+
+      &:hover {
+        color: #4285f4;
+      }
+    }
+
+    &--edit {
+      color: #f66233;
+      font-size: 18px;
+    }
+
+    &--delete {
+      color: #ff0000;
+      font-size: 18px;
+    }
+  }
+}
+.btn-send {
+  background-color: #f66233;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background-color: #4285f4;
+  color: white;
+  border: 1px solid #4285f4;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
