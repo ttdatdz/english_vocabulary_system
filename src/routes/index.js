@@ -19,6 +19,7 @@ import DetailTopic from "../pages/DetailTopic";
 import DetailListFalshCard from "../pages/DetailListFlashCard";
 import PracticeFlashCard from "../pages/PracticeFlashCard";
 import DetailExam from "../pages/DetailExam";
+import PracticeExam from "../pages/PracticeExam";
 
 function MainRoutes() {
   return (
@@ -44,6 +45,7 @@ function MainRoutes() {
           />
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="DetailExam" element={<DetailExam />} />
+          <Route path="PracticeExam" element={<PracticeExam />} />
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>

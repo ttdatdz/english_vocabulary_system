@@ -1,0 +1,99 @@
+.PracticeExam {
+  &__header {
+    background: linear-gradient(to right, #fda98e, #f9cccc);
+    padding: 40px 0;
+
+    .MainContainer {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+    }
+  }
+  &__btnExit {
+    padding: 10px 20px;
+    width: 100px;
+    border: none;
+    color: #35509a;
+    font-weight: 600;
+    background-color: #e8f2ff;
+    &:hover {
+      background-color: #e8f2ff !important;
+      color: #35509a !important;
+    }
+  }
+  &__content {
+    display: flex;
+    margin: 20px 0px;
+    gap: 5px;
+    &-left {
+      width: 80%;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      border-radius: 10px;
+    }
+    &-right {
+      flex: 1;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+    }
+  }
+  &__practiceTime {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  &__btnSubmit {
+    color: #ff8059;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 18px;
+    border-radius: 5px;
+    border: 1px solid #ff8059;
+    transition: all 0.3s;
+    width: 100%;
+    margin-bottom: 20px;
+
+    &:hover {
+      background-color: #ff6a4d !important;
+      color: white !important;
+      border-color: #ff6a4d !important;
+    }
+  }
+  &__note {
+    margin-bottom: 10px;
+    line-height: 1.5;
+    font-size: 15px;
+    font-weight: 500;
+    color: #ffb001;
+  }
+  &__title-part {
+    margin: 10px 0px;
+  }
+  &__btnQuestion {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #f66233;
+    color: black;
+    font-weight: 500;
+    &:hover {
+      background-color: #f66233 !important;
+      color: white !important;
+      border-color: #f66233 !important;
+    }
+  }
+}

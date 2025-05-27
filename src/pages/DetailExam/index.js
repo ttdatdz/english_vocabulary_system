@@ -3,11 +3,12 @@ import "./DetailExam.scss";
 import BaseTable from "../../components/BaseTable";
 import ListPartSection from "../../components/ListPartSection";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CommentItem from "../../components/CommentItem";
 const { TabPane } = Tabs;
 export default function DetailExam() {
   const [activeTab, setActiveTab] = useState("1");
+  const navigate = useNavigate();
   const columns = [
     {
       title: "Ngày làm",
@@ -221,7 +222,12 @@ export default function DetailExam() {
 
           <div className="detail-exam__tab-content">
             {renderTopicList()}
-            <Button className="detail-exam__practice-btn">Luyện tập</Button>
+            <Button
+              className="detail-exam__practice-btn"
+              onClick={() => navigate("/PracticeExam")}
+            >
+              Luyện tập
+            </Button>
           </div>
         </div>
         <div className="detail-exam__comments">
