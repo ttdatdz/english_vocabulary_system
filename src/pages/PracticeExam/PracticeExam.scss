@@ -38,6 +38,41 @@
       border: 1px solid #ddd;
       background-color: #fff;
       border-radius: 10px;
+
+      .ant-tabs-nav {
+        margin-bottom: 0;
+      }
+
+      .ant-tabs-tab {
+        background-color: #f8f9fa;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 16px;
+        margin-left: 10px !important;
+        transition: all;
+        &:hover {
+          background-color: #e8f2ff;
+          color: #35509a !important;
+          transition: all;
+        }
+      }
+
+      .ant-tabs-tab-active {
+        background-color: #e8f2ff !important;
+        color: #35509a !important;
+        transition: all;
+      }
+
+      .ant-tabs-ink-bar {
+        display: none !important;
+        list-style: none;
+      }
+
+      .ant-tabs-nav::before {
+        display: none !important;
+      }
     }
     &-right {
       flex: 1;

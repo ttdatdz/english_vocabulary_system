@@ -55,7 +55,7 @@ export default function Part1() {
 
   return (
     <div className="Part1">
-      <div className="Part1__header">Part 1</div>
+      {/* <div className="Part1__header">Part 1</div> */}
       {/* danh sách câu hỏi part 1 */}
       {part1Questions.map((question) => (
         <div key={question.id} className="CardPartOne">

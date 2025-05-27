@@ -1,11 +1,33 @@
 import { Button } from "antd";
 import "./PracticeExam.scss";
 import Part1 from "../../components/Part1";
-import React from "react";
+import React, { useState } from "react";
+import { Tabs } from "antd";
 import Part2 from "../../components/Part2";
 import Part3 from "../../components/Part3";
+import Part4 from "../../components/Part4";
+import Part5 from "../../components/Part5";
+const { TabPane } = Tabs;
 export default function PracticeExam() {
   const questionOrder = Array.from({ length: 200 }, (_, i) => i + 1);
+  const [activeTab, setActiveTab] = useState("1");
+
+  const renderPart = () => {
+    switch (activeTab) {
+      case "1":
+        return <Part1 activeTab={1} />;
+      case "2":
+        return <Part2 activeTab={2} />;
+      case "3":
+        return <Part3 activeTab={3} />;
+      case "4":
+        return <Part4 activeTab={4} />;
+      case "5":
+        return <Part5 activeTab={5} />;
+      default:
+        return [];
+    }
+  };
   return (
     <>
       <div className="PracticeExam">
@@ -18,10 +40,16 @@ export default function PracticeExam() {
         <div className="MainContainer">
           <div className="PracticeExam__content">
             <div className="PracticeExam__content-left">
-              {/* part1 - > part 7 */}
-              <Part1 />
-              <Part2 />
-              <Part3 />
+              <Tabs defaultActiveKey="1" onChange={setActiveTab}>
+                <TabPane tab="Part 1" key="1" />
+                <TabPane tab="Part 2" key="2" />
+                <TabPane tab="Part 3" key="3" />
+                <TabPane tab="Part 4" key="4" />
+                <TabPane tab="Part 5" key="5" />
+              </Tabs>
+              <div className="VocabularyTopic-page__listTopic">
+                {renderPart()}
+              </div>
             </div>
             <div className="PracticeExam__content-right">
               <p className="PracticeExam__practiceTime">
