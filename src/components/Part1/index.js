@@ -1,7 +1,10 @@
 import { Button, Divider } from "antd";
 import "./Part1.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
-export default function Part1() {
+
+export default function Part1(props) {
+  const { activeTab, setActiveTab, questionRefs } = props;
+
   const part1Questions = [
     {
       id: 1,
@@ -55,18 +58,13 @@ export default function Part1() {
 
   return (
     <div className="Part1">
-      {/* <div className="Part1__header">Part 1</div> */}
-      {/* danh sách câu hỏi part 1 */}
       {part1Questions.map((question) => (
-        <div key={question.id} className="CardPartOne">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              gap: "20px",
-              width: "100%",
-            }}
-          >
+        <div
+          key={question.id}
+          className="CardPartOne"
+          //khi react render DOM thì nó sẽ đọc qua từng element, nếu element đó có ref thì nó sẽ tạo ra 1 tham chiếu đến element này và truyền nó vào hàm bên trong ref mà ta cung cấp
+        >
+          <div style={{ display: "flex", gap: "20px", width: "100%" }}>
             <div className="CardPartOne__left">
               <img
                 src={question.image}
@@ -76,11 +74,15 @@ export default function Part1() {
                 controls
                 src={question.audio}
                 style={{ marginTop: "10px" }}
-                className="CardPartOne__audio"
               />
             </div>
             <div className="CardPartOne__right">
-              <div className="CardPartOne__questionNumber">{question.id}</div>
+              <div
+                className="CardPartOne__questionNumber"
+                ref={(el) => (questionRefs.current[question.id] = el)}
+              >
+                {question.id}
+              </div>
               <div
                 style={{
                   display: "flex",
@@ -88,7 +90,6 @@ export default function Part1() {
                   gap: "10px",
                 }}
               >
-                {/* danh sách đáp án */}
                 {question.options.map((label) => (
                   <div className="CardPartOne__option" key={label}>
                     <input
@@ -110,15 +111,16 @@ export default function Part1() {
             <Divider className="Part1__divider" />
           ) : (
             <div
-              style={{
-                display: "flex",
-                justifyContent: "end",
-                width: "100%",
-              }}
+              style={{ display: "flex", justifyContent: "end", width: "100%" }}
             >
-              <Button className="btnNext">
-                Tiếp theo
-                <ArrowRightOutlined className="iconNext" />
+              <Button
+                className="btnNext"
+                onClick={() => {
+                  setActiveTab("2");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                Tiếp theo <ArrowRightOutlined />
               </Button>
             </div>
           )}

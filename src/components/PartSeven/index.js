@@ -1,7 +1,8 @@
 import { Divider } from "antd";
 import "./PartSeven.scss";
 
-export default function PartSeven() {
+export default function PartSeven(props) {
+  const { activeTab, setActiveTab, questionRefs } = props;
   const partSevenQuestions = Array.from({ length: 18 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
     images: [
@@ -68,7 +69,11 @@ export default function PartSeven() {
             <div className="CardPartSeven__container-question">
               {/* Danh sách câu hỏi */}
               {dialog.questions.map((question) => (
-                <div key={question.id} className="CardPartSeven__questionBlock">
+                <div
+                  key={question.id}
+                  className="CardPartSeven__questionBlock"
+                  ref={(el) => (questionRefs.current[question.id] = el)}
+                >
                   <div className="CardPartSeven__container-questionNumber">
                     <div className="CardPartSeven__questionNumber">
                       {question.id}

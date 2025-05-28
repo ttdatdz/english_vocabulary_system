@@ -2,7 +2,8 @@ import { Button, Divider } from "antd";
 import "./PartSix.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
-export default function PartSix() {
+export default function PartSix(props) {
+  const { activeTab, setActiveTab, questionRefs } = props;
   const partSixQuestions = Array.from({ length: 4 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
     reading: `NOTICE
@@ -48,7 +49,11 @@ Denville Property Management Partners`,
             <div className="CardPartSix__container-question">
               {/* Danh sách 4 câu hỏi */}
               {dialog.questions.map((question) => (
-                <div key={question.id} className="CardPartSix__questionBlock">
+                <div
+                  key={question.id}
+                  className="CardPartSix__questionBlock"
+                  ref={(el) => (questionRefs.current[question.id] = el)}
+                >
                   <div className="CardPartSix__container-questionNumber">
                     <div className="CardPartSix__questionNumber">
                       {question.id}
@@ -88,7 +93,13 @@ Denville Property Management Partners`,
                 width: "100%",
               }}
             >
-              <Button className="btnNext">
+              <Button
+                className="btnNext"
+                onClick={() => {
+                  setActiveTab("7");
+                  window.scrollTo({ top: 0, behavior: "smooth" }); // khi chuyển tab xong thì cuộn lên đầu trang
+                }}
+              >
                 Tiếp theo
                 <ArrowRightOutlined className="iconNext" />
               </Button>

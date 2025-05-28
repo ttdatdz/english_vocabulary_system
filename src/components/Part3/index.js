@@ -2,7 +2,8 @@ import { Button, Divider } from "antd";
 import "./Part3.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
-export default function Part3() {
+export default function Part3(props) {
+  const { activeTab, setActiveTab, questionRefs } = props;
   const part3Questions = Array.from({ length: 13 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
@@ -47,8 +48,6 @@ export default function Part3() {
 
   return (
     <div className="Part3">
-      {/* <div className="Part3__header">Part 3</div> */}
-
       {part3Questions.map((dialog) => (
         <div key={dialog.id} className="CardPartThree">
           {/* Audio cho mỗi đoạn hội thoại */}
@@ -72,7 +71,11 @@ export default function Part3() {
             <div className="CardPartThree__container-question">
               {/* Danh sách 3 câu hỏi */}
               {dialog.questions.map((question) => (
-                <div key={question.id} className="CardPartThree__questionBlock">
+                <div
+                  key={question.id}
+                  className="CardPartThree__questionBlock"
+                  ref={(el) => (questionRefs.current[question.id] = el)}
+                >
                   <div className="CardPartThree__questionNumber">
                     {question.id}
                   </div>
@@ -112,7 +115,13 @@ export default function Part3() {
                 width: "100%",
               }}
             >
-              <Button className="btnNext">
+              <Button
+                className="btnNext"
+                onClick={() => {
+                  setActiveTab("4");
+                  window.scrollTo({ top: 0, behavior: "smooth" }); // khi chuyển tab xong thì cuộn lên đầu trang
+                }}
+              >
                 Tiếp theo
                 <ArrowRightOutlined className="iconNext" />
               </Button>

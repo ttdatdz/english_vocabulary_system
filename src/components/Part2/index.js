@@ -1,7 +1,8 @@
 import { Button, Divider } from "antd";
 import "./Part2.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
-export default function Part2() {
+export default function Part2(props) {
+  const { activeTab, setActiveTab, questionRefs } = props;
   const part2Questions = Array.from({ length: 25 }, (_, i) => ({
     id: i + 7,
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
@@ -10,10 +11,13 @@ export default function Part2() {
   }));
   return (
     <div className="Part2">
-      {/* <div className="Part2__header">Part 2</div> */}
-      {/* danh sách câu hỏi part 1 */}
+      {/* danh sách câu hỏi part 2 */}
       {part2Questions.map((question) => (
-        <div key={question.id} className="CardPartTwo">
+        <div
+          key={question.id}
+          className="CardPartTwo"
+          ref={(el) => (questionRefs.current[question.id] = el)}
+        >
           <div
             style={{
               display: "flex",
@@ -67,7 +71,13 @@ export default function Part2() {
                 width: "100%",
               }}
             >
-              <Button className="btnNext">
+              <Button
+                className="btnNext"
+                onClick={() => {
+                  setActiveTab("3");
+                  window.scrollTo({ top: 0, behavior: "smooth" }); // khi chuyển tab xong thì cuộn lên đầu trang
+                }}
+              >
                 Tiếp theo
                 <ArrowRightOutlined className="iconNext" />
               </Button>
