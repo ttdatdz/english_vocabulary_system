@@ -8,6 +8,7 @@ import Part3 from "../../components/Part3";
 import Part4 from "../../components/Part4";
 import Part5 from "../../components/Part5";
 import PartSix from "../../components/PartSix";
+import PartSeven from "../../components/PartSeven";
 const { TabPane } = Tabs;
 export default function PracticeExam() {
   const questionOrder = Array.from({ length: 200 }, (_, i) => i + 1);
@@ -27,6 +28,8 @@ export default function PracticeExam() {
         return <Part5 activeTab={5} />;
       case "6":
         return <PartSix activeTab={6} />;
+      case "7":
+        return <PartSeven activeTab={7} />;
       default:
         return [];
     }
@@ -50,6 +53,7 @@ export default function PracticeExam() {
                 <TabPane tab="Part 4" key="4" />
                 <TabPane tab="Part 5" key="5" />
                 <TabPane tab="Part 6" key="6" />
+                <TabPane tab="Part 7" key="7" />
               </Tabs>
               <div className="VocabularyTopic-page__listTopic">
                 {renderPart()}
