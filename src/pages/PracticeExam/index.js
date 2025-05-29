@@ -9,6 +9,7 @@ import Part4 from "../../components/Part4";
 import Part5 from "../../components/Part5";
 import PartSix from "../../components/PartSix";
 import PartSeven from "../../components/PartSeven";
+import { useLocation } from "react-router-dom";
 const { TabPane } = Tabs;
 
 export default function PracticeExam() {
@@ -18,11 +19,17 @@ export default function PracticeExam() {
   // Khi lưu object hoặc DOM element,.current giữ một tham chiếu đến giá trị gốc, tức là thay đổi giá trị gốc ở nơi khác thì .current cũng thấy thay đổi, và ngược lại.
   const questionRefs = useRef({});
 
-  const questionOrder = Array.from({ length: 200 }, (_, i) => i + 1);
   const [activeTab, setActiveTab] = useState("1");
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
+  //useLocation giúp bạn lấy thông tin về route hiện tại, đặc biệt là lấy lại dữ liệu đã truyền qua navigate bằng thuộc tính state.
+  const location = useLocation();
+  const {
+    selectedParts = [1, 2, 3, 4, 5, 6, 7],
+    practiceTime = 0,
+    mode = "fulltest",
+  } = location.state || {};
 
   const scrollToQuestion = (id) => {
     const el = questionRefs.current[id];
@@ -145,7 +152,16 @@ export default function PracticeExam() {
         return [];
     }
   };
-
+  // Chỉ render các tab part được chọn
+  const partTabs = [
+    { key: "1", label: "Part 1" },
+    { key: "2", label: "Part 2" },
+    { key: "3", label: "Part 3" },
+    { key: "4", label: "Part 4" },
+    { key: "5", label: "Part 5" },
+    { key: "6", label: "Part 6" },
+    { key: "7", label: "Part 7" },
+  ].filter((tab) => selectedParts.includes(Number(tab.key)));
   const getPartByQuestion = (id) => {
     if (id <= 6) return "1";
     if (id <= 31) return "2";
@@ -155,7 +171,21 @@ export default function PracticeExam() {
     if (id <= 146) return "6";
     return "7";
   };
-
+  const partQuestionRanges = {
+    1: [1, 6],
+    2: [7, 31],
+    3: [32, 70],
+    4: [71, 100],
+    5: [101, 130],
+    6: [131, 146],
+    7: [147, 200],
+  };
+  const filteredQuestionOrder = selectedParts
+    .map((part) => {
+      const [start, end] = partQuestionRanges[part];
+      return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    })
+    .flat();
   return (
     <div className="PracticeExam">
       <div className="PracticeExam__header">
@@ -168,17 +198,13 @@ export default function PracticeExam() {
         <div className="PracticeExam__content">
           <div className="PracticeExam__content-left">
             <Tabs
-              defaultActiveKey="1"
+              defaultActiveKey={partTabs[0].key}
               activeKey={activeTab}
               onChange={setActiveTab}
             >
-              <TabPane tab="Part 1" key="1" />
-              <TabPane tab="Part 2" key="2" />
-              <TabPane tab="Part 3" key="3" />
-              <TabPane tab="Part 4" key="4" />
-              <TabPane tab="Part 5" key="5" />
-              <TabPane tab="Part 6" key="6" />
-              <TabPane tab="Part 7" key="7" />
+              {partTabs.map((tab) => (
+                <TabPane tab={tab.label} key={tab.key} />
+              ))}
             </Tabs>
             <div className="VocabularyTopic-page__listTopic">
               {renderPart()}
@@ -195,7 +221,7 @@ export default function PracticeExam() {
               dấu review
             </p>
             <div>
-              {questionOrder.map((item) => (
+              {filteredQuestionOrder.map((item) => (
                 <React.Fragment key={item}>
                   {item === 1 && (
                     <h3 className="PracticeExam__title-part">Part 1</h3>

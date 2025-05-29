@@ -8,6 +8,9 @@ import CommentItem from "../../components/CommentItem";
 const { TabPane } = Tabs;
 export default function DetailExam() {
   const [activeTab, setActiveTab] = useState("1");
+  const [selectedParts, setSelectedParts] = useState([]);
+  const [practiceTime, setPracticeTime] = useState(0);
+  const [isStarted, setIsStarted] = useState(false);
   const navigate = useNavigate();
   const columns = [
     {
@@ -111,16 +114,49 @@ export default function DetailExam() {
     { number: 6, title: "Part 6", questions: 16 },
     { number: 7, title: "Part 7", questions: 54 },
   ];
-
+  const handlePartChange = (partNumber) => {
+    setSelectedParts((prev) =>
+      prev.includes(partNumber)
+        ? prev.filter((p) => p !== partNumber)
+        : [...prev, partNumber]
+    );
+  };
+  console.log(">>>>>>>>>>check selectedParts", selectedParts);
+  const handleTimeChange = (value) => {
+    setPracticeTime(Number(value));
+  };
+  console.log(">>>>>>>>>>check PracticeTime", practiceTime);
+  const handleStartPractice = (e) => {
+    e.preventDefault();
+    if (selectedParts.length === 0) {
+      alert("Hãy chọn ít nhất một Part!");
+      return;
+    }
+    setIsStarted(true);
+  };
   const renderTopicList = () => {
     switch (activeTab) {
       case "1":
         return (
-          <ListPartSection parts={parts} activeTab={1} hasCheckbox={true} />
+          <ListPartSection
+            parts={parts}
+            activeTab={1}
+            hasCheckbox={true}
+            handleTimeChange={handleTimeChange}
+            selectedParts={selectedParts}
+            onPartChange={handlePartChange}
+          />
         );
       case "2":
         return (
-          <ListPartSection parts={parts} activeTab={2} hasCheckbox={false} />
+          <ListPartSection
+            parts={parts}
+            activeTab={2}
+            hasCheckbox={false}
+            selectedParts={[]} // không cần chọn part khi làm full test
+            onPartChange={() => {}}
+            handleTimeChange={handleTimeChange}
+          />
         );
       default:
         return [];
@@ -224,7 +260,20 @@ export default function DetailExam() {
             {renderTopicList()}
             <Button
               className="detail-exam__practice-btn"
-              onClick={() => navigate("/PracticeExam")}
+              onClick={() => {
+                if (activeTab === "1" && selectedParts.length === 0) {
+                  alert("Hãy chọn ít nhất một Part!");
+                  return;
+                }
+                navigate("/PracticeExam", {
+                  state: {
+                    selectedParts:
+                      activeTab === "1" ? selectedParts : [1, 2, 3, 4, 5, 6, 7],
+                    practiceTime,
+                    mode: activeTab === "1" ? "practice" : "fulltest",
+                  },
+                });
+              }}
             >
               Luyện tập
             </Button>

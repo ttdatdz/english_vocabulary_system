@@ -2,8 +2,14 @@ import { useState } from "react";
 import "./ListPartSection.scss";
 import SelectField from "../SelectField";
 
-export default function ListPartSection({ hasCheckbox, parts, activeTab }) {
-  const [checkedParts, setCheckedParts] = useState({});
+export default function ListPartSection({
+  hasCheckbox,
+  parts,
+  activeTab,
+  selectedParts,
+  onPartChange,
+  handleTimeChange,
+}) {
   const handleChange = (value) => {
     console.log(`selected ${value}`);
   };
@@ -11,16 +17,13 @@ export default function ListPartSection({ hasCheckbox, parts, activeTab }) {
   // Hàm xử lý khi click vào part-card
   const handlePartClick = (partNumber) => {
     if (hasCheckbox) {
-      setCheckedParts((prev) => ({
-        ...prev,
-        [partNumber]: !prev[partNumber], // Đảo trạng thái
-      }));
+      onPartChange(partNumber); // Gọi hàm props để cập nhật selectedParts ở cha
     }
   };
 
   // Mảng các lựa chọn thời gian
   const practiceTimes = Array.from({ length: 27 }, (_, i) => {
-    const minutes = (i + 1) * 5;
+    const minutes = i * 5;
     return {
       value: minutes,
       label: `${minutes} phút`,
@@ -40,9 +43,9 @@ export default function ListPartSection({ hasCheckbox, parts, activeTab }) {
             {hasCheckbox && (
               <input
                 type="checkbox"
-                checked={checkedParts[part.number] || false}
-                onChange={() => {}} // Cần có để tránh warning
-                onClick={(e) => e.stopPropagation()} // Ngăn sự kiện nổi bọt
+                checked={selectedParts.includes(part.number)}
+                onChange={() => onPartChange(part.number)}
+                onClick={(e) => e.stopPropagation()}
               />
             )}
             <span>
@@ -62,7 +65,7 @@ export default function ListPartSection({ hasCheckbox, parts, activeTab }) {
             <SelectField
               style={{ width: "100%", height: "40px" }}
               defaultValue="Chọn thời gian"
-              onChange={handleChange}
+              onChange={handleTimeChange}
               options={practiceTimes}
             />
           </div>
