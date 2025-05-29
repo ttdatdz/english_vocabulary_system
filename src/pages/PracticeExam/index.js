@@ -22,6 +22,7 @@ export default function PracticeExam() {
   const [activeTab, setActiveTab] = useState("1");
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [markedQuestions, setMarkedQuestions] = useState([]);
+  const [userAnswers, setUserAnswers] = useState({});
 
   const scrollToQuestion = (id) => {
     const el = questionRefs.current[id];
@@ -42,6 +43,11 @@ export default function PracticeExam() {
       [questionId]: true,
     }));
   };
+  const saveUserAnswer = (questionId, value) => {
+    setUserAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+  // console.log(">>>>>>>>>check UserAnswers", userAnswers);
+
   const renderPart = () => {
     switch (activeTab) {
       case "1":
@@ -53,6 +59,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       case "2":
@@ -64,6 +72,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       case "3":
@@ -75,6 +85,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       case "4":
@@ -86,6 +98,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       case "5":
@@ -97,6 +111,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       case "6":
@@ -108,6 +124,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       case "7":
@@ -119,6 +137,8 @@ export default function PracticeExam() {
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
             onAnswerQuestion={onAnswerQuestion}
+            saveUserAnswer={saveUserAnswer}
+            userAnswers={userAnswers}
           />
         );
       default:

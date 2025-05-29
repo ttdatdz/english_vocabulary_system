@@ -10,6 +10,8 @@ export default function Part1(props) {
     markedQuestions,
     toggleMarkQuestion,
     onAnswerQuestion,
+    saveUserAnswer,
+    userAnswers,
   } = props;
 
   const part1Questions = [
@@ -62,7 +64,12 @@ export default function Part1(props) {
       correctAnswer: "A",
     },
   ];
-
+  const handleChange = (e, question) => {
+    // console.log("check e ", e.target.value);
+    // console.log("check question", question);
+    onAnswerQuestion(question.id);
+    saveUserAnswer(question.id, e.target.value);
+  };
   return (
     <div className="Part1">
       {part1Questions.map((question) => (
@@ -108,7 +115,9 @@ export default function Part1(props) {
                       type="radio"
                       name={`part1-question-${question.id}`}
                       id={`part1-question-${question.id}-option-${label}`}
-                      onChange={() => onAnswerQuestion(question.id)}
+                      onChange={(e) => handleChange(e, question)}
+                      value={label}
+                      checked={userAnswers[question.id] === label}
                     />
                     <label
                       htmlFor={`part1-question-${question.id}-option-${label}`}

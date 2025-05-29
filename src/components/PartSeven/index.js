@@ -9,6 +9,8 @@ export default function PartSeven(props) {
     markedQuestions,
     toggleMarkQuestion,
     onAnswerQuestion,
+    saveUserAnswer,
+    userAnswers,
   } = props;
   const partSevenQuestions = Array.from({ length: 18 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
@@ -52,7 +54,10 @@ export default function PartSeven(props) {
       },
     ],
   }));
-
+  const handleChange = (e, question) => {
+    onAnswerQuestion(question.id);
+    saveUserAnswer(question.id, e.target.value);
+  };
   return (
     <div className="PartSeven">
       {partSevenQuestions.map((dialog) => (
@@ -102,7 +107,9 @@ export default function PartSeven(props) {
                             type="radio"
                             name={`part3-question-${question.id}`}
                             id={`part3-question-${question.id}-option-${option}`}
-                            onChange={() => onAnswerQuestion(question.id)}
+                            onChange={(e) => handleChange(e, question)}
+                            value={option}
+                            checked={userAnswers[question.id] === option}
                           />
                           <label
                             htmlFor={`part3-question-${question.id}-option-${option}`}

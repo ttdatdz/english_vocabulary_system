@@ -10,6 +10,8 @@ export default function Part5(props) {
     markedQuestions,
     toggleMarkQuestion,
     onAnswerQuestion,
+    saveUserAnswer,
+    userAnswers,
   } = props;
   const part5Questions = Array.from({ length: 30 }, (_, i) => ({
     id: i + 101,
@@ -17,7 +19,10 @@ export default function Part5(props) {
     options: ["A. regional", "B. regionally", "C. region", "D. regions"],
     correctAnswer: "B",
   }));
-
+  const handleChange = (e, question) => {
+    onAnswerQuestion(question.id);
+    saveUserAnswer(question.id, e.target.value);
+  };
   return (
     <div className="PartFive">
       {part5Questions.map((dialog) => (
@@ -50,7 +55,9 @@ export default function Part5(props) {
                         type="radio"
                         name={`part3-question-${dialog.id}`}
                         id={`part3-question-${dialog.id}-option-${option}`}
-                        onChange={() => onAnswerQuestion(dialog.id)}
+                        onChange={(e) => handleChange(e, dialog)}
+                        value={option}
+                        checked={userAnswers[dialog.id] === option}
                       />
                       <label
                         htmlFor={`part3-question-${dialog.id}-option-${option}`}

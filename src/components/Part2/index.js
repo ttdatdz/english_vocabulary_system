@@ -9,6 +9,8 @@ export default function Part2(props) {
     markedQuestions,
     toggleMarkQuestion,
     onAnswerQuestion,
+    saveUserAnswer,
+    userAnswers,
   } = props;
   const part2Questions = Array.from({ length: 25 }, (_, i) => ({
     id: i + 7,
@@ -16,6 +18,10 @@ export default function Part2(props) {
     options: ["A", "B", "C", "D"],
     correctAnswer: ["B"],
   }));
+  const handleChange = (e, question) => {
+    onAnswerQuestion(question.id);
+    saveUserAnswer(question.id, e.target.value);
+  };
   return (
     <div className="Part2">
       {/* danh sách câu hỏi part 2 */}
@@ -66,7 +72,9 @@ export default function Part2(props) {
                       type="radio"
                       name={`part2-question-${question.id}`}
                       id={`part2-question-${question.id}-option-${label}`}
-                      onChange={() => onAnswerQuestion(question.id)}
+                      onChange={(e) => handleChange(e, question)}
+                      value={label}
+                      checked={userAnswers[question.id] === label}
                     />
                     <label
                       htmlFor={`part2-question-${question.id}-option-${label}`}

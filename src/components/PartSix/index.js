@@ -10,6 +10,8 @@ export default function PartSix(props) {
     markedQuestions,
     toggleMarkQuestion,
     onAnswerQuestion,
+    saveUserAnswer,
+    userAnswers,
   } = props;
   const partSixQuestions = Array.from({ length: 4 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
@@ -45,7 +47,10 @@ Denville Property Management Partners`,
       },
     ],
   }));
-
+  const handleChange = (e, question) => {
+    onAnswerQuestion(question.id);
+    saveUserAnswer(question.id, e.target.value);
+  };
   return (
     <div className="PartSix">
       {partSixQuestions.map((dialog) => (
@@ -82,7 +87,9 @@ Denville Property Management Partners`,
                             type="radio"
                             name={`part3-question-${question.id}`}
                             id={`part3-question-${question.id}-option-${option}`}
-                            onChange={() => onAnswerQuestion(question.id)}
+                            onChange={(e) => handleChange(e, question)}
+                            value={option}
+                            checked={userAnswers[question.id] === option}
                           />
                           <label
                             htmlFor={`part3-question-${question.id}-option-${option}`}
