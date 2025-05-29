@@ -9,6 +9,7 @@ export default function Part1(props) {
     questionRefs,
     markedQuestions,
     toggleMarkQuestion,
+    onAnswerQuestion,
   } = props;
 
   const part1Questions = [
@@ -107,6 +108,7 @@ export default function Part1(props) {
                       type="radio"
                       name={`part1-question-${question.id}`}
                       id={`part1-question-${question.id}-option-${label}`}
+                      onChange={() => onAnswerQuestion(question.id)}
                     />
                     <label
                       htmlFor={`part1-question-${question.id}-option-${label}`}

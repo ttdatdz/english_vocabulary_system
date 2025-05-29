@@ -9,6 +9,7 @@ export default function Part5(props) {
     questionRefs,
     markedQuestions,
     toggleMarkQuestion,
+    onAnswerQuestion,
   } = props;
   const part5Questions = Array.from({ length: 30 }, (_, i) => ({
     id: i + 101,
@@ -49,6 +50,7 @@ export default function Part5(props) {
                         type="radio"
                         name={`part3-question-${dialog.id}`}
                         id={`part3-question-${dialog.id}-option-${option}`}
+                        onChange={() => onAnswerQuestion(dialog.id)}
                       />
                       <label
                         htmlFor={`part3-question-${dialog.id}-option-${option}`}

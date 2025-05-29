@@ -20,6 +20,8 @@ export default function PracticeExam() {
 
   const questionOrder = Array.from({ length: 200 }, (_, i) => i + 1);
   const [activeTab, setActiveTab] = useState("1");
+  const [answeredQuestions, setAnsweredQuestions] = useState({});
+  const [markedQuestions, setMarkedQuestions] = useState([]);
 
   const scrollToQuestion = (id) => {
     const el = questionRefs.current[id];
@@ -28,14 +30,18 @@ export default function PracticeExam() {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
-  const [markedQuestions, setMarkedQuestions] = useState([]);
 
   const toggleMarkQuestion = (id) => {
     setMarkedQuestions((prev) =>
       prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]
     );
   };
-
+  const onAnswerQuestion = (questionId) => {
+    setAnsweredQuestions((prev) => ({
+      ...prev,
+      [questionId]: true,
+    }));
+  };
   const renderPart = () => {
     switch (activeTab) {
       case "1":
@@ -46,6 +52,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       case "2":
@@ -56,6 +63,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       case "3":
@@ -66,6 +74,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       case "4":
@@ -76,6 +85,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       case "5":
@@ -86,6 +96,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       case "6":
@@ -96,6 +107,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       case "7":
@@ -106,6 +118,7 @@ export default function PracticeExam() {
             questionRefs={questionRefs}
             markedQuestions={markedQuestions}
             toggleMarkQuestion={toggleMarkQuestion}
+            onAnswerQuestion={onAnswerQuestion}
           />
         );
       default:
@@ -188,7 +201,7 @@ export default function PracticeExam() {
                   <Button
                     className={`PracticeExam__btnQuestion ${
                       markedQuestions.includes(item) ? "marked" : ""
-                    }`}
+                    } ${answeredQuestions[item] ? "answered" : ""}`}
                     onClick={() => {
                       const part = getPartByQuestion(item);
                       setActiveTab(part);

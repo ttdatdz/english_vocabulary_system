@@ -133,15 +133,24 @@
       border-color: #f66233 !important;
     }
   }
-}
-
-.marked {
-  border: 1px solid #ffbb25 !important;
-  color: #fff !important;
-  background-color: #ffbb25 !important;
-  &:hover {
-    background-color: #ffbb25 !important;
+  .answered {
+    background-color: #f66233 !important;
     color: white !important;
-    border-color: #ffbb25 !important;
+    border-color: #f66233 !important;
+    &:hover {
+      background-color: #f66233 !important;
+      color: white !important;
+      border-color: #f66233 !important;
+    }
+  }
+  .marked {
+    border: 1px solid #ffbb25 !important;
+    color: #fff !important;
+    background-color: #ffbb25 !important;
+    &:hover {
+      background-color: #ffbb25 !important;
+      color: white !important;
+      border-color: #ffbb25 !important;
+    }
   }
 }

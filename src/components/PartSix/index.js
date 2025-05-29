@@ -9,6 +9,7 @@ export default function PartSix(props) {
     questionRefs,
     markedQuestions,
     toggleMarkQuestion,
+    onAnswerQuestion,
   } = props;
   const partSixQuestions = Array.from({ length: 4 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
@@ -81,6 +82,7 @@ Denville Property Management Partners`,
                             type="radio"
                             name={`part3-question-${question.id}`}
                             id={`part3-question-${question.id}-option-${option}`}
+                            onChange={() => onAnswerQuestion(question.id)}
                           />
                           <label
                             htmlFor={`part3-question-${question.id}-option-${option}`}
