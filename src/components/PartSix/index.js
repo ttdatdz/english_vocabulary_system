@@ -3,7 +3,13 @@ import "./PartSix.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
 export default function PartSix(props) {
-  const { activeTab, setActiveTab, questionRefs } = props;
+  const {
+    activeTab,
+    setActiveTab,
+    questionRefs,
+    markedQuestions,
+    toggleMarkQuestion,
+  } = props;
   const partSixQuestions = Array.from({ length: 4 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
     reading: `NOTICE
@@ -55,7 +61,14 @@ Denville Property Management Partners`,
                   ref={(el) => (questionRefs.current[question.id] = el)}
                 >
                   <div className="CardPartSix__container-questionNumber">
-                    <div className="CardPartSix__questionNumber">
+                    <div
+                      className={`CardPartSix__questionNumber ${
+                        markedQuestions.includes(question.id) ? "marked" : ""
+                      }`}
+                      onClick={() => {
+                        toggleMarkQuestion(question.id);
+                      }}
+                    >
                       {question.id}
                     </div>
                   </div>

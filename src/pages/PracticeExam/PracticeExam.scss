@@ -134,3 +134,14 @@
     }
   }
 }
+
+.marked {
+  border: 1px solid #ffbb25 !important;
+  color: #fff !important;
+  background-color: #ffbb25 !important;
+  &:hover {
+    background-color: #ffbb25 !important;
+    color: white !important;
+    border-color: #ffbb25 !important;
+  }
+}

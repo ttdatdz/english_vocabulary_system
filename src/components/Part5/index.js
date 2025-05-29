@@ -3,7 +3,13 @@ import "./Part5.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
 export default function Part5(props) {
-  const { activeTab, setActiveTab, questionRefs } = props;
+  const {
+    activeTab,
+    setActiveTab,
+    questionRefs,
+    markedQuestions,
+    toggleMarkQuestion,
+  } = props;
   const part5Questions = Array.from({ length: 30 }, (_, i) => ({
     id: i + 101,
     question: "Mougey Fine Gifts is known for its large range of _____ goods.",
@@ -22,7 +28,16 @@ export default function Part5(props) {
           <div className="CardPartFive__right">
             <div className="CardPartFive__container-question">
               {/* card câu hỏi*/}
-              <div className="CardPartFive__questionNumber">{dialog.id}</div>
+              <div
+                className={`CardPartFive__questionNumber ${
+                  markedQuestions.includes(dialog.id) ? "marked" : ""
+                }`}
+                onClick={() => {
+                  toggleMarkQuestion(dialog.id);
+                }}
+              >
+                {dialog.id}
+              </div>
               <div>
                 <div className="CardPartFive__questionText">
                   {dialog.question}

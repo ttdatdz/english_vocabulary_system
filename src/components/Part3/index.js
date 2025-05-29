@@ -3,7 +3,13 @@ import "./Part3.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
 export default function Part3(props) {
-  const { activeTab, setActiveTab, questionRefs } = props;
+  const {
+    activeTab,
+    setActiveTab,
+    questionRefs,
+    markedQuestions,
+    toggleMarkQuestion,
+  } = props;
   const part3Questions = Array.from({ length: 13 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
@@ -76,7 +82,14 @@ export default function Part3(props) {
                   className="CardPartThree__questionBlock"
                   ref={(el) => (questionRefs.current[question.id] = el)}
                 >
-                  <div className="CardPartThree__questionNumber">
+                  <div
+                    className={`CardPartThree__questionNumber ${
+                      markedQuestions.includes(question.id) ? "marked" : ""
+                    }`}
+                    onClick={() => {
+                      toggleMarkQuestion(question.id);
+                    }}
+                  >
                     {question.id}
                   </div>
                   <div>

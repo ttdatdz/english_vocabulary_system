@@ -2,7 +2,13 @@ import { Divider } from "antd";
 import "./PartSeven.scss";
 
 export default function PartSeven(props) {
-  const { activeTab, setActiveTab, questionRefs } = props;
+  const {
+    activeTab,
+    setActiveTab,
+    questionRefs,
+    markedQuestions,
+    toggleMarkQuestion,
+  } = props;
   const partSevenQuestions = Array.from({ length: 18 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
     images: [
@@ -75,7 +81,14 @@ export default function PartSeven(props) {
                   ref={(el) => (questionRefs.current[question.id] = el)}
                 >
                   <div className="CardPartSeven__container-questionNumber">
-                    <div className="CardPartSeven__questionNumber">
+                    <div
+                      className={`CardPartSeven__questionNumber ${
+                        markedQuestions.includes(question.id) ? "marked" : ""
+                      }`}
+                      onClick={() => {
+                        toggleMarkQuestion(question.id);
+                      }}
+                    >
                       {question.id}
                     </div>
                   </div>

@@ -3,7 +3,13 @@ import "./Part1.scss";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
 export default function Part1(props) {
-  const { activeTab, setActiveTab, questionRefs } = props;
+  const {
+    activeTab,
+    setActiveTab,
+    questionRefs,
+    markedQuestions,
+    toggleMarkQuestion,
+  } = props;
 
   const part1Questions = [
     {
@@ -73,13 +79,18 @@ export default function Part1(props) {
               <audio
                 controls
                 src={question.audio}
-                style={{ marginTop: "10px" }}
+                style={{ marginTop: "10px", width: "100%" }}
               />
             </div>
             <div className="CardPartOne__right">
               <div
-                className="CardPartOne__questionNumber"
+                className={`CardPartOne__questionNumber ${
+                  markedQuestions.includes(question.id) ? "marked" : ""
+                }`}
                 ref={(el) => (questionRefs.current[question.id] = el)}
+                onClick={() => {
+                  toggleMarkQuestion(question.id);
+                }}
               >
                 {question.id}
               </div>
