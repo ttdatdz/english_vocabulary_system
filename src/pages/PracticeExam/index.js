@@ -1,7 +1,7 @@
 import { Button } from "antd";
 import "./PracticeExam.scss";
 import Part1 from "../../components/Part1";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Tabs } from "antd";
 import Part2 from "../../components/Part2";
 import Part3 from "../../components/Part3";
@@ -10,6 +10,7 @@ import Part5 from "../../components/Part5";
 import PartSix from "../../components/PartSix";
 import PartSeven from "../../components/PartSeven";
 import { useLocation } from "react-router-dom";
+import moment from "moment";
 const { TabPane } = Tabs;
 
 export default function PracticeExam() {
@@ -23,6 +24,11 @@ export default function PracticeExam() {
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
+
+  // cuộn lên đầu trang
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   //useLocation giúp bạn lấy thông tin về route hiện tại, đặc biệt là lấy lại dữ liệu đã truyền qua navigate bằng thuộc tính state.
   const location = useLocation();
   const {
@@ -31,6 +37,60 @@ export default function PracticeExam() {
     mode = "fulltest",
   } = location.state || {};
 
+  // Tính thời gian làm bài
+  let displayTime;
+  if (mode === "fulltest") {
+    displayTime = 120; // 120 phút cho full test
+  } else {
+    displayTime = practiceTime > 0 ? practiceTime : null; // null = vô hạn
+  }
+
+  //Biến lưu trữ số giây còn lại
+  const [secondsLeft, setSecondsLeft] = useState(
+    displayTime ? displayTime * 60 : null
+  );
+  //thời gian đã trôi qua
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // useEffect cho timer
+  useEffect(() => {
+    if (secondsLeft === null) return; // Không giới hạn thời gian
+    if (secondsLeft <= 0) {
+      // Hết giờ, xử lý nộp bài hoặc thông báo ở đây
+      alert("Hết thời gian làm bài!");
+      // Bạn có thể tự động gọi hàm nộp bài ở đây nếu muốn
+      return;
+    }
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => prev - 1);
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [secondsLeft]);
+
+  useEffect(() => {
+    if (displayTime !== null) return; // Chỉ chạy khi không giới hạn thời gian
+    const timer = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [displayTime]);
+  //Hàm format thời gian
+  const formatTime = (secondsLeft) => {
+    const m = Math.floor(secondsLeft / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (secondsLeft % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+  const formatElapsed = (seconds) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
   const scrollToQuestion = (id) => {
     const el = questionRefs.current[id];
     if (el) {
@@ -212,8 +272,15 @@ export default function PracticeExam() {
           </div>
           <div className="PracticeExam__content-right">
             <p className="PracticeExam__practiceTime">
-              Thời gian làm bài:{" "}
-              <strong style={{ fontSize: "19px" }}> 05:20s</strong>
+              {displayTime === null
+                ? "Thời gian làm bài :"
+                : "Thời gian còn lại :"}{" "}
+              <strong style={{ fontSize: "19px" }}>
+                {" "}
+                {displayTime === null
+                  ? `${formatElapsed(elapsedSeconds)}`
+                  : `${formatTime(secondsLeft)}`}
+              </strong>
             </p>
             <Button className="PracticeExam__btnSubmit">Nộp bài</Button>
             <p className="PracticeExam__note">

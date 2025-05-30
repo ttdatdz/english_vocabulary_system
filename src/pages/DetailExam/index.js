@@ -10,7 +10,6 @@ export default function DetailExam() {
   const [activeTab, setActiveTab] = useState("1");
   const [selectedParts, setSelectedParts] = useState([]);
   const [practiceTime, setPracticeTime] = useState(0);
-  const [isStarted, setIsStarted] = useState(false);
   const navigate = useNavigate();
   const columns = [
     {
@@ -126,14 +125,6 @@ export default function DetailExam() {
     setPracticeTime(Number(value));
   };
   console.log(">>>>>>>>>>check PracticeTime", practiceTime);
-  const handleStartPractice = (e) => {
-    e.preventDefault();
-    if (selectedParts.length === 0) {
-      alert("Hãy chọn ít nhất một Part!");
-      return;
-    }
-    setIsStarted(true);
-  };
   const renderTopicList = () => {
     switch (activeTab) {
       case "1":
