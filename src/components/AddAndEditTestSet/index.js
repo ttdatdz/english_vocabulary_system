@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import "./AddAndEditCategory.scss";
+import "./AddAndEditTestSet.scss";
 import { Button, Form, Input } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 
-export default function AddAndEditCategory(props) {
+export default function AddAndEditTestSet(props) {
   const { onOK, confirmLoading, initialValues } = props;
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
@@ -43,10 +43,10 @@ export default function AddAndEditCategory(props) {
         disabled={!isEditing && initialValues}
       >
         <Form.Item
-          label="Tên danh mục"
+          label="Tên bộ đề"
           name="title"
           wrapperCol={{ span: 18 }}
-          rules={[{ required: true, message: "Vui lòng nhập tên danh mục!" }]}
+          rules={[{ required: true, message: "Vui lòng nhập tên bộ đề!" }]}
         >
           <Input />
         </Form.Item>

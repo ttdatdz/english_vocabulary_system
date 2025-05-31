@@ -2,6 +2,7 @@ import { DashboardOutlined, UserOutlined } from "@ant-design/icons";
 import { IoNewspaperOutline } from "react-icons/io5";
 import { HiOutlineServerStack } from "react-icons/hi2";
 import { BiCategory } from "react-icons/bi";
+import { GoStack } from "react-icons/go";
 import { Menu } from "antd";
 import "./MenuSider.scss";
 import { Link } from "react-router-dom";
@@ -32,6 +33,11 @@ export default function MenuSider(props) {
       key: "sub5",
       label: <Link to={"BlogCategoryManagement"}>Category Management</Link>,
       icon: <BiCategory style={{ fontSize: "15px" }} />,
+    },
+    {
+      key: "sub6",
+      label: <Link to={"TestSetManagement"}>Test Set Management</Link>,
+      icon: <GoStack style={{ fontSize: "15px" }} />,
     },
   ];
   return (

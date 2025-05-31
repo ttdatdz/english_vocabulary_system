@@ -21,6 +21,7 @@ import PracticeFlashCard from "../pages/PracticeFlashCard";
 import DetailExam from "../pages/DetailExam";
 import PracticeExam from "../pages/PracticeExam";
 import BlogCategoryManagent from "../pages/BlogCategoryManagement";
+import TestSetManagement from "../pages/TestSetManagement";
 
 function MainRoutes() {
   return (
@@ -60,6 +61,7 @@ function MainRoutes() {
             path="BlogCategoryManagement"
             element={<BlogCategoryManagent />}
           />
+          <Route path="TestSetManagement" element={<TestSetManagement />} />
         </Route>
         {/* Route cho trang Forbidden*/}
         {/* <Route path="/forbidden" element={<Forbidden />} /> */}
