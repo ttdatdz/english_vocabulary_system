@@ -20,6 +20,7 @@ import DetailListFalshCard from "../pages/DetailListFlashCard";
 import PracticeFlashCard from "../pages/PracticeFlashCard";
 import DetailExam from "../pages/DetailExam";
 import PracticeExam from "../pages/PracticeExam";
+import BlogCategoryManagent from "../pages/BlogCategoryManagement";
 
 function MainRoutes() {
   return (
@@ -55,6 +56,10 @@ function MainRoutes() {
           <Route path="BlogManagement" element={<BlogManagement />} />
           <Route path="ToeicTestManagement" element={<ToeicTestManagement />} />
           <Route path="PersonalInformation" element={<PersonalInformation />} />
+          <Route
+            path="BlogCategoryManagement"
+            element={<BlogCategoryManagent />}
+          />
         </Route>
         {/* Route cho trang Forbidden*/}
         {/* <Route path="/forbidden" element={<Forbidden />} /> */}
