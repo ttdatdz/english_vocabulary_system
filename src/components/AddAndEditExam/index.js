@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import "./AddTopicForm.scss";
 import { Button, Form, Input, Select } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 const { Option } = Select;
 export default function AddAndEditExam(props) {
   const { onOK, confirmLoading, initialValues } = props;
   const [form] = Form.useForm();
-
+  const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
     form.setFieldsValue({
       title: initialValues?.testName || "", // giả sử `title` là tên
@@ -34,6 +35,17 @@ export default function AddAndEditExam(props) {
     setSelectedFile(file);
     form.setFieldsValue({ file });
   };
+
+  const onCancel = () => {
+    setIsEditing(false);
+    form.setFieldsValue({
+      title: initialValues?.testName || "",
+      collection: initialValues?.examSet || "",
+      duration: initialValues?.duration || "",
+      file: null,
+    });
+    setSelectedFile(null);
+  };
   return (
     <>
       <Form
@@ -46,6 +58,7 @@ export default function AddAndEditExam(props) {
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
+        disabled={!isEditing && initialValues}
       >
         <Form.Item
           label="Tên đề"
@@ -79,35 +92,54 @@ export default function AddAndEditExam(props) {
           name="file"
           rules={[{ required: true, message: "Vui lòng import câu hỏi!" }]}
         >
-          <Button onClick={() => fileInputRef.current.click()} type="default">
-            Chọn file
-          </Button>
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-          {selectedFile && (
-            <div style={{ marginTop: 8, color: "#1890ff" }}>
-              Đã chọn: {selectedFile.name}
-            </div>
-          )}
-        </Form.Item>
-        <Form.Item>
-          <div style={{ display: "flex", justifyContent: "end" }}>
-            <Button
-              loading={confirmLoading}
-              className="UserForm__Accept"
-              type="primary"
-              htmlType="submit"
-            >
-              Xác nhận
+          <div>
+            <Button onClick={() => fileInputRef.current.click()} type="default">
+              Chọn file
             </Button>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+            {selectedFile && (
+              <div style={{ marginTop: 8, color: "#1890ff" }}>
+                Đã chọn: {selectedFile.name}
+              </div>
+            )}
           </div>
         </Form.Item>
+        {isEditing && (
+          <Form.Item
+            wrapperCol={{ offset: 8, span: 24 }} // canh thẳng hàng với input
+          >
+            <div className="UserForm__Contain-Button">
+              <Button className="UserForm__Cancel" danger onClick={onCancel}>
+                Hủy
+              </Button>
+              <Button
+                loading={confirmLoading}
+                className="UserForm__Accept"
+                type="primary"
+                htmlType="submit"
+              >
+                Xác nhận
+              </Button>
+            </div>
+          </Form.Item>
+        )}
       </Form>
+
+      {!isEditing && initialValues && (
+        <Button
+          className="ButtonIsEdit"
+          icon={<EditOutlined />}
+          onClick={() => setIsEditing(true)}
+        >
+          Chỉnh sửa thông tin
+        </Button>
+      )}
     </>
   );
 }

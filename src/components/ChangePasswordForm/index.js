@@ -44,9 +44,9 @@ export default function ChangePasswordForm() {
   return (
     <>
       <Form
-        className="PersonalInformationForm"
+        className="ChangePasswordForm"
         form={form}
-        name="basic"
+        name="ChangePasswordForm"
         labelAlign="left"
         labelCol={{ span: 7 }}
         wrapperCol={{ span: 17 }}
