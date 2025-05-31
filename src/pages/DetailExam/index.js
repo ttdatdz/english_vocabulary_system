@@ -114,11 +114,16 @@ export default function DetailExam() {
     { number: 7, title: "Part 7", questions: 54 },
   ];
   const handlePartChange = (partNumber) => {
-    setSelectedParts((prev) =>
-      prev.includes(partNumber)
-        ? prev.filter((p) => p !== partNumber)
-        : [...prev, partNumber]
-    );
+    setSelectedParts((prev) => {
+      let newParts;
+      if (prev.includes(partNumber)) {
+        newParts = prev.filter((p) => p !== partNumber);
+      } else {
+        newParts = [...prev, partNumber];
+      }
+      // Sắp xếp tăng dần
+      return newParts.sort((a, b) => a - b);
+    });
   };
   console.log(">>>>>>>>>>check selectedParts", selectedParts);
   const handleTimeChange = (value) => {

@@ -12,6 +12,9 @@ export default function Part5(props) {
     onAnswerQuestion,
     saveUserAnswer,
     userAnswers,
+    selectedParts,
+    mode,
+    goToNextPart,
   } = props;
   const part5Questions = Array.from({ length: 30 }, (_, i) => ({
     id: i + 101,
@@ -74,24 +77,30 @@ export default function Part5(props) {
           {dialog.id !== 130 ? (
             <Divider className="PartFive__divider" />
           ) : (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "end",
-                width: "100%",
-              }}
-            >
-              <Button
-                className="btnNext"
-                onClick={() => {
-                  setActiveTab("6");
-                  window.scrollTo({ top: 0, behavior: "smooth" }); // khi chuyển tab xong thì cuộn lên đầu trang
+            // Chỉ hiện nút nếu activeTab KHÔNG phải là phần tử cuối cùng trong selectedParts
+            selectedParts[selectedParts.length - 1] !== Number(activeTab) && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "end",
+                  width: "100%",
                 }}
               >
-                Tiếp theo
-                <ArrowRightOutlined className="iconNext" />
-              </Button>
-            </div>
+                <Button
+                  className="btnNext"
+                  onClick={() => {
+                    goToNextPart({
+                      selectedParts,
+                      activeTab,
+                      setActiveTab,
+                      mode,
+                    });
+                  }}
+                >
+                  Tiếp theo <ArrowRightOutlined />
+                </Button>
+              </div>
+            )
           )}
         </div>
       ))}

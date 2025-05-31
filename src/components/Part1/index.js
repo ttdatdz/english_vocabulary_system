@@ -12,6 +12,9 @@ export default function Part1(props) {
     onAnswerQuestion,
     saveUserAnswer,
     userAnswers,
+    selectedParts,
+    mode,
+    goToNextPart,
   } = props;
 
   const part1Questions = [
@@ -132,19 +135,30 @@ export default function Part1(props) {
           {question.id !== 6 ? (
             <Divider className="Part1__divider" />
           ) : (
-            <div
-              style={{ display: "flex", justifyContent: "end", width: "100%" }}
-            >
-              <Button
-                className="btnNext"
-                onClick={() => {
-                  setActiveTab("2");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+            // Chỉ hiện nút nếu activeTab KHÔNG phải là phần tử cuối cùng trong selectedParts
+            selectedParts[selectedParts.length - 1] !== Number(activeTab) && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "end",
+                  width: "100%",
                 }}
               >
-                Tiếp theo <ArrowRightOutlined />
-              </Button>
-            </div>
+                <Button
+                  className="btnNext"
+                  onClick={() => {
+                    goToNextPart({
+                      selectedParts,
+                      activeTab,
+                      setActiveTab,
+                      mode,
+                    });
+                  }}
+                >
+                  Tiếp theo <ArrowRightOutlined />
+                </Button>
+              </div>
+            )
           )}
         </div>
       ))}

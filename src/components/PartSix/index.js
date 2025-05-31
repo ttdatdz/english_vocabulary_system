@@ -12,6 +12,9 @@ export default function PartSix(props) {
     onAnswerQuestion,
     saveUserAnswer,
     userAnswers,
+    selectedParts,
+    mode,
+    goToNextPart,
   } = props;
   const partSixQuestions = Array.from({ length: 4 }, (_, i) => ({
     id: i, // đoạn hội thoại thứ i
@@ -108,24 +111,30 @@ Denville Property Management Partners`,
           {dialog.id !== partSixQuestions.length - 1 ? (
             <Divider className="PartSix__divider" />
           ) : (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "end",
-                width: "100%",
-              }}
-            >
-              <Button
-                className="btnNext"
-                onClick={() => {
-                  setActiveTab("7");
-                  window.scrollTo({ top: 0, behavior: "smooth" }); // khi chuyển tab xong thì cuộn lên đầu trang
+            // Chỉ hiện nút nếu activeTab KHÔNG phải là phần tử cuối cùng trong selectedParts
+            selectedParts[selectedParts.length - 1] !== Number(activeTab) && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "end",
+                  width: "100%",
                 }}
               >
-                Tiếp theo
-                <ArrowRightOutlined className="iconNext" />
-              </Button>
-            </div>
+                <Button
+                  className="btnNext"
+                  onClick={() => {
+                    goToNextPart({
+                      selectedParts,
+                      activeTab,
+                      setActiveTab,
+                      mode,
+                    });
+                  }}
+                >
+                  Tiếp theo <ArrowRightOutlined />
+                </Button>
+              </div>
+            )
           )}
         </div>
       ))}

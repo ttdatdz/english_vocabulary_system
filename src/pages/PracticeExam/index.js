@@ -20,7 +20,6 @@ export default function PracticeExam() {
   // Khi lưu object hoặc DOM element,.current giữ một tham chiếu đến giá trị gốc, tức là thay đổi giá trị gốc ở nơi khác thì .current cũng thấy thay đổi, và ngược lại.
   const questionRefs = useRef({});
 
-  const [activeTab, setActiveTab] = useState("1");
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
@@ -37,6 +36,27 @@ export default function PracticeExam() {
     mode = "fulltest",
   } = location.state || {};
 
+  const [activeTab, setActiveTab] = useState(
+    selectedParts.length > 0 ? selectedParts[0].toString() : "1"
+  );
+  useEffect(() => {
+    if (selectedParts.length > 0) {
+      setActiveTab(selectedParts[0].toString());
+    }
+  }, [selectedParts]);
+  // hàm chuyển qua part tiếp theo
+  function goToNextPart({ selectedParts, activeTab, setActiveTab, mode }) {
+    if (mode === "fulltest") {
+      setActiveTab((prev) => (Number(prev) + 1).toString());
+    } else {
+      const currentIndex = selectedParts.indexOf(Number(activeTab));
+      const nextPart = selectedParts[currentIndex + 1];
+      if (nextPart) {
+        setActiveTab(nextPart.toString());
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   // Tính thời gian làm bài
   let displayTime;
   if (mode === "fulltest") {
@@ -128,6 +148,9 @@ export default function PracticeExam() {
             onAnswerQuestion={onAnswerQuestion}
             saveUserAnswer={saveUserAnswer}
             userAnswers={userAnswers}
+            selectedParts={selectedParts}
+            mode={mode}
+            goToNextPart={goToNextPart}
           />
         );
       case "2":
@@ -141,6 +164,9 @@ export default function PracticeExam() {
             onAnswerQuestion={onAnswerQuestion}
             saveUserAnswer={saveUserAnswer}
             userAnswers={userAnswers}
+            selectedParts={selectedParts}
+            mode={mode}
+            goToNextPart={goToNextPart}
           />
         );
       case "3":
@@ -154,6 +180,9 @@ export default function PracticeExam() {
             onAnswerQuestion={onAnswerQuestion}
             saveUserAnswer={saveUserAnswer}
             userAnswers={userAnswers}
+            selectedParts={selectedParts}
+            mode={mode}
+            goToNextPart={goToNextPart}
           />
         );
       case "4":
@@ -167,6 +196,9 @@ export default function PracticeExam() {
             onAnswerQuestion={onAnswerQuestion}
             saveUserAnswer={saveUserAnswer}
             userAnswers={userAnswers}
+            selectedParts={selectedParts}
+            mode={mode}
+            goToNextPart={goToNextPart}
           />
         );
       case "5":
@@ -180,6 +212,9 @@ export default function PracticeExam() {
             onAnswerQuestion={onAnswerQuestion}
             saveUserAnswer={saveUserAnswer}
             userAnswers={userAnswers}
+            selectedParts={selectedParts}
+            mode={mode}
+            goToNextPart={goToNextPart}
           />
         );
       case "6":
@@ -193,6 +228,9 @@ export default function PracticeExam() {
             onAnswerQuestion={onAnswerQuestion}
             saveUserAnswer={saveUserAnswer}
             userAnswers={userAnswers}
+            selectedParts={selectedParts}
+            mode={mode}
+            goToNextPart={goToNextPart}
           />
         );
       case "7":
