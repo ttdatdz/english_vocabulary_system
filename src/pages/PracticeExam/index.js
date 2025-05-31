@@ -39,11 +39,13 @@ export default function PracticeExam() {
   const [activeTab, setActiveTab] = useState(
     selectedParts.length > 0 ? selectedParts[0].toString() : "1"
   );
+
   useEffect(() => {
     if (selectedParts.length > 0) {
       setActiveTab(selectedParts[0].toString());
     }
   }, [selectedParts]);
+
   // hàm chuyển qua part tiếp theo
   function goToNextPart({ selectedParts, activeTab, setActiveTab, mode }) {
     if (mode === "fulltest") {

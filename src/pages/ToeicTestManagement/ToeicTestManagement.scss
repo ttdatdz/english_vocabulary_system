@@ -1,0 +1,13 @@
+.ToeicTestManagement {
+  //   margin-bottom: 67px;
+}
+.FindInformation {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  .filter {
+    margin-bottom: 20px;
+    height: 40px;
+    width: 15%;
+  }
+}

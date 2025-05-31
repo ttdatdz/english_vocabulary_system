@@ -1,81 +1,80 @@
 .Header {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0px;
+
+  &__logo {
+    width: 230px;
+    // height: 100px;
     display: flex;
+    justify-content: center;
     align-items: center;
-    background-color: #FFFFFF;
-    border-bottom: 1px solid #E0E0E0;
-    padding: 0px;
+    padding: 5px 0px;
+    cursor: pointer;
+    border-right: 1px solid #ddd;
+    transition: all 0.2s;
 
-    &__logo {
-        width: 230px;
-        // height: 100px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 5px 0px;
-        cursor: pointer;
-        border-right: 1px solid #ddd;
-        transition: all 0.2s;
-
-        &--collapsed {
-            width: 80px;
-            transition: all 0.2s;
-        }
-
-        // img {
-        //     width: 140px;
-        //     height: auto;
-        // }
+    &--collapsed {
+      width: 80px;
+      transition: all 0.2s;
     }
 
-    &__imgLogo {
-        width: 140px;
-        height: auto;
+    // img {
+    //     width: 140px;
+    //     height: auto;
+    // }
+  }
 
-        &--collapsed {
-            width: 70px;
-            height: auto;
-        }
+  &__imgLogo {
+    width: 140px;
+    height: auto;
+
+    &--collapsed {
+      width: 70px;
+      height: auto;
     }
+  }
 
-    &__Nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        flex: 1
-    }
+  &__Nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    flex: 1;
+  }
 
-    &__collapse {
-        font-size: 18px;
-        padding: 5px 15px;
-        cursor: pointer;
-    }
+  &__collapse {
+    font-size: 18px;
+    padding: 5px 15px;
+    cursor: pointer;
+  }
 
-    &__account-avatar {
-        width: 70px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 5px 0px;
-        cursor: pointer;
+  &__account-avatar {
+    width: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0px;
+    cursor: pointer;
 
-        // img {
-        //     width: 40px;
-        //     height: auto;
-        //     border-radius: 50%;
-        // }
-    }
-
+    // img {
+    //     width: 40px;
+    //     height: auto;
+    //     border-radius: 50%;
+    // }
+  }
 }
 
 .Content {
-    padding: 20px;
-    background-color: #F9FBFD;
+  padding: 20px;
+  padding-bottom: 52px;
+  background-color: #f9fbfd;
 }
 
 .Sider {
-    border-right: 1px solid #ddd;
-    display: flex;
-    justify-content: center;
-
+  border-right: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
 }
