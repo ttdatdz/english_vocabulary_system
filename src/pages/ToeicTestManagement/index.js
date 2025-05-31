@@ -1,19 +1,19 @@
 import { useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import "./ToeicTestManagement.scss";
-import { Input, Select } from "antd";
+import { Button, Input, Select } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
-import DetailUserForm from "../../components/DetailUserForm";
 import BaseTable from "../../components/BaseTable";
 import { confirmDelete } from "../../utils/alertHelper";
+import AddAndEditExam from "../../components/AddAndEditExam";
 export default function ToeicTestManagement() {
-  const [selectedUser, setSelectedUser] = useState(null); // lấy thông tin người dùng đưa vào modal
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
+  const [detailingExam, setDetailingExam] = useState(null);
   const showModal = (record) => {
-    setSelectedUser(record);
+    setDetailingExam(record);
     setOpen(true);
   };
   const handleOk = () => {
@@ -26,7 +26,6 @@ export default function ToeicTestManagement() {
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedUser(null);
   };
   const columns = [
     {
@@ -129,27 +128,37 @@ export default function ToeicTestManagement() {
   const handleChange = (value) => {
     console.log(`selected ${value}`);
   };
+  console.log(">>>>.check detailingExam", detailingExam);
   return (
     <div className="ToeicTestManagement">
       <h2 className="PageTitle">Toiec test Management</h2>
-      <div className="FindInformation">
-        <Input
-          className="SearchBar"
-          suffix={<SearchOutlined />}
-          placeholder="Nhập tên bài thi cần tìm"
-          allowClear
-        />
-        <Select
-          defaultValue="Tất cả"
-          placeholder="Lọc theo bộ đề"
-          onChange={handleChange}
-          options={[
-            { value: "ETS2024", label: "ETS 2024" },
-            { value: "ETS2023", label: "ETS 2023" },
-            { value: "All", label: "Tất cả" },
-          ]}
-          className="filter"
-        />
+      <div className="ToeicTestManagement__header">
+        <div className="FindInformation">
+          <Input
+            className="SearchBar SearchBar--size"
+            suffix={<SearchOutlined />}
+            placeholder="Nhập tên bài thi cần tìm"
+            allowClear
+          />
+          <Select
+            // defaultValue="Tất cả"
+            placeholder="Lọc theo bộ đề"
+            onChange={handleChange}
+            options={[
+              { value: "ETS2024", label: "ETS 2024" },
+              { value: "ETS2023", label: "ETS 2023" },
+              { value: "All", label: "Tất cả" },
+            ]}
+            className="filter"
+          />
+        </div>
+        <Button
+          type="primary"
+          className="create-topic-button create-topic-button--size"
+          onClick={() => showModal(null)}
+        >
+          + Thêm
+        </Button>
       </div>
       <BaseTable columns={columns} data={data} onChange={onChange} />
 
@@ -158,13 +167,15 @@ export default function ToeicTestManagement() {
         onCancel={handleClose}
         title={
           <div style={{ fontSize: 24, fontWeight: "bold" }}>
-            Chi tiết người dùng
+            {detailingExam ? "Chi tiết đề thi" : "Thêm đề thi"}
           </div>
         }
       >
-        {selectedUser ? (
-          <DetailUserForm onOk={handleOk} confirmLoading={confirmLoading} />
-        ) : null}
+        <AddAndEditExam
+          onOK={handleOk}
+          confirmLoading={confirmLoading}
+          initialValues={detailingExam}
+        />
       </BaseModal>
     </div>
   );
