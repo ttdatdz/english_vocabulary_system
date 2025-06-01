@@ -22,6 +22,7 @@ import DetailExam from "../pages/DetailExam";
 import PracticeExam from "../pages/PracticeExam";
 import BlogCategoryManagent from "../pages/BlogCategoryManagement";
 import TestSetManagement from "../pages/TestSetManagement";
+import FeedbackManagement from "../pages/FeedbackManagement";
 
 function MainRoutes() {
   return (
@@ -62,6 +63,7 @@ function MainRoutes() {
             element={<BlogCategoryManagent />}
           />
           <Route path="TestSetManagement" element={<TestSetManagement />} />
+          <Route path="FeedbackManagement" element={<FeedbackManagement />} />
         </Route>
         {/* Route cho trang Forbidden*/}
         {/* <Route path="/forbidden" element={<Forbidden />} /> */}

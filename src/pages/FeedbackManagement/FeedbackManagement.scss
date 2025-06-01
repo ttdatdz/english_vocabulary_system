@@ -1,0 +1,23 @@
+.TestSetManagement {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .create-topic-button--size {
+    margin-bottom: 20px;
+    height: 40px;
+    width: 150px;
+    font-weight: 500;
+    font-size: 16px;
+  }
+}
+.FindInformation {
+  width: 80%;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  .SearchBar--size {
+    width: 40%;
+  }
+}

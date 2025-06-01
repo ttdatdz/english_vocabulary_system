@@ -1,0 +1,83 @@
+.DetailFeedbackForm {
+  &__info {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 24px 16px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    transition: box-shadow 0.2s;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 17px;
+    margin-bottom: 10px;
+
+    strong {
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+    div:last-child {
+      color: #888;
+      font-size: 14px;
+    }
+  }
+
+  &__content {
+    margin: 14px 0 8px 0;
+    font-size: 15px;
+    color: #222;
+    line-height: 1.7;
+  }
+
+  &__image {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start;
+    // img {
+    //   border: 1px solid #e0e0e0;
+    //   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+    //   background: #fff;
+    //   border-radius: 8px;
+    //   max-width: 120px;
+    //   max-height: 120px;
+    //   object-fit: cover;
+    //   transition: transform 0.2s;
+    //   &:hover {
+    //     transform: scale(1.05);
+    //     box-shadow: 0 4px 16px rgba(22, 119, 255, 0.13);
+    //   }
+    // }
+  }
+
+  &__reply {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 24px 16px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    label {
+      font-weight: 600;
+      display: block;
+      font-size: 17px;
+    }
+    .ant-input-textarea {
+      margin-bottom: 10px;
+      background-color: #ff6a4d !important;
+    }
+    .ant-form-item-label > label {
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+}

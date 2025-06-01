@@ -39,6 +39,11 @@ export default function MenuSider(props) {
       label: <Link to={"TestSetManagement"}>Test Set Management</Link>,
       icon: <GoStack style={{ fontSize: "15px" }} />,
     },
+    {
+      key: "sub7",
+      label: <Link to={"FeedbackManagement"}>Feedback Management</Link>,
+      icon: <GoStack style={{ fontSize: "15px" }} />,
+    },
   ];
   return (
     <Menu
