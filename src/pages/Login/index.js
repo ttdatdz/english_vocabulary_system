@@ -8,10 +8,12 @@ import axios from "axios";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from '../../utils/AuthContext';
 
 export default function Login() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
 
     const onFinish = async (values) => {
         try {
@@ -24,14 +26,11 @@ export default function Login() {
             );
 
             if (data?.accessToken) {
-                localStorage.setItem("accessToken", data.accessToken);
-                localStorage.setItem("renewalToken", data.renewalToken);
-                localStorage.setItem("userId", data.userId);
-                localStorage.setItem("accountName", data.accountName);
-                localStorage.setItem("role", data.role);
-
+                login(data); // cập nhật context
                 message.success("Đăng nhập thành công!");
-                navigate("/");
+                if (data.role != "ADMIN")
+                    navigate("/");
+                else navigate("/admin");
             } else {
                 message.error("Đăng nhập thất bại!");
             }

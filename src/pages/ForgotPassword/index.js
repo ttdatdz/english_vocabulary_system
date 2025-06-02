@@ -1,11 +1,22 @@
 import "./ForgotPassword.scss";
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Button, message } from 'antd';
 import { Link } from "react-router-dom";
 import { IoMdArrowBack } from "react-icons/io";
+import { post } from "../../utils/request";
 
 export default function ForgotPassword() {
-    const onFinish = (values) => {
-        console.log('Success:', values);
+    const onFinish = async (values) => {
+        console.log(values.accountName);
+        const data = await post({
+            email: values.email,
+            accountName: values.accountName
+        },
+            "api/user/forgot-password"
+        );
+        if (data?.success)
+            message.success("Đã gửi mã xác nhận đến email được đăng ký!")
+        else
+        message.error("Lỗi khi gửi email.")
     };
     return (
         <>
@@ -23,7 +34,7 @@ export default function ForgotPassword() {
                             className="ForgotPassword-page__form"
                         >
                             <Form.Item
-                                name="username"
+                                name="accountName"
                                 className="ForgotPassword-page__form-item"
                                 rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
                             >

@@ -38,6 +38,7 @@ function MainRoutes() {
           <Route path="VocabularyTopics" element={<VocabularyTopic />} />
           <Route path="ToiecTests" element={<ToeicTests />} />
           <Route path="Blogs" element={<Blogs />} />
+          <Route path="PersonalInformation" element={<PersonalInformation />} />
           <Route
             path="VocabularyTopics/DetailTopic"
             element={<DetailTopic />}
@@ -46,7 +47,6 @@ function MainRoutes() {
             path="VocabularyTopics/DetailTopic/DetailListFlashCard"
             element={<DetailListFalshCard />}
           />
-          <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="DetailExam" element={<DetailExam />} />
           <Route path="PracticeExam" element={<PracticeExam />} />
         </Route>

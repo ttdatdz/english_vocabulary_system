@@ -6,13 +6,27 @@ import { Button, Layout } from 'antd';
 import Logo from '../../assets/images/logo.jpg';
 import { Link, Outlet } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { Dropdown, Menu } from "antd";
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../utils/AuthContext';
+import AccountAvatar from '../../components/AccountAvatar';
+
 const { Header, Footer, Content } = Layout;
 function CustomerLayout() {
     const navigate = useNavigate();
 
+    console.log(localStorage.getItem("accessToken"));
+
+    const { user, logout } = useAuth();
+
     const handleLogin = () => {
         navigate('/login'); // điều hướng không reload trang
     };
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/login");
+    };
+
     const handleClick = () => {
         navigate('/');
     }
@@ -29,7 +43,14 @@ function CustomerLayout() {
                         <Link to={"/VocabularyTopics"} className='Header-Customer__NavItem'>Flashcards</Link>
                         <Link to={"/Blogs"} className='Header-Customer__NavItem'>Blog</Link>
                         <Link to={"/Feedback"} className='Header-Customer__NavItem'>Đánh giá</Link>
-                        <Button className='Header-Customer__btnLogin' onClick={handleLogin}>Đăng nhập</Button>
+                        {user ? (
+                            <AccountAvatar />
+                        ) : (
+                            <Button className="Header-Customer__btnLogin" onClick={handleLogin}>
+                                Đăng nhập
+                            </Button>
+                        )}
+                        {/* <Button className='Header-Customer__btnLogin' onClick={handleLogin}>Đăng nhập</Button> */}
                     </div>
                 </div>
             </Header>

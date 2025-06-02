@@ -1,8 +1,13 @@
+import { message } from "antd";
+
 const API_DOMAIN = "http://143.198.83.161/"
 
 export const get = async (path) => {
     try {
-        const response = await fetch(API_DOMAIN + path);
+        const response = await fetch(API_DOMAIN + path, {
+            method: "GET",
+            headers: getAuthHeaders(),
+        });
         if (!response.ok) {
             // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
             throw new Error(`Lỗi: ${response.status}`);
@@ -14,36 +19,89 @@ export const get = async (path) => {
     }
 
 }
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("accessToken");
+    return {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+    };
+};
 
-export const post = async (values, path) => {
+export const getWithParams = async (path, params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const url = API_DOMAIN + path + (query ? `?${query}` : "");
+
     try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error(`Error: ${response}`);
+        return await response.json();
+    } catch (error) {
+        console.log(`Error: ${error.message}`);
+    }
+};
+
+export const post = async (values, path, auth = false) => {
+    try {
+        const headers = {
+            "Content-type": "application/json",
+            Accept: "application/json",
+        }
+        if (auth) {
+            const token = localStorage.getItem("accessToken");
+            if (token) headers.Authorization = `Bearer ${token}`;
+        }
         const response = await fetch(API_DOMAIN + path, {
             method: 'POST',
-            headers: { //Xác định kiểu dữ liệu gửi và mong muốn nhận
-                'Content-type': 'application/json', // cái kiểu data gửi cho server sẽ là dạng json
-                Accept: 'application/json' //cho server biết cái data mình mong muốn mà server trả về có định dạng json
-            },
+            headers,
             body: JSON.stringify(values) //nơi chứa data để gửi lên server. Trước khi gửi phải chuyển nó qua dạng json
         });
         if (!response.ok) {
             // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-            throw new Error(`Lỗi: ${response.status}`);
+            throw new Error(`Lỗi: ${response.message}`);
         }
         const result = await response.json(); // nhận response và chuyển nó lại qua dạng js để dùng
         return result;
     }
     catch (error) {
-        alert(`Lỗi khi gọi API: ${error.message}`); // 🐞 Hiển thị lỗi
+        console.log(`Lỗi khi gọi API: ${error.message}`); // 🐞 Hiển thị lỗi
     }
 }
-export const del = async (path) => {
+
+export const postFormData = async (path, formData) => {
     try {
+        const token = localStorage.getItem("accessToken");
+        const response = await fetch(API_DOMAIN + path, {
+            method: "POST",
+            headers: token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                }
+                : undefined,
+            body: formData
+        });
+        if (!response.ok) throw new Error(`Error: ${response}`);
+        return await response.json();
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+export const del = async (path, auth = false) => {
+    try {
+        const headers = {
+            "Content-type": "application/json",
+            Accept: "application/json",
+        }
+        if (auth) {
+            const token = localStorage.getItem("accessToken");
+            if (token) headers.Authorization = `Bearer ${token}`;
+        }
         const response = await fetch(API_DOMAIN + path, {
             method: 'DELETE',
-            headers: { //Xác định kiểu dữ liệu gửi và mong muốn nhận
-                'Content-type': 'application/json', // cái kiểu data gửi cho server sẽ là dạng json
-                Accept: 'application/json' //cho server biết cái data mình mong muốn mà server trả về có định dạng json
-            },
+            headers,
         });
         if (!response.ok) {
             // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try

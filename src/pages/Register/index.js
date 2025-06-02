@@ -1,11 +1,28 @@
 import "./Register.scss";
 import { Form, Input, Button } from 'antd';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowBack } from "react-icons/io";
 
+import { DatePicker } from 'antd';
+import { post } from "../../utils/request";
+import { useState } from "react";
+
 export default function Register() {
-    const onFinish = (values) => {
-        console.log('Success:', values);
+    const navigate = useNavigate();
+    const onFinish = async (values) => {
+        const dataToSend = {
+            ...values,
+            birthday: values.birthday.format("YYYY-MM-DD"), // chuyển thành chuỗi
+        };
+
+        try {
+            const response = await post(dataToSend, "api/user/register");
+            alert("Đăng ký thành công!");
+            navigate("/Login");
+        } catch (error) {
+            alert("Đăng ký thất bại!");
+            console.error(error);
+        }
     };
     return (
         <>
@@ -37,15 +54,27 @@ export default function Register() {
                             >
                                 <Input className="Register-page__InputUserName" style={{ height: '40px', color: '#ED5F31' }} placeholder="Email" />
                             </Form.Item>
-                            <Form.Item
+                            {/* <Form.Item
                                 name="phoneNumber"
                                 className="Register-page__form-item"
                                 rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
                             >
                                 <Input className="Register-page__InputUserName" style={{ height: '40px', color: '#ED5F31' }} placeholder="Số điện thoại" />
+                            </Form.Item> */}
+                            <Form.Item
+                                name="birthday"
+                                className="Register-page__form-item"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày sinh!' }]}
+                            >
+                                <DatePicker
+                                    className="Register-page__InputUserName"
+                                    style={{ height: '40px', width: '100%', color: '#ED5F31' }}
+                                    placeholder="Chọn ngày sinh"
+                                    format="YYYY-MM-DD"
+                                />
                             </Form.Item>
                             <Form.Item
-                                name="username"
+                                name="accountName"
                                 className="Register-page__form-item"
                                 rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
                             >
@@ -53,7 +82,7 @@ export default function Register() {
                             </Form.Item>
                             <Form.Item
                                 className="login-page__form-item"
-                                name="password"
+                                name="passWord"
                                 rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
                             >
                                 <Input.Password className="login-page__InputPassword" style={{ height: '40px', color: '#ED5F31' }} placeholder="Mật khẩu" />

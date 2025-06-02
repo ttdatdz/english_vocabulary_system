@@ -3,11 +3,21 @@ import { Dropdown, Space } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { MdExitToApp } from "react-icons/md";
 import './AccountAvatar.scss';
+import { useAuth } from "../../utils/AuthContext";
+import { useNavigate } from "react-router-dom";
 export default function AccountAvatar() {
+
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();              // xóa localStorage và reset user
+        navigate("/login");   // chuyển hướng
+    };
     const items = [
         {
             label: (
-                <Link to="PersonalInformation">
+                <Link to="/PersonalInformation">
                     <div className="Item-Dropdown">
                         <UserOutlined className="Item-Dropdown__icon" />
                         Thông tin cá nhân
@@ -18,16 +28,16 @@ export default function AccountAvatar() {
         },
         {
             label: (
-                <Link to="PersonalInformation">
-                    <div className="Item-Dropdown">
-                        <MdExitToApp className="Item-Dropdown__icon" />
-                        Đăng xuất
-                    </div>
-                </Link>
+                <div className="Item-Dropdown" onClick={handleLogout}>
+                    <MdExitToApp className="Item-Dropdown__icon" />
+                    Đăng xuất
+                </div>
             ),
             key: '1',
         },
     ];
+
+
     return (
         <Dropdown menu={{ items }} trigger={['click']}>
             <a className="AccountAvatar" onClick={e => e.preventDefault()}>
