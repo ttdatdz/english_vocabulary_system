@@ -1,5 +1,6 @@
 import "./PersonalInformationForm.scss";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getWithParams , put} from "../../utils/request";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import {
   Button,
@@ -12,27 +13,70 @@ import {
   Upload,
 } from "antd";
 import { showSuccess } from "../../utils/alertHelper";
+import dayjs from "dayjs";
+
 const { Option } = Select;
 export default function PersonalInformationForm(props) {
   const [isEditing, setIsEditing] = useState(false);
   const [fileList, setFileList] = useState([]);
+  const [initialValues, setInitialValues] = useState({});
+
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [form] = Form.useForm();
 
-  const onFinish = (values) => {
-    setLoading(true);
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const userID = localStorage.getItem("userId");
+        const accountName = localStorage.getItem("accountName");
 
-    setTimeout(() => {
+        const data = await getWithParams("api/user/getUserByFilter", {
+          userID,
+          accountName,
+        });
+
+        if (data) {
+          const initVals = {
+            fullName: data.fullName,
+            birthday: dayjs(data.birthday),
+            email: data.email,
+            accountName: data.accountName,
+          };
+          form.setFieldsValue(initVals);
+          setInitialValues(initVals); // lưu lại
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin người dùng:", error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const onFinish = async (values) => {
+    setLoading(true);
+    try {
+      const updateData = {
+        fullName: values.fullName,
+        birthday: values.birthday?.format("YYYY-MM-DD"),
+        email: values.email,
+        accountName: values.accountName,
+      };
+
+      await put(updateData, "api/user/updateProfile");
+      showSuccess("Cập nhật thông tin thành công!");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Lỗi cập nhật thông tin:", error.message);
+    } finally {
       setLoading(false);
-      setIsEditing(false); // quay lại chế độ xem
-      showSuccess("Cập nhật thông tin thành công!"); // Hiển thị thông báo thành công
-    }, 2000);
+    }
   };
 
   const onCancel = () => {
     setIsEditing(false);
-    form.resetFields(); // Reset lại giá trị form về ban đầu
+    form.setFieldsValue(initialValues); // Reset lại giá trị form về ban đầu
     setFileList([]);
     setPreviewUrl(null);
   };
@@ -64,7 +108,7 @@ export default function PersonalInformationForm(props) {
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-        // Khóa tất cả input khi không chỉnh sửa
+      // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>
@@ -76,7 +120,7 @@ export default function PersonalInformationForm(props) {
               <Input disabled={!isEditing} />
             </Form.Item>
 
-            <Form.Item
+            {/* <Form.Item
               label="Giới tính"
               name="gender"
               rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
@@ -91,17 +135,26 @@ export default function PersonalInformationForm(props) {
                 <Option value="female">Nữ</Option>
                 <Option value="other">Khác</Option>
               </Select>
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item
               label="Ngày sinh"
-              name="birthDate"
+              name="birthday"
               rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
             >
               <DatePicker disabled={!isEditing} style={{ width: "100%" }} />
             </Form.Item>
-
             <Form.Item
+              label="Tên tài khoản"
+              name="accountName"
+              rules={[
+                { required: true, message: "Vui lòng nhập tên tài khoản!" },
+              ]}
+            >
+              <Input disabled={!isEditing} />
+            </Form.Item>
+
+            {/* <Form.Item
               label="Số điện thoại"
               name="phoneNumber"
               rules={[
@@ -109,15 +162,15 @@ export default function PersonalInformationForm(props) {
               ]}
             >
               <Input disabled={!isEditing} />
-            </Form.Item>
+            </Form.Item> */}
 
-            <Form.Item
+            {/* <Form.Item
               label="Địa chỉ"
               name="address"
               rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
             >
               <Input disabled={!isEditing} />
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item
               label="Email"

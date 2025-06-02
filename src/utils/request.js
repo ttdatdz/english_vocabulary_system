@@ -1,4 +1,5 @@
 import { message } from "antd";
+import { showErrorMessage } from "./alertHelper";
 
 const API_DOMAIN = "http://143.198.83.161/"
 
@@ -15,7 +16,7 @@ export const get = async (path) => {
         const result = await response.json();
         return result;
     } catch (error) {
-        alert(`Lỗi khi gọi API: ${error.message}`);
+        showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
     }
 
 }
@@ -37,10 +38,14 @@ export const getWithParams = async (path, params = {}) => {
             method: "GET",
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error(`Error: ${response}`);
+
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(`${result.detail}`);
+        }
         return await response.json();
     } catch (error) {
-        console.log(`Error: ${error.message}`);
+        showErrorMessage(error.message);
     }
 };
 
@@ -59,15 +64,18 @@ export const post = async (values, path, auth = false) => {
             headers,
             body: JSON.stringify(values) //nơi chứa data để gửi lên server. Trước khi gửi phải chuyển nó qua dạng json
         });
-        if (!response.ok) {
-            // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-            throw new Error(`Lỗi: ${response.message}`);
+
+        if (response.ok) {
+            return;
         }
-        const result = await response.json(); // nhận response và chuyển nó lại qua dạng js để dùng
-        return result;
+        else {
+            const result = await response.json();
+            // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
+            throw new Error(`${result.detail}`);
+        }
     }
     catch (error) {
-        console.log(`Lỗi khi gọi API: ${error.message}`); // 🐞 Hiển thị lỗi
+        showErrorMessage(error.message); // 🐞 Hiển thị lỗi
     }
 }
 
@@ -83,10 +91,14 @@ export const postFormData = async (path, formData) => {
                 : undefined,
             body: formData
         });
-        if (!response.ok) throw new Error(`Error: ${response}`);
-        return await response.json();
+        if (response.ok)
+            return;
+        else {
+            const result = await response.json();
+            throw new Error(result.detail);
+        }
     } catch (error) {
-        alert(`Error: ${error.message}`);
+        showErrorMessage(error.message);
     }
 }
 export const del = async (path, auth = false) => {
@@ -103,15 +115,14 @@ export const del = async (path, auth = false) => {
             method: 'DELETE',
             headers,
         });
-        if (!response.ok) {
-            // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-            throw new Error(`Lỗi: ${response.status}`);
+        if(response.ok) return;
+        else{
+            const result=await response.json();
+            throw new Error(result.detail);
         }
-        const result = await response.json(); // nhận response và chuyển nó lại qua dạng js để dùng
-        return result;
     }
     catch (error) {
-        alert(`Lỗi khi gọi API: ${error.message}`); // 🐞 Hiển thị lỗi
+        alert(error.message); // 🐞 Hiển thị lỗi
     }
 }
 export const patch = async (value, path) => {
@@ -135,3 +146,30 @@ export const patch = async (value, path) => {
         alert(`Lỗi khi gọi API: ${error.message}`); // 🐞 Hiển thị lỗi
     }
 }
+export const put = async (values, path, auth = true) => {
+    try {
+        const headers = {
+            "Content-type": "application/json",
+            Accept: "application/json",
+        };
+        if (auth) {
+            const token = localStorage.getItem("accessToken");
+            if (token) headers.Authorization = `Bearer ${token}`;
+        }
+        const response = await fetch(API_DOMAIN + path, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(values),
+        });
+
+        if (response.ok) {
+            return;
+        }
+        else {
+            const result=await response.json();
+            throw new Error(result.detail);
+        }
+    } catch (error) {
+        showErrorMessage(error.message);
+    }
+};

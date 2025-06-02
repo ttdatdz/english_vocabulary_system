@@ -1,10 +1,11 @@
 import "./ForgotPassword.scss";
 import { Form, Input, Button, message } from 'antd';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowBack } from "react-icons/io";
 import { post } from "../../utils/request";
 
 export default function ForgotPassword() {
+    const navigate = useNavigate();
     const onFinish = async (values) => {
         console.log(values.accountName);
         const data = await post({
@@ -13,10 +14,12 @@ export default function ForgotPassword() {
         },
             "api/user/forgot-password"
         );
-        if (data?.success)
+        if (data?.success) {
             message.success("Đã gửi mã xác nhận đến email được đăng ký!")
+            navigate("Login");
+        }
         else
-        message.error("Lỗi khi gửi email.")
+            message.error("Lỗi khi gửi email.")
     };
     return (
         <>
