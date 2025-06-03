@@ -20,16 +20,15 @@ export default function ChangePasswordForm() {
     try {
       const updateData = {
         oldPassword: values.oldPassword,
-        newPassword: values.newPassword
-      }
+        newPassword: values.newPassword,
+      };
       const data = await post(updateData, "/api/user/reset-password", true);
       if (data?.success) {
         showSuccess("Cập nhật thông tin thành công!");
         setIsEditing(false);
         form.resetFields();
         navigate("../Login");
-      }else
-      showErrorMessage(data.detail);
+      } else showErrorMessage(data.detail);
     } catch (error) {
       console.error("Lỗi cập nhật thông tin:", error.message);
     } finally {
@@ -66,11 +65,11 @@ export default function ChangePasswordForm() {
         labelAlign="left"
         labelCol={{ span: 7 }}
         wrapperCol={{ span: 17 }}
-        style={{ maxWidth: 1300 }}
+        style={{ maxWidth: "100%" }}
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-      // Khóa tất cả input khi không chỉnh sửa
+        // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>

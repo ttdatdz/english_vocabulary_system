@@ -1,6 +1,6 @@
 import "./PersonalInformationForm.scss";
 import { useState, useEffect } from "react";
-import { getWithParams , put} from "../../utils/request";
+import { getWithParams, put } from "../../utils/request";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import {
   Button,
@@ -104,11 +104,11 @@ export default function PersonalInformationForm(props) {
         labelAlign="left"
         labelCol={{ span: 7 }}
         wrapperCol={{ span: 17 }}
-        style={{ maxWidth: 1300 }}
+        style={{ maxWidth: "100%" }}
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-      // Khóa tất cả input khi không chỉnh sửa
+        // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>
@@ -119,24 +119,6 @@ export default function PersonalInformationForm(props) {
             >
               <Input disabled={!isEditing} />
             </Form.Item>
-
-            {/* <Form.Item
-              label="Giới tính"
-              name="gender"
-              rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
-            >
-              <Select
-                disabled={!isEditing}
-                placeholder="Chọn giới tính"
-                onChange={onGenderChange}
-                allowClear
-              >
-                <Option value="male">Nam</Option>
-                <Option value="female">Nữ</Option>
-                <Option value="other">Khác</Option>
-              </Select>
-            </Form.Item> */}
-
             <Form.Item
               label="Ngày sinh"
               name="birthday"
@@ -154,7 +136,7 @@ export default function PersonalInformationForm(props) {
               <Input disabled={!isEditing} />
             </Form.Item>
 
-            {/* <Form.Item
+            <Form.Item
               label="Số điện thoại"
               name="phoneNumber"
               rules={[
@@ -162,15 +144,15 @@ export default function PersonalInformationForm(props) {
               ]}
             >
               <Input disabled={!isEditing} />
-            </Form.Item> */}
+            </Form.Item>
 
-            {/* <Form.Item
+            <Form.Item
               label="Địa chỉ"
               name="address"
               rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
             >
               <Input disabled={!isEditing} />
-            </Form.Item> */}
+            </Form.Item>
 
             <Form.Item
               label="Email"

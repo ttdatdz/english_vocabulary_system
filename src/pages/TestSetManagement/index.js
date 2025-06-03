@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import "./TestSetManagement.scss";
 import { Button, Input } from "antd";
@@ -8,6 +8,7 @@ import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
 import { confirmDelete } from "../../utils/alertHelper";
 import AddAndEditTestSet from "../../components/AddAndEditTestSet";
+import { GetAllTestSets } from "../../services/Exam/testSetService";
 export default function TestSetManagement() {
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
@@ -80,6 +81,18 @@ export default function TestSetManagement() {
       name: "ETS 2019",
     },
   ];
+
+  const [ListTestSets, setListTestSets] = useState([]);
+  const fetchAPI = async () => {
+    const result = await GetAllTestSets();
+    console.log(">>>>>>>>>>.check result", result);
+
+    setListTestSets(result);
+  };
+  useEffect(() => {
+    fetchAPI();
+  }, []);
+
   const onChange = (pagination, filters, sorter, extra) => {
     console.log("params", pagination, filters, sorter, extra);
   };
