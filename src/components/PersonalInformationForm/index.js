@@ -1,8 +1,9 @@
 import "./PersonalInformationForm.scss";
 import { useState, useEffect } from "react";
-import { getWithParams, put } from "../../utils/request";
+import { getWithParams, putFormData} from "../../utils/request";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import {
+  Avatar,
   Button,
   Col,
   DatePicker,
@@ -38,10 +39,13 @@ export default function PersonalInformationForm(props) {
 
         if (data) {
           const initVals = {
+            avatar: data?.avatar,
             fullName: data.fullName,
             birthday: dayjs(data.birthday),
             email: data.email,
             accountName: data.accountName,
+            phoneNumber: data?.phoneNumber,
+            address: data?.address
           };
           form.setFieldsValue(initVals);
           setInitialValues(initVals); // lưu lại
@@ -57,14 +61,23 @@ export default function PersonalInformationForm(props) {
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      const formData = new FormData();
+
       const updateData = {
         fullName: values.fullName,
         birthday: values.birthday?.format("YYYY-MM-DD"),
         email: values.email,
         accountName: values.accountName,
+        phoneNumber: values.phoneNumber,
+        address: values.address
       };
+      
+      formData.append("dataJson", JSON.stringify(updateData));
+      if (fileList[0]?.originFileObj) {
+        formData.append("avatar", fileList[0].originFileObj);
+      }
 
-      await put(updateData, "api/user/updateProfile");
+      await putFormData("api/user/updateProfile", formData);
       showSuccess("Cập nhật thông tin thành công!");
       setIsEditing(false);
     } catch (error) {
@@ -73,6 +86,7 @@ export default function PersonalInformationForm(props) {
       setLoading(false);
     }
   };
+
 
   const onCancel = () => {
     setIsEditing(false);
@@ -108,7 +122,7 @@ export default function PersonalInformationForm(props) {
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-        // Khóa tất cả input khi không chỉnh sửa
+      // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>
@@ -171,8 +185,9 @@ export default function PersonalInformationForm(props) {
               {isEditing ? (
                 <div className="UserForm__Avatar-EditBlock">
                   <img
+                  
                     src={
-                      previewUrl ||
+                      form.getFieldValue("avatar")||
                       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
                     }
                     alt="avatar"
@@ -195,7 +210,7 @@ export default function PersonalInformationForm(props) {
               ) : (
                 <img
                   src={
-                    previewUrl ||
+                    form.getFieldValue("avatar") ||
                     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
                   }
                   alt="avatar"

@@ -5,6 +5,8 @@ import { Button, Col, Form, Input, Row, Select } from "antd";
 import { showSuccess, showErrorMessage } from "../../utils/alertHelper";
 import { post, put } from "../../utils/request";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../utils/AuthContext";
+
 const { Option } = Select;
 export default function ChangePasswordForm() {
   const [isEditing, setIsEditing] = useState(false);
@@ -14,7 +16,7 @@ export default function ChangePasswordForm() {
   const [form] = Form.useForm();
 
   const navigate = useNavigate();
-
+  const { logout } = useAuth();
   const onFinish = async (values) => {
     setLoading(true);
     try {
@@ -23,12 +25,14 @@ export default function ChangePasswordForm() {
         newPassword: values.newPassword,
       };
       const data = await post(updateData, "/api/user/reset-password", true);
-      if (data?.success) {
+      if (data) {
         showSuccess("Cập nhật thông tin thành công!");
         setIsEditing(false);
         form.resetFields();
-        navigate("../Login");
-      } else showErrorMessage(data.detail);
+        logout();
+        navigate("/Login");
+      } else showErrorMessage("Có lỗi xảy ra khi đổi mật khẩu");
+
     } catch (error) {
       console.error("Lỗi cập nhật thông tin:", error.message);
     } finally {
@@ -69,7 +73,7 @@ export default function ChangePasswordForm() {
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-        // Khóa tất cả input khi không chỉnh sửa
+      // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>
