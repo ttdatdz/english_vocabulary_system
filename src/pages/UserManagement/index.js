@@ -4,15 +4,18 @@ import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
 import "./UserManagement.scss";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import DetailUserForm from "../../components/DetailUserForm";
 import { confirmDelete } from "../../utils/alertHelper";
+import { GetAllUsers } from "../../services/User/userService";
 
 export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null); // lấy thông tin người dùng đưa vào modal
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
+  const [allUsers, setAllUsers] = useState([]);
+  const [listUsers, setListUsers] = useState([]);
   const showModal = (record) => {
     setSelectedUser(record);
     setOpen(true);
@@ -31,32 +34,25 @@ export default function UserManagement() {
   };
   const columns = [
     {
-      title: "Name",
-      dataIndex: "name",
+      title: "Số thứ tự",
+      key: "index",
+      render: (_, __, index) => index + 1,
     },
     {
-      title: "Chinese Score",
-      dataIndex: "chinese",
-      sorter: {
-        compare: (a, b) => a.chinese - b.chinese,
-        multiple: 3,
-      },
+      title: "Họ và tên",
+      dataIndex: "fullName",
     },
     {
-      title: "Math Score",
-      dataIndex: "math",
-      sorter: {
-        compare: (a, b) => a.math - b.math,
-        multiple: 2,
-      },
+      title: "Ngày sinh",
+      dataIndex: "birthday",
     },
     {
-      title: "English Score",
-      dataIndex: "english",
-      sorter: {
-        compare: (a, b) => a.english - b.english,
-        multiple: 1,
-      },
+      title: "Số điện thoại",
+      dataIndex: "phoneNumber",
+    },
+    {
+      title: "Đia chỉ",
+      dataIndex: "address",
     },
     {
       title: "Action",
@@ -72,52 +68,34 @@ export default function UserManagement() {
       ),
     },
   ];
-  const data = [
-    {
-      key: "1",
-      name: "John Brown",
-      chinese: 98,
-      math: 60,
-      english: 70,
-    },
-    {
-      key: "2",
-      name: "Jim Green",
-      chinese: 98,
-      math: 66,
-      english: 89,
-    },
-    {
-      key: "3",
-      name: "Joe Black",
-      chinese: 98,
-      math: 90,
-      english: 70,
-    },
-    {
-      key: "4",
-      name: "Jim Red",
-      chinese: 88,
-      math: 99,
-      english: 89,
-    },
-    {
-      key: "5",
-      name: "Jim Red",
-      chinese: 88,
-      math: 99,
-      english: 89,
-    },
-    {
-      key: "6",
-      name: "Jim Red",
-      chinese: 88,
-      math: 99,
-      english: 89,
-    },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await GetAllUsers();
+        setAllUsers(res);
+        setListUsers(res);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách user:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
   const onChange = (pagination, filters, sorter, extra) => {
     console.log("params", pagination, filters, sorter, extra);
+  };
+
+  const handleSearch = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    if (searchValue) {
+      const filteredUsers = allUsers.filter(
+        (user) =>
+          user.fullName.toLowerCase().includes(searchValue) ||
+          user.phoneNumber.includes(searchValue)
+      );
+      setListUsers(filteredUsers);
+    } else {
+      setListUsers(allUsers); // Reset lại danh sách hiển thị, không cần gọi lại API
+    }
   };
   return (
     <>
@@ -127,8 +105,9 @@ export default function UserManagement() {
         suffix={<SearchOutlined />}
         placeholder="Nhập tên hoặc số điện thoại cần tìm"
         allowClear
+        onChange={handleSearch}
       />
-      <BaseTable columns={columns} data={data} onChange={onChange} />
+      <BaseTable columns={columns} data={listUsers} onChange={onChange} />
 
       <BaseModal
         open={open}
@@ -140,7 +119,11 @@ export default function UserManagement() {
         }
       >
         {selectedUser ? (
-          <DetailUserForm onOk={handleOk} confirmLoading={confirmLoading} />
+          <DetailUserForm
+            onOk={handleOk}
+            confirmLoading={confirmLoading}
+            selectedUser={selectedUser}
+          />
         ) : null}
       </BaseModal>
     </>

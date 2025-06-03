@@ -13,10 +13,11 @@ import {
 } from "antd";
 const { Option } = Select;
 export default function DetailUserForm(props) {
-  const { onOk, confirmLoading } = props;
+  const { onOk, confirmLoading, selectedUser } = props;
   const [isEditing, setIsEditing] = useState(false);
   const [fileList, setFileList] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
+
   const [form] = Form.useForm();
 
   const onFinish = (values) => {
@@ -41,10 +42,6 @@ export default function DetailUserForm(props) {
     }
   };
 
-  const onGenderChange = (value) => {
-    form.setFieldsValue({ gender: value });
-  };
-
   return (
     <>
       <Form
@@ -55,7 +52,7 @@ export default function DetailUserForm(props) {
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 16 }}
         style={{ maxWidth: 750 }}
-        initialValues={{}}
+        initialValues={selectedUser}
         onFinish={onFinish}
         autoComplete="off"
         disabled={!isEditing} // Khóa tất cả input khi không chỉnh sửa
@@ -68,22 +65,6 @@ export default function DetailUserForm(props) {
               rules={[{ required: true, message: "Vui lòng nhập họ và tên!" }]}
             >
               <Input />
-            </Form.Item>
-
-            <Form.Item
-              label="Giới tính"
-              name="gender"
-              rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
-            >
-              <Select
-                placeholder="Chọn giới tính"
-                onChange={onGenderChange}
-                allowClear
-              >
-                <Option value="male">Nam</Option>
-                <Option value="female">Nữ</Option>
-                <Option value="other">Khác</Option>
-              </Select>
             </Form.Item>
 
             <Form.Item

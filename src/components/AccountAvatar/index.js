@@ -5,6 +5,7 @@ import { MdExitToApp } from "react-icons/md";
 import "./AccountAvatar.scss";
 import { useAuth } from "../../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 export default function AccountAvatar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -35,13 +36,19 @@ export default function AccountAvatar() {
       key: "1",
     },
   ];
-
+  // const userId = localStorage.getItem("userId");
+  // // console.log(">>>>>>>check user", user);
+  // useEffect(() => {}, [userId]);
+  const user = JSON.parse(localStorage.getItem("user"));
   return (
     <Dropdown menu={{ items }} trigger={["click"]}>
       <a className="AccountAvatar" onClick={(e) => e.preventDefault()}>
         <img
           className="AccountAvatar__img"
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
+          src={
+            user?.avatar ||
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
+          }
           alt="Avatar"
         />
       </a>
