@@ -112,6 +112,7 @@ export const del = async (path, auth = true) => {
       method: "DELETE",
       headers,
     });
+    // console.log("response:", response);
     if (response.ok) {
       return true;
     } else {
