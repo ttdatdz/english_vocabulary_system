@@ -7,8 +7,12 @@ import "./UserManagement.scss";
 import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import DetailUserForm from "../../components/DetailUserForm";
-import { confirmDelete } from "../../utils/alertHelper";
-import { GetAllUsers } from "../../services/User/userService";
+import {
+  confirmDelete,
+  showErrorMessage,
+  showSuccess,
+} from "../../utils/alertHelper";
+import { DeleteUser, GetAllUsers } from "../../services/User/userService";
 
 export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null); // lấy thông tin người dùng đưa vào modal
@@ -32,6 +36,26 @@ export default function UserManagement() {
     setOpen(false);
     setSelectedUser(null);
   };
+  const handleDelete = async (userId) => {
+    const confirmed = await confirmDelete("Bạn có chắc muốn xóa user này?");
+    console.log(">>>>check confirmed:", confirmed); // Log id ra console
+    console.log("User id:", userId); // Log id ra console
+    if (!confirmed) return;
+    try {
+      const result = await DeleteUser(userId);
+      console.log(">>>>check result:", result); // Log kết quả xóa ra console
+      if (!result) {
+        showErrorMessage("Xóa user thất bại");
+        return;
+      }
+      setListUsers((prev) => prev.filter((user) => user.id !== userId));
+      setAllUsers((prev) => prev.filter((user) => user.id !== userId));
+      showSuccess("Xóa user thành công!");
+    } catch (error) {
+      showErrorMessage("Xóa user thất bại!");
+    }
+  };
+
   const columns = [
     {
       title: "Số thứ tự",
@@ -62,7 +86,9 @@ export default function UserManagement() {
           <IoEye className="Action__Detail" onClick={() => showModal(record)} />
           <MdDelete
             className="Action__Delete"
-            onClick={() => confirmDelete()}
+            onClick={() => {
+              handleDelete(record.id);
+            }}
           />
         </div>
       ),
@@ -72,8 +98,14 @@ export default function UserManagement() {
     const fetchUsers = async () => {
       try {
         const res = await GetAllUsers();
-        setAllUsers(res);
-        setListUsers(res);
+
+        //đoạn này để fix warning key trong bảng
+        const usersWithKey = res.map((user) => ({
+          ...user,
+          key: user.id,
+        }));
+        setAllUsers(usersWithKey);
+        setListUsers(usersWithKey);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách user:", error);
       }

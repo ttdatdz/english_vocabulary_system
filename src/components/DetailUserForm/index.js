@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import "./DetailUserForm.scss";
+import dayjs from "dayjs";
 import {
   Button,
   Col,
@@ -18,6 +19,11 @@ export default function DetailUserForm(props) {
   const [fileList, setFileList] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  //dùng initialValues để lấy data từ selectedUser. Sau đó chuyển đổi birthday sang dayjs
+  const initialValues = {
+    ...selectedUser,
+    birthday: selectedUser?.birthday ? dayjs(selectedUser.birthday) : null,
+  };
   const [form] = Form.useForm();
 
   const onFinish = (values) => {
@@ -41,7 +47,7 @@ export default function DetailUserForm(props) {
       reader.readAsDataURL(file);
     }
   };
-
+  console.log("selectedUser", selectedUser);
   return (
     <>
       <Form
@@ -52,7 +58,7 @@ export default function DetailUserForm(props) {
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 16 }}
         style={{ maxWidth: 750 }}
-        initialValues={selectedUser}
+        initialValues={initialValues}
         onFinish={onFinish}
         autoComplete="off"
         disabled={!isEditing} // Khóa tất cả input khi không chỉnh sửa
@@ -69,7 +75,7 @@ export default function DetailUserForm(props) {
 
             <Form.Item
               label="Ngày sinh"
-              name="birthDate"
+              name="birthday"
               rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
             >
               <DatePicker style={{ width: "100%" }} />
@@ -103,7 +109,7 @@ export default function DetailUserForm(props) {
 
             <Form.Item
               label="Tài khoản"
-              name="username"
+              name="accountName"
               rules={[{ required: true, message: "Vui lòng nhập tài khoản!" }]}
             >
               <Input />

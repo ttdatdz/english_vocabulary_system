@@ -1,11 +1,11 @@
-import { del, get, patch, post } from "../../utils/request";
+import { del, get, patch } from "../../utils/request";
 
 export const GetAllUsers = async () => {
   const result = await get("api/user/getAllUsers");
   return result;
 };
-export const DeleleUser = async (id) => {
-  const result = await del(`admin/UserManagement/${id}`);
+export const DeleteUser = async (id) => {
+  const result = await del(`api/user/delete/${id}`);
   return result;
 };
 export const UpdateUser = async (value, id) => {
