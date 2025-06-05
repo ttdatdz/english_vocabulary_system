@@ -2,52 +2,108 @@ import { useState } from "react";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import "./DetailUserForm.scss";
 import dayjs from "dayjs";
-import {
-  Button,
-  Col,
-  DatePicker,
-  Form,
-  Input,
-  Row,
-  Select,
-  Upload,
-} from "antd";
-const { Option } = Select;
+import { Button, Col, DatePicker, Form, Input, Row, Upload } from "antd";
+import { UpdateUser } from "../../services/User/userService";
+import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
+
 export default function DetailUserForm(props) {
   const { onOk, confirmLoading, selectedUser } = props;
   const [isEditing, setIsEditing] = useState(false);
   const [fileList, setFileList] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
 
-  //dùng initialValues để lấy data từ selectedUser. Sau đó chuyển đổi birthday sang dayjs
   const initialValues = {
     ...selectedUser,
     birthday: selectedUser?.birthday ? dayjs(selectedUser.birthday) : null,
   };
   const [form] = Form.useForm();
 
+  const fetchData = async (values) => {
+    try {
+      // Xử lý ngày sinh về dạng string nếu cần
+      const data = {
+        ...values,
+        birthday: values.birthday ? values.birthday.format("YYYY-MM-DD") : null,
+        id: selectedUser.id, // Thêm id vào data gửi lên
+      };
+      console.log(">>>>check data:", data);
+      const result = await UpdateUser(data);
+      if (result) {
+        showSuccess("Cập nhật thành công!");
+        setIsEditing(false);
+        onOk();
+      } else {
+        showErrorMessage("Cập nhật thất bại!");
+      }
+    } catch (error) {
+      showErrorMessage(error.message || "Cập nhật thất bại!");
+    }
+  };
+
+  const validateData = (values) => {
+    const now = dayjs();
+    const minDate = now.subtract(5, "year");
+    if (values.birthday.isAfter(now)) {
+      showErrorMessage("Ngày sinh phải nhỏ hơn ngày hiện tại!");
+      return false;
+    }
+    if (values.birthday.isAfter(minDate)) {
+      showErrorMessage("Tuổi phải lớn hơn 5!");
+      return false;
+    }
+    // Kiểm tra năm sinh phải lớn hơn 1969
+    if (values.birthday.year() <= 1969) {
+      showErrorMessage("Năm sinh phải lớn hơn 1969!");
+      return false;
+    }
+    // Số điện thoại
+    if (!/^0\d{9}$/.test(values.phoneNumber || "")) {
+      showErrorMessage("Số điện thoại phải có 10 số và bắt đầu bằng 0!");
+      return false;
+    }
+    // Địa chỉ
+    if (!values.address) {
+      showErrorMessage("Vui lòng nhập địa chỉ!");
+      return false;
+    }
+    // Email
+    if (!/^[\w-\.]+@gmail\.com$/.test(values.email || "")) {
+      showErrorMessage("Email phải có dạng @gmail.com!");
+      return false;
+    }
+    // Tài khoản
+    if (!values.accountName) {
+      showErrorMessage("Vui lòng nhập tài khoản!");
+      return false;
+    }
+
+    return true;
+  };
+
   const onFinish = (values) => {
-    console.log("Success:", values);
-    setIsEditing(false); // Gửi xong thì quay lại chế độ xem
+    console.log(">>>>>>>check values:", values);
+    if (!validateData(values)) return;
+    fetchData(values);
   };
 
   const onCancel = () => {
     setIsEditing(false);
-    form.resetFields(); // Reset lại giá trị form về ban đầu
+    form.resetFields();
     setFileList([]);
     setPreviewUrl(null);
   };
-
-  const handleChange = ({ fileList }) => {
-    setFileList(fileList);
-    const file = fileList[0]?.originFileObj;
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setPreviewUrl(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
-  console.log("selectedUser", selectedUser);
+  // Xử lý upload avatar
+  const handleAvatarChange =
+    (setFileList, setPreviewUrl) =>
+    ({ fileList }) => {
+      setFileList(fileList);
+      const file = fileList[0]?.originFileObj;
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => setPreviewUrl(reader.result);
+        reader.readAsDataURL(file);
+      }
+    };
   return (
     <>
       <Form
@@ -61,7 +117,7 @@ export default function DetailUserForm(props) {
         initialValues={initialValues}
         onFinish={onFinish}
         autoComplete="off"
-        disabled={!isEditing} // Khóa tất cả input khi không chỉnh sửa
+        disabled={!isEditing}
       >
         <Row gutter={24}>
           <Col span={14}>
@@ -102,7 +158,7 @@ export default function DetailUserForm(props) {
             <Form.Item
               label="Email"
               name="email"
-              rules={[{ required: true, message: "Vui lòng nhập email!" }]}
+              rules={[{ required: true, message: "Vui lòng nhập Email!" }]}
             >
               <Input />
             </Form.Item>
@@ -112,22 +168,18 @@ export default function DetailUserForm(props) {
               name="accountName"
               rules={[{ required: true, message: "Vui lòng nhập tài khoản!" }]}
             >
-              <Input />
+              <Input autoComplete="username" />
             </Form.Item>
 
-            <Form.Item
-              label="Mật khẩu"
-              name="password"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-            >
-              <Input.Password />
+            <Form.Item label="Mật khẩu" name="password">
+              <Input.Password autoComplete="current-password" />
             </Form.Item>
           </Col>
           <Col span={10} className="UserForm__Avatar-Col">
             <Form.Item
               name="avatar"
               className="UserForm__Avatar-FormItem"
-              wrapperCol={{ span: 24 }} // canh thẳng hàng với input
+              wrapperCol={{ span: 24 }}
             >
               {isEditing ? (
                 <div className="UserForm__Avatar-EditBlock">
@@ -143,7 +195,7 @@ export default function DetailUserForm(props) {
                   <Upload
                     showUploadList={false}
                     beforeUpload={() => false}
-                    onChange={handleChange}
+                    onChange={handleAvatarChange(setFileList, setPreviewUrl)}
                   >
                     <Button
                       className="UserForm__ChangeAvatarBtn"
@@ -168,9 +220,7 @@ export default function DetailUserForm(props) {
 
           {isEditing && (
             <Col span={24}>
-              <Form.Item
-                wrapperCol={{ offset: 8, span: 24 }} // canh thẳng hàng với input
-              >
+              <Form.Item wrapperCol={{ offset: 8, span: 24 }}>
                 <div className="UserForm__Contain-Button">
                   <Button
                     className="UserForm__Cancel"

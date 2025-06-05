@@ -1,11 +1,11 @@
 import { del, get, patch, post } from "../../utils/request";
 
 export const GetAllTestSets = async () => {
-  const result = await get("admin/TestSetManagement");
+  const result = await get("api/exam/collection/getAll");
   return result;
 };
-export const DeleleTestSet = async (id) => {
-  const result = await del(`admin/TestSetManagement/${id}`);
+export const DeleteTestSet = async (id) => {
+  const result = await del(`api/exam/collection/delete/${id}`);
   return result;
 };
 export const UpdateTestSet = async (value, id) => {
@@ -13,6 +13,6 @@ export const UpdateTestSet = async (value, id) => {
   return result;
 };
 export const CreateTestSet = async (value) => {
-  const result = await post(value, "admin/TestSetManagement", true);
+  const result = await post(value, "api/exam/collection/create", true);
   return result;
 };

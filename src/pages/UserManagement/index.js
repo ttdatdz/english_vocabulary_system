@@ -38,12 +38,12 @@ export default function UserManagement() {
   };
   const handleDelete = async (userId) => {
     const confirmed = await confirmDelete("Bạn có chắc muốn xóa user này?");
-    console.log(">>>>check confirmed:", confirmed); // Log id ra console
-    console.log("User id:", userId); // Log id ra console
+    // console.log(">>>>check confirmed:", confirmed); // Log id ra console
+    // console.log("User id:", userId); // Log id ra console
     if (!confirmed) return;
     try {
       const result = await DeleteUser(userId);
-      console.log(">>>>check result:", result); // Log kết quả xóa ra console
+      // console.log(">>>>check result:", result); // Log kết quả xóa ra console
       if (!result) {
         showErrorMessage("Xóa user thất bại");
         return;

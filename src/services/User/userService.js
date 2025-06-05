@@ -1,4 +1,4 @@
-import { del, get, patch } from "../../utils/request";
+import { del, get, putFormData } from "../../utils/request";
 
 export const GetAllUsers = async () => {
   const result = await get("api/user/getAllUsers");
@@ -8,8 +8,8 @@ export const DeleteUser = async (id) => {
   const result = await del(`api/user/delete/${id}`);
   return result;
 };
-export const UpdateUser = async (value, id) => {
-  const result = await patch(value, `admin/UserManagement/${id}`);
+export const UpdateUser = async (value) => {
+  const result = await putFormData(`api/user/update`, value);
   return result;
 };
 export const GetDetailUser = async (id) => {

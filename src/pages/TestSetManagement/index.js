@@ -6,15 +6,24 @@ import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
-import { confirmDelete } from "../../utils/alertHelper";
+import {
+  confirmDelete,
+  showErrorMessage,
+  showSuccess,
+} from "../../utils/alertHelper";
 import AddAndEditTestSet from "../../components/AddAndEditTestSet";
-import { GetAllTestSets } from "../../services/Exam/testSetService";
+import {
+  DeleteTestSet,
+  GetAllTestSets,
+} from "../../services/Exam/testSetService";
 export default function TestSetManagement() {
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
-  const [detailingCategory, setDetailingCategory] = useState(null);
+  const [detailingTestSet, setDetailingTestSet] = useState(null);
+  const [allTestSets, setAllTestSets] = useState([]);
+  const [listTestSets, setListTestSets] = useState([]);
   const showModal = (record) => {
-    setDetailingCategory(record);
+    setDetailingTestSet(record);
     setOpen(true);
   };
   const handleOk = () => {
@@ -24,7 +33,22 @@ export default function TestSetManagement() {
       setConfirmLoading(false);
     }, 2000);
   };
-
+  const handleDelete = async (Id) => {
+    const confirmed = await confirmDelete("Bạn có chắc muốn xóa bộ đề này?");
+    if (!confirmed) return;
+    try {
+      const result = await DeleteTestSet(Id);
+      if (!result) {
+        showErrorMessage("Xóa bộ đề thất bại");
+        return;
+      }
+      setListTestSets((prev) => prev.filter((testSet) => testSet.id !== Id));
+      setAllTestSets((prev) => prev.filter((testSet) => testSet.id !== Id));
+      showSuccess("Xóa bộ đề thành công!");
+    } catch (error) {
+      showErrorMessage("Xóa bộ đề thất bại!");
+    }
+  };
   const handleClose = () => {
     setOpen(false);
   };
@@ -37,7 +61,7 @@ export default function TestSetManagement() {
     },
     {
       title: "Tên bộ đề",
-      dataIndex: "name",
+      dataIndex: "collection",
       key: "testName",
     },
     {
@@ -48,55 +72,48 @@ export default function TestSetManagement() {
           <IoEye className="Action__Detail" onClick={() => showModal(record)} />
           <MdDelete
             className="Action__Delete"
-            onClick={() => confirmDelete()}
+            onClick={() => {
+              handleDelete(record.id);
+            }}
           />
         </div>
       ),
     },
   ];
 
-  const data = [
-    {
-      key: "1",
-      name: "ETS 2024",
-    },
-    {
-      key: "2",
-      name: "ETS 2023",
-    },
-    {
-      key: "3",
-      name: "ETS 2022",
-    },
-    {
-      key: "4",
-      name: "ETS 2021",
-    },
-    {
-      key: "5",
-      name: "ETS 2020",
-    },
-    {
-      key: "6",
-      name: "ETS 2019",
-    },
-  ];
-
-  const [ListTestSets, setListTestSets] = useState([]);
-  const fetchAPI = async () => {
-    const result = await GetAllTestSets();
-    console.log(">>>>>>>>>>.check result", result);
-
-    setListTestSets(result);
-  };
   useEffect(() => {
-    fetchAPI();
+    const fetchUsers = async () => {
+      try {
+        const res = await GetAllTestSets();
+
+        //đoạn này để fix warning key trong bảng
+        const usersWithKey = res.map((user) => ({
+          ...user,
+          key: user.id,
+        }));
+        setAllTestSets(usersWithKey);
+        setListTestSets(usersWithKey);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách bộ đề:", error);
+      }
+    };
+    fetchUsers();
   }, []);
 
   const onChange = (pagination, filters, sorter, extra) => {
     console.log("params", pagination, filters, sorter, extra);
   };
-  // console.log(">>>>.check detailingCategory", detailingCategory);
+  const handleSearch = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    if (searchValue) {
+      const filteredTestSet = allTestSets.filter((testSet) =>
+        testSet.collection?.toLowerCase().includes(searchValue)
+      );
+      setListTestSets(filteredTestSet);
+    } else {
+      setListTestSets(allTestSets); // Reset lại danh sách hiển thị
+    }
+  };
   return (
     <div className="TestSetManagement">
       <h2 className="PageTitle">Test Set Management</h2>
@@ -107,6 +124,7 @@ export default function TestSetManagement() {
             suffix={<SearchOutlined />}
             placeholder="Nhập tên bộ đề cần tìm"
             allowClear
+            onChange={handleSearch}
           />
         </div>
         <Button
@@ -117,21 +135,21 @@ export default function TestSetManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={data} onChange={onChange} />
+      <BaseTable columns={columns} data={listTestSets} onChange={onChange} />
 
       <BaseModal
         open={open}
         onCancel={handleClose}
         title={
           <div style={{ fontSize: 24, fontWeight: "bold" }}>
-            {detailingCategory ? "Chi tiết bộ đề" : "Thêm bộ đề"}
+            {detailingTestSet ? "Chi tiết bộ đề" : "Thêm bộ đề"}
           </div>
         }
       >
         <AddAndEditTestSet
           onOK={handleOk}
           confirmLoading={confirmLoading}
-          initialValues={detailingCategory}
+          initialValues={detailingTestSet}
         />
       </BaseModal>
     </div>

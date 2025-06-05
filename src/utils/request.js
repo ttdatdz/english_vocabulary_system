@@ -1,24 +1,7 @@
-import { HttpStatusCode } from "axios";
 import { showErrorMessage } from "./alertHelper";
 
 const API_DOMAIN = "http://143.198.83.161/";
 
-export const get = async (path) => {
-  try {
-    const response = await fetch(API_DOMAIN + path, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`Lỗi: ${response.status}`);
-    }
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
-  }
-};
 const getAuthHeaders = () => {
   const token = localStorage.getItem("accessToken");
   return {
@@ -48,6 +31,24 @@ export const getWithParams = async (path, params = {}) => {
   }
 };
 
+// ============================Những api lấy giá trị thông thường===========================
+
+export const get = async (path) => {
+  try {
+    const response = await fetch(API_DOMAIN + path, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
+      throw new Error(`Lỗi: ${response.status}`);
+    }
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
+  }
+};
 export const post = async (values, path, auth = false) => {
   try {
     const headers = {
@@ -77,26 +78,6 @@ export const post = async (values, path, auth = false) => {
   }
 };
 
-export const postFormData = async (path, formData) => {
-  try {
-    const token = localStorage.getItem("accessToken");
-    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-
-    const response = await fetch(API_DOMAIN + path, {
-      method: "POST",
-      headers, // KHÔNG set Content-Type — để fetch tự set multipart boundary
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const result = await response.json();
-      throw new Error(result.detail || "Lỗi không xác định");
-    }
-  } catch (error) {
-    showErrorMessage(error.message);
-  }
-};
-
 export const del = async (path, auth = true) => {
   try {
     const headers = {
@@ -112,11 +93,12 @@ export const del = async (path, auth = true) => {
       method: "DELETE",
       headers,
     });
-    // console.log("response:", response);
+    // const result = await response.text(); // Lấy kết quả trả về dưới dạng text
+    // console.log("result:", result);
     if (response.ok) {
       return true;
     } else {
-      const result = await response.json();
+      const result = await response.text(); // Lấy kết quả trả về dưới dạng text
       throw new Error(result.detail);
     }
   } catch (error) {
@@ -168,6 +150,28 @@ export const put = async (values, path, auth = true) => {
     } else {
       const result = await response.json();
       throw new Error(result.detail);
+    }
+  } catch (error) {
+    showErrorMessage(error.message);
+  }
+};
+
+// =============================những api có gửi file (multipart/form-data)===========================
+
+export const postFormData = async (path, formData) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const response = await fetch(API_DOMAIN + path, {
+      method: "POST",
+      headers, // KHÔNG set Content-Type — để fetch tự set multipart boundary
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.detail || "Lỗi không xác định");
     }
   } catch (error) {
     showErrorMessage(error.message);
