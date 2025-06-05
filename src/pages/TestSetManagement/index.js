@@ -149,6 +149,7 @@ export default function TestSetManagement() {
         <AddAndEditTestSet
           onOK={handleOk}
           confirmLoading={confirmLoading}
+          setConfirmLoading={setConfirmLoading}
           initialValues={detailingTestSet}
         />
       </BaseModal>

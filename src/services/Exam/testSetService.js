@@ -1,4 +1,4 @@
-import { del, get, patch, post } from "../../utils/request";
+import { del, get, patch, post, put } from "../../utils/request";
 
 export const GetAllTestSets = async () => {
   const result = await get("api/exam/collection/getAll");
@@ -9,7 +9,7 @@ export const DeleteTestSet = async (id) => {
   return result;
 };
 export const UpdateTestSet = async (value, id) => {
-  const result = await patch(value, `admin/TestSetManagement/${id}`);
+  const result = await put(value, `api/exam/collection/update/${id}`);
   return result;
 };
 export const CreateTestSet = async (value) => {

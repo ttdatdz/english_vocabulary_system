@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import "./ToeicTestManagement.scss";
 import { Button, Input, Select } from "antd";
@@ -6,12 +6,21 @@ import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
-import { confirmDelete } from "../../utils/alertHelper";
+import {
+  confirmDelete,
+  showErrorMessage,
+  showSuccess,
+} from "../../utils/alertHelper";
 import AddAndEditExam from "../../components/AddAndEditExam";
+import { DeleteExam, GetAllExams } from "../../services/Exam/examService";
+import { GetAllTestSets } from "../../services/Exam/testSetService";
 export default function ToeicTestManagement() {
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
   const [detailingExam, setDetailingExam] = useState(null);
+  const [allExams, setAllExams] = useState([]);
+  const [listExams, setListExams] = useState([]);
+  const [listTestSets, setListTestSets] = useState([]);
   const showModal = (record) => {
     setDetailingExam(record);
     setOpen(true);
@@ -27,6 +36,65 @@ export default function ToeicTestManagement() {
   const handleClose = () => {
     setOpen(false);
   };
+
+  // lấy danh sách đề thi
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await GetAllExams();
+
+        //đoạn này để fix warning key trong bảng
+        const usersWithKey = res.map((exam) => ({
+          ...exam,
+          key: exam.id,
+        }));
+        setListExams(usersWithKey);
+        setAllExams(usersWithKey);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách bộ đề:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // lấy danh sách bộ đề
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await GetAllTestSets();
+
+        //đoạn này để fix warning key trong bảng
+        const usersWithKey = res
+          .map((user) => ({
+            ...user,
+            key: user.id,
+          }))
+          .sort((a, b) => b.collection.localeCompare(a.collection));
+        setListTestSets(usersWithKey);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách bộ đề:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // Xóa đề thi
+  const handleDelete = async (Id) => {
+    const confirmed = await confirmDelete("Bạn có chắc muốn đề thi này?");
+    if (!confirmed) return;
+    try {
+      const result = await DeleteExam(Id);
+      if (!result) {
+        showErrorMessage("Xóa đề thi thất bại");
+        return;
+      }
+      setListExams((prev) => prev.filter((exam) => exam.id !== Id));
+      setAllExams((prev) => prev.filter((exam) => exam.id !== Id));
+      showSuccess("Xóa đề thi thành công!");
+    } catch (error) {
+      showErrorMessage("Xóa đề thi thất bại!");
+    }
+  };
   const columns = [
     {
       title: "Số thứ tự",
@@ -36,8 +104,8 @@ export default function ToeicTestManagement() {
     },
     {
       title: "Tên bài thi",
-      dataIndex: "testName",
-      key: "testName",
+      dataIndex: "title",
+      key: "title",
     },
     {
       title: "Thời lượng (phút)",
@@ -45,9 +113,6 @@ export default function ToeicTestManagement() {
       key: "duration",
       render: (value, _, __) => {
         return value + " phút";
-      },
-      sorter: {
-        compare: (a, b) => a.duration - b.duration,
       },
     },
     {
@@ -60,8 +125,8 @@ export default function ToeicTestManagement() {
     },
     {
       title: "Bộ đề",
-      dataIndex: "examSet",
-      key: "examSet",
+      dataIndex: "collection",
+      key: "collection",
     },
     {
       title: "Action",
@@ -71,62 +136,34 @@ export default function ToeicTestManagement() {
           <IoEye className="Action__Detail" onClick={() => showModal(record)} />
           <MdDelete
             className="Action__Delete"
-            onClick={() => confirmDelete()}
+            onClick={() => handleDelete(record.id)}
           />
         </div>
       ),
     },
   ];
 
-  const data = [
-    {
-      key: "1",
-      testName: "ETS 2024 - Test 1",
-      duration: 120,
-      createdAt: "2024-05-01",
-      examSet: "ETS 2024",
-    },
-    {
-      key: "2",
-      testName: "ETS 2024 - Test 2",
-      duration: 120,
-      createdAt: "2024-05-10",
-      examSet: "ETS 2024",
-    },
-    {
-      key: "3",
-      testName: "Mini Test A",
-      duration: 30,
-      createdAt: "2024-04-20",
-      examSet: "Mini Test",
-    },
-    {
-      key: "4",
-      testName: "Mini Test B",
-      duration: 30,
-      createdAt: "2024-04-25",
-      examSet: "Mini Test",
-    },
-    {
-      key: "5",
-      testName: "Mini Test C",
-      duration: 30,
-      createdAt: "2024-04-25",
-      examSet: "Mini Test",
-    },
-    {
-      key: "6",
-      testName: "Mini Test D",
-      duration: 30,
-      createdAt: "2024-04-25",
-      examSet: "Mini Test",
-    },
-  ];
+  const handleSearch = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    if (searchValue) {
+      const filteredExam = allExams.filter((exam) =>
+        exam.title?.toLowerCase().includes(searchValue)
+      );
+      setListExams(filteredExam);
+    } else {
+      setListExams(allExams); // Reset lại danh sách hiển thị
+    }
+  };
   const onChange = (pagination, filters, sorter, extra) => {
     console.log("params", pagination, filters, sorter, extra);
   };
   const handleChange = (value) => {
-    console.log(`selected ${value}`);
+    if (value === "All") {
+      setListExams(allExams);
+    } else {
+      const filtered = allExams.filter((exam) => exam.collection === value);
+      setListExams(filtered);
+    }
   };
   console.log(">>>>.check detailingExam", detailingExam);
   return (
@@ -139,15 +176,18 @@ export default function ToeicTestManagement() {
             suffix={<SearchOutlined />}
             placeholder="Nhập tên bài thi cần tìm"
             allowClear
+            onChange={handleSearch}
           />
           <Select
-            // defaultValue="Tất cả"
+            defaultValue="All"
             placeholder="Lọc theo bộ đề"
             onChange={handleChange}
             options={[
-              { value: "ETS2024", label: "ETS 2024" },
-              { value: "ETS2023", label: "ETS 2023" },
-              { value: "All", label: "Tất cả" },
+              { label: "Tất cả", value: "All" },
+              ...listTestSets.map((testSet) => ({
+                label: testSet.collection,
+                value: testSet.collection,
+              })),
             ]}
             className="filter"
           />
@@ -160,7 +200,7 @@ export default function ToeicTestManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={data} onChange={onChange} />
+      <BaseTable columns={columns} data={listExams} onChange={onChange} />
 
       <BaseModal
         open={open}
