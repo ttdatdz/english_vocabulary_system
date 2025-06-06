@@ -66,7 +66,8 @@ export const post = async (values, path, auth = false) => {
     });
 
     if (response.ok) {
-      if (path === "api/user/login") return await response.json(); // nếu là đăng nhập thì trả về dữ liệu người dùng
+      if (path === "api/user/login" || path === "api/exam/create")
+        return await response.json(); // nếu là đăng nhập thì trả về dữ liệu người dùng
       return true;
     } else {
       const result = await response.json();
@@ -169,9 +170,17 @@ export const postFormData = async (path, formData) => {
       body: formData,
     });
 
+    const isJson = response.headers
+      .get("content-type")
+      ?.includes("application/json");
+    const result = isJson ? await response.json() : await response.text();
+
     if (!response.ok) {
-      const result = await response.json();
-      throw new Error(result.detail || "Lỗi không xác định");
+      throw new Error(
+        (result && result.detail) || result || "Lỗi không xác định"
+      );
+    } else {
+      return result;
     }
   } catch (error) {
     showErrorMessage(error.message);

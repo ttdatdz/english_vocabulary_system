@@ -21,20 +21,35 @@ export default function ToeicTestManagement() {
   const [allExams, setAllExams] = useState([]);
   const [listExams, setListExams] = useState([]);
   const [listTestSets, setListTestSets] = useState([]);
+  const [formKey, setFormKey] = useState(Date.now());
   const showModal = (record) => {
     setDetailingExam(record);
     setOpen(true);
+    setFormKey(Date.now());
   };
-  const handleOk = () => {
-    setConfirmLoading(true);
-    setTimeout(() => {
-      setOpen(false);
-      setConfirmLoading(false);
-    }, 2000);
+  const handleClose = () => {
+    console.log(">>>>.chạy vào handleClose");
+    setOpen(false);
+    setDetailingExam(null);
   };
 
-  const handleClose = () => {
+  const reloadExams = async () => {
+    const res = await GetAllExams();
+    // Thêm key cho mỗi exam (key = id)
+    const examsWithKey = res.map((exam) => ({
+      ...exam,
+      key: exam.id,
+    }));
+    setListExams(examsWithKey);
+    setAllExams(examsWithKey);
+  };
+  const handleOk = (isSucced) => {
+    reloadExams();
     setOpen(false);
+    setConfirmLoading(false);
+    if (isSucced) {
+      showSuccess("Thêm đề thi thành công!");
+    }
   };
 
   // lấy danh sách đề thi
@@ -113,14 +128,6 @@ export default function ToeicTestManagement() {
       key: "duration",
       render: (value, _, __) => {
         return value + " phút";
-      },
-    },
-    {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      sorter: {
-        compare: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
       },
     },
     {
@@ -215,6 +222,11 @@ export default function ToeicTestManagement() {
           onOK={handleOk}
           confirmLoading={confirmLoading}
           initialValues={detailingExam}
+          setDetailingExam={setDetailingExam}
+          listTestSets={listTestSets}
+          setConfirmLoading={setConfirmLoading}
+          open={open}
+          key={formKey}
         />
       </BaseModal>
     </div>
