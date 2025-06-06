@@ -9,7 +9,8 @@ import {
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 export default function AddAndEditTestSet(props) {
-  const { onOK, confirmLoading, initialValues, setConfirmLoading } = props;
+  const { onOK, confirmLoading, initialValues, setConfirmLoading, open } =
+    props;
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
@@ -18,38 +19,43 @@ export default function AddAndEditTestSet(props) {
     });
   }, [initialValues, form]);
 
+  useEffect(() => {
+    if (!open) {
+      form.resetFields();
+    }
+  }, [open, form]);
   const onFinish = async (values) => {
-    console.log("Form submitted with values:", values);
     // Nếu không có initialValues, nghĩa là đang thêm mới
     if (!initialValues) {
-      console.log("Adding new test set:", values);
+      setConfirmLoading(true); // Bật loading NGAY khi bắt đầu
       const result = await CreateTestSet(values);
-      if (!result) {
-        showErrorMessage("Thêm bộ đề thất bại!");
-        return;
-      }
-      onOK();
-      showSuccess("Thêm bộ đề thành công!");
+
       setTimeout(() => {
-        form.resetFields(); // Reset toàn bộ form về trạng thái ban đầu
+        setConfirmLoading(false); // Tắt loading sau 2s
+        if (!result) {
+          return;
+        } else {
+          onOK(result);
+          showSuccess("Thêm bộ đề thành công!");
+          form.resetFields();
+        }
       }, 2000);
     } else {
       // Nếu có initialValues, nghĩa là đang chỉnh sửa
-      console.log("Editing test set:", values);
-
-      const result = await UpdateTestSet(values, initialValues.id);
-      if (!result) {
-        showErrorMessage("Cập nhật bộ đề thất bại!");
-        return;
-      }
+      // console.log("Editing test set:", values);
       setConfirmLoading(true);
+      const result = await UpdateTestSet(values, initialValues.id);
+      console.log(">>>>>>>>check result:", result);
       setTimeout(() => {
         setConfirmLoading(false);
-        setIsEditing(false);
+        if (!result) {
+          return;
+        }
 
-        // form.resetFields(); // Reset toàn bộ form về trạng thái ban đầu
+        // setConfirmLoading(false);
+        setIsEditing(false);
+        showSuccess("Cập nhật bộ đề thành công!");
       }, 2000);
-      showSuccess("Cập nhật bộ đề thành công!");
     }
   };
 

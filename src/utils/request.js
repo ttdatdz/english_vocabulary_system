@@ -75,7 +75,9 @@ export const post = async (values, path, auth = false) => {
       throw new Error(`${result.detail}`);
     }
   } catch (error) {
-    showErrorMessage(error.message); // 🐞 Hiển thị lỗi
+    setTimeout(() => {
+      showErrorMessage(error.message);
+    }, 2000);
   }
 };
 
@@ -145,15 +147,23 @@ export const put = async (values, path, auth = true) => {
       headers,
       body: JSON.stringify(values),
     });
+    // const isJson = response.headers
+    //   .get("content-type")
+    //   ?.includes("application/json");
+    // const result = isJson ? await response.json() : await response.text();
 
+    // Lấy kết quả trả về dưới dạng json  console.log(">>>>>>>>>>>>>result11", result);
     if (response.ok) {
-      return;
+      return true;
     } else {
-      const result = await response.json();
-      throw new Error(result.detail);
+      const result = await response.text();
+      const test = JSON.parse(result);
+      throw new Error(test.detail);
     }
   } catch (error) {
-    showErrorMessage(error.message);
+    setTimeout(() => {
+      showErrorMessage(error.message);
+    }, 2000);
   }
 };
 

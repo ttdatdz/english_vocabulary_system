@@ -22,16 +22,29 @@ export default function TestSetManagement() {
   const [detailingTestSet, setDetailingTestSet] = useState(null);
   const [allTestSets, setAllTestSets] = useState([]);
   const [listTestSets, setListTestSets] = useState([]);
+  const [formKey, setFormKey] = useState(Date.now());
   const showModal = (record) => {
     setDetailingTestSet(record);
     setOpen(true);
+    setFormKey(Date.now());
   };
-  const handleOk = () => {
-    setConfirmLoading(true);
-    setTimeout(() => {
-      setOpen(false);
-      setConfirmLoading(false);
-    }, 2000);
+  const reloadExams = async () => {
+    const res = await GetAllTestSets();
+    // Thêm key cho mỗi exam (key = id)
+    const TestSetsWithKey = res.map((exam) => ({
+      ...exam,
+      key: exam.id,
+    }));
+    setListTestSets(TestSetsWithKey);
+    setAllTestSets(TestSetsWithKey);
+  };
+  const handleOk = (isSucced) => {
+    reloadExams();
+    setOpen(false);
+    setConfirmLoading(false);
+    if (isSucced) {
+      showSuccess("Thêm đề thi thành công!");
+    }
   };
   const handleDelete = async (Id) => {
     const confirmed = await confirmDelete("Bạn có chắc muốn xóa bộ đề này?");
@@ -151,6 +164,8 @@ export default function TestSetManagement() {
           confirmLoading={confirmLoading}
           setConfirmLoading={setConfirmLoading}
           initialValues={detailingTestSet}
+          open={open}
+          key={formKey}
         />
       </BaseModal>
     </div>
