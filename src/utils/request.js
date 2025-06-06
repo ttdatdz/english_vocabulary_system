@@ -101,11 +101,11 @@ export const del = async (path, auth = true) => {
     if (response.ok) {
       return true;
     } else {
-      const result = await response.text(); // Lấy kết quả trả về dưới dạng text
+      const result = await response.json(); // Lấy kết quả trả về dưới dạng text
       throw new Error(result.detail);
     }
   } catch (error) {
-    alert(error.message); // 🐞 Hiển thị lỗi
+    showErrorMessage(error.message); // 🐞 Hiển thị lỗi
   }
 };
 export const patch = async (value, path, auth = true) => {

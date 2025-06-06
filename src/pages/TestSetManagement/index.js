@@ -52,7 +52,7 @@ export default function TestSetManagement() {
     try {
       const result = await DeleteTestSet(Id);
       if (!result) {
-        showErrorMessage("Xóa bộ đề thất bại");
+        // showErrorMessage("Xóa bộ đề thất bại");
         return;
       }
       setListTestSets((prev) => prev.filter((testSet) => testSet.id !== Id));
