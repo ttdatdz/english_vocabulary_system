@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import "./BlogManagement.scss";
 import { Button, Input, Select } from "antd";
@@ -6,12 +6,22 @@ import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
-import { confirmDelete } from "../../utils/alertHelper";
+import { confirmDelete, showErrorMessage } from "../../utils/alertHelper";
 import AddAndEditBlog from "../../components/AddAndEditBlog";
+import { GetAllBlogs } from "../../services/Blog/blogService";
+import { GetAllCategoryBlogs } from "../../services/Blog/categoryBlogService";
+
 export default function BlogManagement() {
-  const [open, setOpen] = useState(false); // mở modal
-  const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
+  const [open, setOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [detailingBlog, setDetailingBlog] = useState(null);
+  const [allBlogs, setAllBlogs] = useState([]);
+  const [listBlogs, setListBlogs] = useState([]);
+  const [formKey, setFormKey] = useState(Date.now());
+  const [listCategoryBlogs, setListCategoryBlogs] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   const showModal = (record = null) => {
     setDetailingBlog(record);
     setOpen(true);
@@ -27,6 +37,60 @@ export default function BlogManagement() {
   const handleClose = () => {
     setOpen(false);
   };
+
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const res = await GetAllBlogs();
+        const BlogsWithKey = res.map((blog) => ({
+          ...blog,
+          key: blog.id,
+        }));
+        setAllBlogs(BlogsWithKey);
+      } catch (error) {
+        showErrorMessage("Lỗi khi lấy danh sách bài blog:", error);
+      }
+    };
+    fetchBlog();
+  }, []);
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const res = await GetAllCategoryBlogs();
+        const CategoryWithKey = res.map((category) => ({
+          ...category,
+          key: category.id,
+        }));
+        setListCategoryBlogs(CategoryWithKey);
+      } catch (error) {
+        showErrorMessage("Lỗi khi lấy danh sách bộ đề:", error);
+      }
+    };
+    fetchCategory();
+  }, []);
+
+  // Lọc dữ liệu dựa trên searchValue và selectedCategory
+  useEffect(() => {
+    let filtered = allBlogs;
+
+    // Tìm kiếm trên nhiều trường (title, shortDetail)
+    if (searchValue) {
+      filtered = filtered.filter(
+        (blog) =>
+          blog.title?.toLowerCase().includes(searchValue) ||
+          blog.shortDetail?.toLowerCase().includes(searchValue)
+      );
+    }
+
+    // Lọc theo danh mục
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter((blog) => blog.category === selectedCategory);
+    }
+
+    setListBlogs(filtered);
+  }, [allBlogs, searchValue, selectedCategory]);
+
   const columns = [
     {
       title: "STT",
@@ -43,16 +107,10 @@ export default function BlogManagement() {
       dataIndex: "category",
       key: "category",
     },
-
     {
-      title: "Ngày đăng",
-      dataIndex: "createdAt",
-      key: "createdAt",
-    },
-    {
-      title: "Lượt xem",
-      dataIndex: "views",
-      key: "views",
+      title: "Tóm tắt ngắn",
+      dataIndex: "shortDetail",
+      key: "shortDetail",
     },
     {
       title: "Action",
@@ -69,56 +127,14 @@ export default function BlogManagement() {
     },
   ];
 
-  const data = [
-    {
-      key: "1",
-      title: "10 mẹo luyện nghe TOEIC hiệu quả",
-      category: "Toeic tips",
-      createdAt: "2024-05-01",
-      views: 1200,
-    },
-    {
-      key: "2",
-      title: "Cách ghi nhớ từ vựng nhanh chóng",
-      category: "Vocabulary",
-      createdAt: "2024-05-03",
-      views: 980,
-    },
-    {
-      key: "3",
-      title: "Kinh nghiệm luyện đọc hiểu TOEIC",
-      category: "Reading skill",
-      createdAt: "2024-05-05",
-      views: 750,
-    },
-    {
-      key: "4",
-      title: "Tổng hợp cấu trúc ngữ pháp thường gặp",
-      category: "Grammar",
-      createdAt: "2024-05-07",
-      views: 860,
-    },
-    {
-      key: "5",
-      title: "Luyện viết tiếng Anh cho người mới bắt đầu",
-      category: "Writing skill",
-      createdAt: "2024-05-10",
-      views: 540,
-    },
-    {
-      key: "6",
-      title: "Cách phát âm chuẩn trong TOEIC",
-      category: "Pronunciation",
-      createdAt: "2024-05-12",
-      views: 430,
-    },
-  ];
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
+  const handleSearch = (e) => {
+    setSearchValue(e.target.value.toLowerCase());
   };
+
   const handleChange = (value) => {
-    console.log(`selected ${value}`);
+    setSelectedCategory(value);
   };
+
   return (
     <div className="BlogManagement">
       <h2 className="PageTitle">Blog Management</h2>
@@ -127,17 +143,20 @@ export default function BlogManagement() {
           <Input
             className="SearchBar SearchBar--size"
             suffix={<SearchOutlined />}
-            placeholder="Nhập tên bài blog cần tìm"
+            placeholder="Nhập tên bài blog hoặc tóm tắt cần tìm"
             allowClear
+            onChange={handleSearch}
           />
           <Select
-            // defaultValue="Tất cả"
+            defaultValue="All"
             placeholder="Lọc theo danh mục"
             onChange={handleChange}
             options={[
-              { value: "Toeic tips", label: "Toeic tips" },
-              { value: "Reading skill", label: "Reading skill" },
-              { value: "All", label: "Tất cả" },
+              { label: "Tất cả", value: "All" },
+              ...listCategoryBlogs.map((category) => ({
+                label: category.title,
+                value: category.title,
+              })),
             ]}
             className="filter"
           />
@@ -150,7 +169,7 @@ export default function BlogManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={data} onChange={onChange} />
+      <BaseTable columns={columns} data={listBlogs} onChange={() => {}} />
 
       <BaseModal
         open={open}

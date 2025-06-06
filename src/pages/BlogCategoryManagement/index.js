@@ -81,7 +81,7 @@ export default function BlogCategoryManagent() {
         setAllCategoryBlogs(usersWithKey);
         setListCategoryBlogs(usersWithKey);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách bộ đề:", error);
+        console.error("Lỗi khi lấy danh sách danh mục blog:", error);
       }
     };
     fetchUsers();
@@ -129,17 +129,7 @@ export default function BlogCategoryManagent() {
   const onChange = (pagination, filters, sorter, extra) => {
     console.log("params", pagination, filters, sorter, extra);
   };
-  // const handleUpdateCategoryBlog = async (values, id) => {
-  //   const result = await UpdateCategoryBlog(values, id);
-  //   if (result) {
-  //     // Cập nhật lại state bằng dữ liệu mới vừa update
-  //     setDetailingCategory({ ...values, id });
-  //     // Nếu cần, cũng cập nhật lại danh sách
-  //     // reloadExams();
-  //     // // Đóng modal hoặc các xử lý khác nếu muốn
-  //   }
-  // };
-  // console.log(">>>>.check detailingCategory", detailingCategory);
+
   return (
     <div className="CategoryManagement">
       <h2 className="PageTitle">Blog Category Management</h2>

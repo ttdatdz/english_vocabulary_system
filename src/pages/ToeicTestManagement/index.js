@@ -14,35 +14,37 @@ import {
 import AddAndEditExam from "../../components/AddAndEditExam";
 import { DeleteExam, GetAllExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
+
 export default function ToeicTestManagement() {
-  const [open, setOpen] = useState(false); // mở modal
-  const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
+  const [open, setOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [detailingExam, setDetailingExam] = useState(null);
   const [allExams, setAllExams] = useState([]);
   const [listExams, setListExams] = useState([]);
   const [listTestSets, setListTestSets] = useState([]);
   const [formKey, setFormKey] = useState(Date.now());
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedCollection, setSelectedCollection] = useState("All");
+
   const showModal = (record) => {
     setDetailingExam(record);
     setOpen(true);
     setFormKey(Date.now());
   };
   const handleClose = () => {
-    console.log(">>>>.chạy vào handleClose");
     setOpen(false);
     setDetailingExam(null);
   };
 
   const reloadExams = async () => {
     const res = await GetAllExams();
-    // Thêm key cho mỗi exam (key = id)
     const examsWithKey = res.map((exam) => ({
       ...exam,
       key: exam.id,
     }));
-    setListExams(examsWithKey);
     setAllExams(examsWithKey);
   };
+
   const handleOk = (isSucced) => {
     reloadExams();
     setOpen(false);
@@ -57,13 +59,10 @@ export default function ToeicTestManagement() {
     const fetchUsers = async () => {
       try {
         const res = await GetAllExams();
-
-        //đoạn này để fix warning key trong bảng
         const usersWithKey = res.map((exam) => ({
           ...exam,
           key: exam.id,
         }));
-        setListExams(usersWithKey);
         setAllExams(usersWithKey);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách bộ đề:", error);
@@ -77,8 +76,6 @@ export default function ToeicTestManagement() {
     const fetchUsers = async () => {
       try {
         const res = await GetAllTestSets();
-
-        //đoạn này để fix warning key trong bảng
         const usersWithKey = res
           .map((user) => ({
             ...user,
@@ -103,18 +100,39 @@ export default function ToeicTestManagement() {
         showErrorMessage("Xóa đề thi thất bại");
         return;
       }
-      setListExams((prev) => prev.filter((exam) => exam.id !== Id));
       setAllExams((prev) => prev.filter((exam) => exam.id !== Id));
       showSuccess("Xóa đề thi thành công!");
     } catch (error) {
       showErrorMessage("Xóa đề thi thất bại!");
     }
   };
+
+  // Lọc dữ liệu dựa trên searchValue và selectedCollection
+  useEffect(() => {
+    let filtered = allExams;
+
+    // Tìm kiếm trên nhiều trường (ở đây là title, có thể mở rộng)
+    if (searchValue) {
+      filtered = filtered.filter(
+        (exam) => exam.title?.toLowerCase().includes(searchValue)
+        // Có thể thêm các trường khác ở đây nếu muốn
+      );
+    }
+
+    // Lọc theo bộ đề
+    if (selectedCollection !== "All") {
+      filtered = filtered.filter(
+        (exam) => exam.collection === selectedCollection
+      );
+    }
+
+    setListExams(filtered);
+  }, [allExams, searchValue, selectedCollection]);
+
   const columns = [
     {
       title: "Số thứ tự",
       key: "index",
-      // Số thứ tự (STT) nên phản ánh đúng vị trí hiện tại của dòng trên bảng, không phải vị trí gốc trong mảng data.
       render: (_, __, index) => index + 1,
     },
     {
@@ -126,9 +144,7 @@ export default function ToeicTestManagement() {
       title: "Thời lượng (phút)",
       dataIndex: "duration",
       key: "duration",
-      render: (value, _, __) => {
-        return value + " phút";
-      },
+      render: (value) => value + " phút",
     },
     {
       title: "Bộ đề",
@@ -151,28 +167,13 @@ export default function ToeicTestManagement() {
   ];
 
   const handleSearch = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    if (searchValue) {
-      const filteredExam = allExams.filter((exam) =>
-        exam.title?.toLowerCase().includes(searchValue)
-      );
-      setListExams(filteredExam);
-    } else {
-      setListExams(allExams); // Reset lại danh sách hiển thị
-    }
+    setSearchValue(e.target.value.toLowerCase());
   };
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
-  };
+
   const handleChange = (value) => {
-    if (value === "All") {
-      setListExams(allExams);
-    } else {
-      const filtered = allExams.filter((exam) => exam.collection === value);
-      setListExams(filtered);
-    }
+    setSelectedCollection(value);
   };
-  console.log(">>>>.check detailingExam", detailingExam);
+
   return (
     <div className="ToeicTestManagement">
       <h2 className="PageTitle">Toiec test Management</h2>
@@ -207,7 +208,7 @@ export default function ToeicTestManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={listExams} onChange={onChange} />
+      <BaseTable columns={columns} data={listExams} onChange={() => {}} />
 
       <BaseModal
         open={open}
