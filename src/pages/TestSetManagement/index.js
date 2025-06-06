@@ -166,6 +166,8 @@ export default function TestSetManagement() {
           initialValues={detailingTestSet}
           open={open}
           key={formKey}
+          setDetailingTestSet={setDetailingTestSet}
+          reloadExams={reloadExams}
         />
       </BaseModal>
     </div>

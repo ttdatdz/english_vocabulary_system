@@ -9,8 +9,15 @@ import {
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 export default function AddAndEditTestSet(props) {
-  const { onOK, confirmLoading, initialValues, setConfirmLoading, open } =
-    props;
+  const {
+    onOK,
+    confirmLoading,
+    initialValues,
+    setConfirmLoading,
+    open,
+    setDetailingTestSet,
+    reloadExams,
+  } = props;
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
@@ -55,6 +62,8 @@ export default function AddAndEditTestSet(props) {
         // setConfirmLoading(false);
         setIsEditing(false);
         showSuccess("Cập nhật bộ đề thành công!");
+        setDetailingTestSet({ ...values, id: initialValues.id });
+        reloadExams();
       }, 2000);
     }
   };
