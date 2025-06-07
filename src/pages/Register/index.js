@@ -3,18 +3,55 @@ import { Form, Input, Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowBack } from "react-icons/io";
 
-import { DatePicker } from "antd";
 import { post } from "../../utils/request";
 import { useState } from "react";
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 export default function Register() {
   const navigate = useNavigate();
+  const validateData = (values) => {
+    // Kiểm tra không được bỏ trống trường nào
+    if (
+      !values.fullName ||
+      !values.email ||
+      !values.phoneNumber ||
+      !values.accountName ||
+      !values.passWord
+    ) {
+      showErrorMessage("Vui lòng nhập đầy đủ tất cả các trường!");
+      return false;
+    }
+    // Email
+    if (!/^[\w-\.]+@gmail\.com$/.test(values.email)) {
+      showErrorMessage("Email phải có dạng @gmail.com!");
+      return false;
+    }
+    // Số điện thoại
+    if (!/^0\d{9}$/.test(values.phoneNumber)) {
+      showErrorMessage("Số điện thoại phải có 10 số và bắt đầu bằng 0!");
+      return false;
+    }
+    // Tài khoản
+    if (values.accountName.length < 5) {
+      showErrorMessage("Tên đăng nhập phải có ít nhất 5 ký tự!");
+      return false;
+    }
+    // Mật khẩu
+    if (values.passWord.length < 5) {
+      showErrorMessage("Mật khẩu phải có ít nhất 5 ký tự!");
+      return false;
+    }
+    return true;
+  };
   const onFinish = async (values) => {
     // console.log(">>>>>>>check values", values);
+    if (!validateData(values)) return;
     try {
       const response = await post(values, `api/user/register`);
-      console.log(">>>>>>>check response", response);
+      // console.log(">>>>>>>check response", response);
+      if (!response) {
+        return;
+      }
       showSuccess("Đăng ký thành công!");
       navigate("/Login");
     } catch (error) {
@@ -41,24 +78,14 @@ export default function Register() {
               className="Register-page__form"
               autoComplete="off"
             >
-              <Form.Item
-                name="fullName"
-                className="Register-page__form-item"
-                rules={[
-                  { required: true, message: "Vui lòng nhập họ và tên!" },
-                ]}
-              >
+              <Form.Item name="fullName" className="Register-page__form-item">
                 <Input
                   className="Register-page__InputUserName"
                   style={{ height: "40px", color: "#ED5F31" }}
                   placeholder="Họ và tên"
                 />
               </Form.Item>
-              <Form.Item
-                name="email"
-                className="Register-page__form-item"
-                rules={[{ required: true, message: "Vui lòng nhập email!" }]}
-              >
+              <Form.Item name="email" className="Register-page__form-item">
                 <Input
                   className="Register-page__InputUserName"
                   style={{ height: "40px", color: "#ED5F31" }}
@@ -68,9 +95,6 @@ export default function Register() {
               <Form.Item
                 name="phoneNumber"
                 className="Register-page__form-item"
-                rules={[
-                  { required: true, message: "Vui lòng nhập số điện thoại!" },
-                ]}
               >
                 <Input
                   className="Register-page__InputUserName"
@@ -82,9 +106,6 @@ export default function Register() {
               <Form.Item
                 name="accountName"
                 className="Register-page__form-item"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên đăng nhập!" },
-                ]}
               >
                 <Input
                   className="Register-page__InputUserName"
@@ -92,11 +113,7 @@ export default function Register() {
                   placeholder="Tên đăng nhập"
                 />
               </Form.Item>
-              <Form.Item
-                className="login-page__form-item"
-                name="passWord"
-                rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-              >
+              <Form.Item className="login-page__form-item" name="passWord">
                 <Input.Password
                   className="login-page__InputPassword"
                   style={{ height: "40px", color: "#ED5F31" }}

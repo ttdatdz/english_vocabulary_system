@@ -70,14 +70,14 @@ export const post = async (values, path, auth = false) => {
         return await response.json(); // nếu là đăng nhập thì trả về dữ liệu người dùng
       return true;
     } else {
-      const result = await response.json();
+      const result = await response.text();
       // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`${result.detail}`);
+      throw new Error(`${result}`);
     }
   } catch (error) {
     setTimeout(() => {
       showErrorMessage(error.message);
-    }, 2000);
+    }, 1000);
   }
 };
 
