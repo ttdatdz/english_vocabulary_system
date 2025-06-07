@@ -16,3 +16,20 @@ export const GetDetailUser = async (id) => {
   const result = await get(`api/user/getUserByFilter?userID=${id}`);
   return result;
 };
+export const RenewalTokenAPI = async (renewalToken) => {
+  const response = await fetch("/api/user/renewalToken", {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${renewalToken}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    const error = new Error("Failed to renew token");
+    error.response = response;
+    throw error;
+  }
+
+  return await response.json(); // Giả sử backend trả về { token: ... }
+};

@@ -2,14 +2,14 @@ import BtnDetail from "../BtnDetail/index";
 import "./CardItemFlashCard.scss";
 import { UserOutlined } from "@ant-design/icons";
 
-export default function CardItemFlashCard() {
+export default function TopicItemFlashCard({ topic }) {
     return (
         <div className="card-item-flashcard">
-            <h3 className="card-item-flashcard__title">Toeic 600 words</h3>
+            <h3 className="card-item-flashcard__title">{topic.title}</h3>
             <div className="card-item-flashcard__info">
                 <p className="card-item-flashcard__info-item">
                     <UserOutlined className="card-item-flashcard__icon" />
-                    <span>120001 Lượt truy cập</span>
+                    <span>{topic.visitCount} Lượt truy cập</span>
                 </p>
             </div>
             <BtnDetail >Chi tiết</BtnDetail>
