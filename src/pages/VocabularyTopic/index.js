@@ -1,47 +1,77 @@
 import "./VocabularyTopic.scss";
 import { Tabs } from 'antd';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ListTopicOfTab from "../../components/ListTopicOfTab";
-
+import { get } from "../../utils/request";
 const { TabPane } = Tabs;
 
 export default function VocabularyTopic() {
-    const myVocabList = [
-        { id: 1, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 2, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 3, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 4, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 5, title: 'TOEIC Vocab ETS 2024 - Listening' },
-    ];
 
-    const studyingList = [
-        { id: 6, title: 'TOEIC Vocab ETS 2024 - Reading' },
-        { id: 7, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-        { id: 8, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-        { id: 9, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-        { id: 10, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-    ];
-
-    const exploreList = [
-        { id: 11, title: 'Business English Basics' },
-        { id: 12, title: 'IELTS Common Topics' },
-        { id: 13, title: 'IELTS Common Topics' },
-        { id: 14, title: 'IELTS Common Topics' },
-        { id: 15, title: 'IELTS Common Topics' },
-    ];
-
+    const [myVocabList, setMyVocabList] = useState([]);
+    const [studyingList, setStudyingList] = useState([]);
+    const [exploreList, setExploreList] = useState([]);
+    const [newList, setNewList] = useState([]);
+    const [reviewList, setReviewList] = useState([]);
+    const [masterList, setMasterList] = useState([]);
     const [activeTab, setActiveTab] = useState('1');
+
+    const fetchUserTopics = async () => {
+        const userId = localStorage.getItem("userId");
+        const data = await get(`/api/flashcard/getTopicsByUser/${userId}`);
+        if (data && Array.isArray(data)) {
+            setMyVocabList(data);
+            setStudyingList(
+                data.filter((item) => item.learningStatus === "IN_PROGRESS")
+            );
+            setNewList(data.filter((item) => item.learningStatus === "NEW"));
+            setReviewList(
+                data.filter((item) => item.learningStatus === "REVIEW_NEEDED")
+            );
+            setMasterList(data.filter((item) => item.learningStatus === "MASTERED"));
+        }
+    };
+
+    useEffect(() => {
+        const fetchExploreTopics = async () => {
+            try {
+                const data = await get("api/flashcard/getTopicPopular");
+                if (data && Array.isArray(data)) {
+                    setExploreList(data);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải chủ đề từ vựng:", error);
+            }
+        };
+        fetchExploreTopics();
+        fetchUserTopics();
+    }, []);
 
     const renderTopicList = () => {
         switch (activeTab) {
-            case '1':
-                return <ListTopicOfTab list={myVocabList} activeTab={1} />;
+            case "1":
+                return (
+                    <ListTopicOfTab
+                        list={myVocabList}
+                        activeTab={1}
+                        onTopicCreated={() => {
+                            fetchUserTopics();
+                            //setFormKey(Date.now());
+                        }}
+                    //formKey={formKey}
+                    />
+                );
             case '2':
                 return <ListTopicOfTab list={studyingList} activeTab={2} />;
             case '3':
-                return <ListTopicOfTab list={exploreList} activeTab={3} />;
+                return <ListTopicOfTab list={newList} activeTab={3} />;
+            case "4":
+                return <ListTopicOfTab list={reviewList} activeTab={4} />;
+            case "5":
+                return <ListTopicOfTab list={masterList} activeTab={5} />;
+            case "6":
+                return <ListTopicOfTab list={exploreList} activeTab={6} />;
             default:
-                return [];
+                return null;
         }
     };
 
@@ -53,7 +83,10 @@ export default function VocabularyTopic() {
                     <Tabs defaultActiveKey="1" onChange={setActiveTab}>
                         <TabPane tab="Bộ từ vựng của tôi" key="1" />
                         <TabPane tab="Đang học" key="2" />
-                        <TabPane tab="Khám phá" key="3" />
+                        <TabPane tab="Mới" key="3" />
+                        <TabPane tab="Cần xem lại" key="4" />
+                        <TabPane tab="Đã thành thạo" key="5" />
+                        <TabPane tab="Khám phá" key="6" />
                     </Tabs>
                 </div>
             </div>
