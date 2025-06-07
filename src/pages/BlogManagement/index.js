@@ -6,9 +6,13 @@ import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
-import { confirmDelete, showErrorMessage } from "../../utils/alertHelper";
+import {
+  confirmDelete,
+  showErrorMessage,
+  showSuccess,
+} from "../../utils/alertHelper";
 import AddAndEditBlog from "../../components/AddAndEditBlog";
-import { GetAllBlogs } from "../../services/Blog/blogService";
+import { DeleteBlog, GetAllBlogs } from "../../services/Blog/blogService";
 import { GetAllCategoryBlogs } from "../../services/Blog/categoryBlogService";
 
 export default function BlogManagement() {
@@ -25,19 +29,45 @@ export default function BlogManagement() {
   const showModal = (record = null) => {
     setDetailingBlog(record);
     setOpen(true);
+    setFormKey(Date.now());
   };
-  const handleOk = () => {
-    setConfirmLoading(true);
-    setTimeout(() => {
-      setOpen(false);
-      setConfirmLoading(false);
-    }, 2000);
+  const reloadBlogs = async () => {
+    const res = await GetAllBlogs();
+    // Thêm key cho mỗi exam (key = id)
+    const BlogsWithKey = res.map((blog) => ({
+      ...blog,
+      key: blog.id,
+    }));
+    setListBlogs(BlogsWithKey);
+    setAllBlogs(BlogsWithKey);
+  };
+  const handleOk = (isSucced) => {
+    reloadBlogs();
+    setOpen(false);
+    setConfirmLoading(false);
+    if (isSucced) {
+      showSuccess("Thêm bài blog thành công!");
+    }
   };
 
   const handleClose = () => {
     setOpen(false);
   };
-
+  const handleDelete = async (Id) => {
+    const confirmed = await confirmDelete("Bạn có chắc muốn xóa bài blog này?");
+    if (!confirmed) return;
+    try {
+      const result = await DeleteBlog(Id);
+      if (!result) {
+        return;
+      }
+      setListBlogs((prev) => prev.filter((blog) => blog.id !== Id));
+      setAllBlogs((prev) => prev.filter((blog) => blog.id !== Id));
+      showSuccess("Xóa bài blog thành công!");
+    } catch (error) {
+      showErrorMessage("Xóa bài blog thất bại!");
+    }
+  };
   useEffect(() => {
     const fetchBlog = async () => {
       try {
@@ -76,10 +106,8 @@ export default function BlogManagement() {
 
     // Tìm kiếm trên nhiều trường (title, shortDetail)
     if (searchValue) {
-      filtered = filtered.filter(
-        (blog) =>
-          blog.title?.toLowerCase().includes(searchValue) ||
-          blog.shortDetail?.toLowerCase().includes(searchValue)
+      filtered = filtered.filter((blog) =>
+        blog.title?.toLowerCase().includes(searchValue)
       );
     }
 
@@ -120,7 +148,7 @@ export default function BlogManagement() {
           <IoEye className="Action__Detail" onClick={() => showModal(record)} />
           <MdDelete
             className="Action__Delete"
-            onClick={() => confirmDelete()}
+            onClick={() => handleDelete(record.id)}
           />
         </div>
       ),
@@ -143,7 +171,7 @@ export default function BlogManagement() {
           <Input
             className="SearchBar SearchBar--size"
             suffix={<SearchOutlined />}
-            placeholder="Nhập tên bài blog hoặc tóm tắt cần tìm"
+            placeholder="Nhập tên bài blog cần tìm"
             allowClear
             onChange={handleSearch}
           />
@@ -179,11 +207,17 @@ export default function BlogManagement() {
             {detailingBlog ? "Chi tiết bài blog" : "Thêm bài blog"}
           </div>
         }
+        width={950}
       >
         <AddAndEditBlog
           onOK={handleOk}
           confirmLoading={confirmLoading}
           initialValues={detailingBlog}
+          listCategoryBlogs={listCategoryBlogs}
+          setConfirmLoading={setConfirmLoading}
+          key={formKey}
+          reloadBlogs={reloadBlogs}
+          setDetailingBlog={setDetailingBlog}
         />
       </BaseModal>
     </div>

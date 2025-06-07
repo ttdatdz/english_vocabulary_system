@@ -1,0 +1,6 @@
+.editor-disabled .tox-edit-area__iframe {
+  pointer-events: none !important;
+  background: #f5f5f5;
+  cursor: not-allowed !important;
+  opacity: 0.5;
+}

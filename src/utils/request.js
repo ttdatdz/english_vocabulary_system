@@ -180,17 +180,17 @@ export const postFormData = async (path, formData) => {
       body: formData,
     });
 
-    const isJson = response.headers
-      .get("content-type")
-      ?.includes("application/json");
-    const result = isJson ? await response.json() : await response.text();
-
+    // const isJson = response.headers
+    //   .get("content-type")
+    //   ?.includes("application/json");
+    // const result = isJson ? await response.json() : await response.text();
+    // console.log(">>>>>>>>>>>>>result11", result);
     if (!response.ok) {
-      throw new Error(
-        (result && result.detail) || result || "Lỗi không xác định"
-      );
+      const result = await response.text();
+      const test = JSON.parse(result);
+      throw new Error(test.detail || "Lỗi không xác định");
     } else {
-      return result;
+      return true;
     }
   } catch (error) {
     showErrorMessage(error.message);
@@ -214,6 +214,8 @@ export const putFormData = async (path, formData) => {
     if (!response.ok) {
       const result = await response.json();
       throw new Error(result.detail || "Lỗi khi cập nhật dữ liệu");
+    } else {
+      return true;
     }
   } catch (error) {
     showErrorMessage(error.message);
