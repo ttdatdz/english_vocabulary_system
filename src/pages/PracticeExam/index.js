@@ -10,7 +10,6 @@ import Part5 from "../../components/Part5";
 import PartSix from "../../components/PartSix";
 import PartSeven from "../../components/PartSeven";
 import { useLocation } from "react-router-dom";
-import moment from "moment";
 const { TabPane } = Tabs;
 
 export default function PracticeExam() {

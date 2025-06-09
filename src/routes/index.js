@@ -48,6 +48,7 @@ function MainRoutes() {
             element={<DetailListFalshCard />}
           />
           <Route path="DetailExam" element={<DetailExam />} />
+          <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="PracticeExam" element={<PracticeExam />} />
         </Route>
         {/* Layout quản trị viên */}
