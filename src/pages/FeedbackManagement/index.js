@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import "./FeedbackManagement.scss";
 import { Input, Select } from "antd";
@@ -6,37 +6,92 @@ import { SearchOutlined, StarFilled } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import BaseTable from "../../components/BaseTable";
-import { confirmDelete } from "../../utils/alertHelper";
+import {
+  confirmDelete,
+  showErrorMessage,
+  showSuccess,
+} from "../../utils/alertHelper";
 import DetailFeedbackForm from "../../components/DetailFeedbackForm";
+import {
+  DeleteEvaluate,
+  GetAllEvaluate,
+} from "../../services/Evaluate/evaluateService";
+import dayjs from "dayjs";
+
 export default function FeedbackManagement() {
-  const [open, setOpen] = useState(false); // mở modal
+  const [open, setOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [allFeedbacks, setAllFeedbacks] = useState([]);
+  const [listFeedbacks, setListFeedbacks] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedStar, setSelectedStar] = useState("All");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
   const showModal = (record) => {
     setSelectedFeedback(record);
     setOpen(true);
   };
+
   const handleOk = () => {
     setTimeout(() => {
       setOpen(false);
     }, 2000);
   };
-  const handleChange = (value) => {
-    console.log(`selected ${value}`);
-  };
+
   const handleClose = () => {
     setOpen(false);
   };
+
+  // Lấy danh sách feedback
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await GetAllEvaluate();
+        const formattedRes = res.map((item) => ({
+          ...item,
+          date: dayjs(item.createAt).format("YYYY-MM-DD"),
+        }));
+        setAllFeedbacks(formattedRes);
+      } catch (error) {
+        showErrorMessage("Lỗi khi lấy danh sách phản hồi:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // Lọc dữ liệu dựa trên searchValue và selectedStar
+  useEffect(() => {
+    let filtered = allFeedbacks;
+
+    if (searchValue) {
+      filtered = filtered.filter((feedback) =>
+        feedback.fullName?.toLowerCase().includes(searchValue)
+      );
+    }
+
+    if (selectedStar !== "All") {
+      filtered = filtered.filter(
+        (feedback) => Number(feedback.star) === Number(selectedStar)
+      );
+    }
+    setPagination((prev) => ({ ...prev, current: 1 })); // Luôn reset về trang 1
+    setListFeedbacks(filtered);
+  }, [allFeedbacks, searchValue, selectedStar]);
+
   const columns = [
     {
       title: "STT",
       key: "index",
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
       width: 60,
     },
     {
       title: "Người đánh giá",
-      dataIndex: "userName",
-      key: "userName",
+      dataIndex: "fullName",
+      key: "fullName",
       width: 150,
     },
     {
@@ -54,8 +109,8 @@ export default function FeedbackManagement() {
     },
     {
       title: "Số sao",
-      dataIndex: "rating",
-      key: "rating",
+      dataIndex: "star",
+      key: "star",
       width: 80,
       render: (rating) => (
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -79,38 +134,40 @@ export default function FeedbackManagement() {
           <IoEye className="Action__Detail" onClick={() => showModal(record)} />
           <MdDelete
             className="Action__Delete"
-            onClick={() => confirmDelete()}
+            onClick={() => handleDelete(record.id)}
           />
         </div>
       ),
     },
   ];
 
-  const data = [
-    {
-      key: "1",
-      userName: "Nguyễn Văn A",
-      email: "vana@gmail.com",
-      content: "Ứng dụng rất hữu ích!",
-      rating: 5,
-      date: "2024-06-01",
-      image:
-        "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    },
-    {
-      key: "2",
-      userName: "Trần Thị B",
-      email: "thib@gmail.com",
-      content: "Nên bổ sung thêm phần luyện nghe.",
-      rating: 4,
-      date: "2024-05-28",
-      image: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-  ];
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
+  // Xóa feedback
+  const handleDelete = async (Id) => {
+    const confirmed = await confirmDelete("Bạn có chắc muốn xóa feedback này?");
+    if (!confirmed) return;
+    try {
+      const result = await DeleteEvaluate(Id);
+      if (!result) {
+        showErrorMessage("Xóa Feedback thất bại");
+        return;
+      }
+      setAllFeedbacks((prev) => prev.filter((feedback) => feedback.id !== Id));
+      showSuccess("Xóa Feedback thành công!");
+    } catch (error) {
+      showErrorMessage("Xóa Feedback thất bại!");
+    }
   };
-  // console.log(">>>>.check detailingFeedback", detailingFeedback);
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
+  };
+  const handleSearch = (e) => {
+    setSearchValue(e.target.value.toLowerCase());
+  };
+
+  const handleChange = (value) => {
+    setSelectedStar(value);
+  };
+
   return (
     <div className="FeedbackManagement">
       <h2 className="PageTitle">Feedback Management</h2>
@@ -121,24 +178,40 @@ export default function FeedbackManagement() {
             suffix={<SearchOutlined />}
             placeholder="Nhập tên người gửi"
             allowClear
+            onChange={handleSearch}
           />
           <Select
-            // defaultValue="Tất cả"
             placeholder="Lọc theo sao"
             onChange={handleChange}
             options={[
+              { value: "All", label: "Tất cả" },
               { value: "5", label: "5" },
               { value: "4", label: "4" },
               { value: "3", label: "3" },
               { value: "2", label: "2" },
               { value: "1", label: "1" },
-              { value: "All", label: "Tất cả" },
             ]}
             className="filter"
           />
         </div>
       </div>
-      <BaseTable columns={columns} data={data} onChange={onChange} />
+
+      <BaseTable
+        columns={columns}
+        data={listFeedbacks}
+        onChange={handleTableChange}
+        // pagination={{
+        //   pageSize: 6,
+        //   showSizeChanger: false,
+        // }}
+        pagination={{
+          ...pagination,
+          total: listFeedbacks.length,
+          showSizeChanger: false,
+        }}
+        rowKey="id"
+      />
+
       <BaseModal
         open={open}
         onCancel={handleClose}

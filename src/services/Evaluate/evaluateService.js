@@ -1,15 +1,15 @@
-import { del, get, postFormData, put, putFormData } from "../../utils/request";
+import { del, get, postFormData, put } from "../../utils/request";
 
 export const GetAllEvaluate = async () => {
-  const result = await get("api/blog/getAll");
+  const result = await get("api/evaluate/get");
   return result;
 };
 export const DeleteEvaluate = async (id) => {
-  const result = await del(`api/blog/delete/${id}`);
+  const result = await del(`api/evaluate/delete/${id}`);
   return result;
 };
 export const UpdateEvaluate = async (value, id) => {
-  const result = await putFormData(`api/blog/update/${id}`, value);
+  const result = await put(value, `api/evaluate/update/${id}`);
   return result;
 };
 export const CreateEvaluate = async (value) => {

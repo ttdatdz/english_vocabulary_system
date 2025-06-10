@@ -2,28 +2,46 @@ import { useState, useEffect } from "react"; // Thêm useEffect ở đây
 import { Button, Input, Rate, Form, Image } from "antd";
 import "./DetailFeedbackForm.scss";
 import { EditOutlined } from "@ant-design/icons";
+import { UpdateEvaluate } from "../../services/Evaluate/evaluateService";
+import { showSuccess } from "../../utils/alertHelper";
 
 export default function DetailFeedbackForm({ feedback, onReply }) {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [form] = Form.useForm();
-
+  console.log("feedback", feedback);
   // Đặt useEffect ở đầu hàm component, không nằm trong điều kiện nào
   useEffect(() => {
-    form.resetFields();
-    setIsEditing(false);
+    if (feedback) {
+      form.setFieldsValue({
+        adminReply: feedback.adminReply || "", // set giá trị cho trường adminReply
+      });
+      setIsEditing(false);
+    }
   }, [feedback, form]);
 
   if (!feedback) return null; // Đặt sau hook
 
-  const onFinish = (values) => {
-    console.log("Success:", values);
-
-    setConfirmLoading(true);
-    setTimeout(() => {
-      setConfirmLoading(false);
-      setIsEditing(false); // Gửi xong thì quay lại chế độ xem
-    }, 2000);
+  const onFinish = async (values) => {
+    console.log("values", values);
+    try {
+      setConfirmLoading(true);
+      const result = await UpdateEvaluate(values, feedback.id);
+      if (!result) {
+        setTimeout(() => {
+          setConfirmLoading(false);
+        }, 2000);
+        return;
+      } else {
+        setTimeout(() => {
+          setConfirmLoading(false);
+          setIsEditing(false);
+          showSuccess("Cập nhật phản hồi thành công!");
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật phản hồi:", error);
+    }
   };
   const handleCancel = () => {
     setIsEditing(false);
@@ -36,13 +54,13 @@ export default function DetailFeedbackForm({ feedback, onReply }) {
         <div className="DetailFeedbackForm__header">
           <div>
             <strong>
-              {feedback.userName} ({feedback.email})
+              {feedback.fullName} ({feedback.email})
             </strong>
           </div>
           <div>{feedback.date}</div>
         </div>
         <div style={{ margin: "8px 0" }}>
-          <Rate disabled value={feedback.rating} />
+          <Rate disabled value={feedback.star} />
         </div>
         <div className="DetailFeedbackForm__content">{feedback.content}</div>
         {feedback.image && (
@@ -56,11 +74,11 @@ export default function DetailFeedbackForm({ feedback, onReply }) {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ reply: "" }}
+          initialValues={feedback}
         >
           <Form.Item
             label="Phản hồi người dùng:"
-            name="reply"
+            name="adminReply"
             rules={[
               { required: true, message: "Vui lòng nhập nội dung phản hồi!" },
             ]}

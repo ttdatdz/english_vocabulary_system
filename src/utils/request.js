@@ -158,7 +158,7 @@ export const put = async (values, path, auth = true) => {
     } else {
       const result = await response.text();
       const test = JSON.parse(result);
-      throw new Error(test.detail);
+      throw new Error(test.detail || test.message);
     }
   } catch (error) {
     setTimeout(() => {
