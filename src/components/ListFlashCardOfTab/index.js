@@ -2,21 +2,26 @@ import "./ListFlashCardOfTab.scss";
 import { Button, Pagination } from "antd";
 import { EditOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
 import BaseModal from "../BaseModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HiOutlineSquare2Stack } from "react-icons/hi2";
-import { confirmDelete } from "../../utils/alertHelper";
+import { confirmDelete, showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import { MdCheckBoxOutlineBlank } from "react-icons/md";
 import AddAndEditListFlashCardForm from "../AddAndEditListFlashCardForm";
 import BtnDetail from "../BtnDetail";
 import { useNavigate } from "react-router-dom";
+import { del } from "../../utils/request";
 
 export default function ListFlashCardOfTab(props) {
-    const { list, activeTab } = props;
+    const { topicId, list, activeTab, onFlashCardCreated } = props;
     const navigate = useNavigate();
     const [editingListFlashCard, setEditingListFlashCard] = useState(null);
     const [open, setOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+
+    const topicsToShow = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const showModal = (FlashCards = null) => {
         setEditingListFlashCard(FlashCards);
         setOpen(true);
@@ -27,14 +32,27 @@ export default function ListFlashCardOfTab(props) {
         setTimeout(() => {
             setOpen(false);
             setConfirmLoading(false);
-        }, 2000);
+            if (onFlashCardCreated) onFlashCardCreated();
+        }, 1000);
     };
 
     const handleClose = () => {
         setOpen(false);
     };
-    const handleClick = () => {
-        navigate('/VocabularyTopics/DetailTopic/DetailListFlashCard')
+    const handleClick = (flashcardId) => {
+        navigate(`/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`)
+    }
+    const handleDelete = async (id) => {
+        const confirmed = await confirmDelete("Bạn có chắc chắn muốn xóa list từ này?");
+        if (confirmed) {
+            const result = await del(`api/flashcard/deleteFlashCard/${id}`);
+            if (result) {
+                showSuccess("Đã xóa thành công!");
+                if (props.onFlashCardCreated) props.onFlashCardCreated(); // fetch lại list
+            } else {
+                showErrorMessage("Không thể xóa. Vui lòng thử lại.");
+            }
+        }
     }
     return (
         <>
@@ -47,47 +65,48 @@ export default function ListFlashCardOfTab(props) {
             )}
 
             <div className="listFlashcard-list">
-                {list.map((item, index) => (
-                    <div className="listFlashcard-card" key={index}>
-                        <div className="listFlashcard-card__header">
-                            <h3 className="listFlashcard-card__title">600 TOEIC Words</h3>
-                            {activeTab === 1 && (
-                                <div className="listFlashcard-card__icons">
-                                    <EditOutlined onClick={() => showModal(item)} className="listFlashcard-card__icon listFlashcard-card__icon--edit" />
-                                    <DeleteOutlined onClick={() => confirmDelete()} className="listFlashcard-card__icon listFlashcard-card__icon--delete" />
-                                </div>
-                            )}
-                            {activeTab === 3 && (
-                                <div className="listFlashcard-card__icons">
-                                    <MdCheckBoxOutlineBlank className="listFlashcard-card__icon listFlashcard-card__icon--apply" />
-                                </div>
-                            )}
-                        </div>
+                {(!list || list.length === 0) ? (
+                    <div className="no-topic-text">Danh sách rỗng.</div>
+                ) : (
+                    topicsToShow.map((item) => (
+                        <div className="listFlashcard-card">
+                            <div className="listFlashcard-card__header">
+                                <h3 className="listFlashcard-card__title">{item?.title}</h3>
+                                {activeTab === 1 && (
+                                    <div className="listFlashcard-card__icons">
+                                        <EditOutlined onClick={(e) => { e.stopPropagation(); showModal(item); }} className="listFlashcard-card__icon listFlashcard-card__icon--edit" />
+                                        <DeleteOutlined onClick={async (e) => { e.stopPropagation(); await handleDelete(item.id); }} className="listFlashcard-card__icon listFlashcard-card__icon--delete" />
+                                    </div>
+                                )}
+                            </div>
 
-                        <div className="listFlashcard-card__info">
-                            <p className="listFlashcard-card__info-item">
-                                <HiOutlineSquare2Stack className="listFlashcard-card__info-icon" />
-                                <span>35 từ</span>
-                            </p>
-                            {activeTab === 3 ? (
+                            <div className="listFlashcard-card__info">
                                 <p className="listFlashcard-card__info-item">
-                                    <UserOutlined className="listFlashcard-card__info-icon" />
-                                    <span>120001 Lượt truy cập</span>
+                                    <HiOutlineSquare2Stack className="listFlashcard-card__info-icon" />
+                                    <span>{item?.words} từ</span>
                                 </p>
-                            ) : (
-                                <p className="listFlashcard-card__info-item">Ôn lại 10/3/2025</p>
-                            )}
-                        </div>
+                                {item.reviewDate && (
+                                    <p className="listFlashcard-card__info-item">Ôn lại {item.reviewDate}</p>
+                                )}
+                                <p className="listFlashcard-card__info-item">Chưa có ngày ôn lại</p>
+                            </div>
 
-                        <div className="listFlashcard-card__footer">
-                            <BtnDetail onClick={handleClick}>Chi tiết</BtnDetail>
+                            <div className="listFlashcard-card__footer">
+                                <BtnDetail onClick={() => { handleClick(item.id) }}>Chi tiết</BtnDetail>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
 
-            <Pagination align="center" defaultCurrent={1} total={50} />
+            <Pagination
+                style={{ display: "flex", justifyContent: "center", marginTop: 20 }}
+                current={currentPage}
+                pageSize={pageSize}
+                total={list.length}
+                onChange={page => setCurrentPage(page)}
+            />
 
             <BaseModal
                 open={open}
@@ -100,8 +119,10 @@ export default function ListFlashCardOfTab(props) {
             >
                 <AddAndEditListFlashCardForm
                     onOK={handleOk}
+                    topicId={topicId}
                     confirmLoading={confirmLoading}
                     initialValues={editingListFlashCard}
+                    onFlashCardCreated={onFlashCardCreated}
                 />
             </BaseModal>
         </>

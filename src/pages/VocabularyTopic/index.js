@@ -36,7 +36,8 @@ export default function VocabularyTopic() {
             try {
                 const data = await get("api/flashcard/getTopicPopular");
                 if (data && Array.isArray(data)) {
-                    setExploreList(data);
+                    //console.log(item.userName, localStorage.getItem("accountName"));
+                    setExploreList(data.filter((item) => item.userName != localStorage.getItem("accountName")));
                 }
             } catch (error) {
                 console.error("Lỗi khi tải chủ đề từ vựng:", error);
@@ -55,21 +56,29 @@ export default function VocabularyTopic() {
                         activeTab={1}
                         onTopicCreated={() => {
                             fetchUserTopics();
-                            //setFormKey(Date.now());
                         }}
-                    //formKey={formKey}
                     />
                 );
             case '2':
-                return <ListTopicOfTab list={studyingList} activeTab={2} />;
+                return <ListTopicOfTab list={studyingList} activeTab={2} onTopicCreated={() => {
+                            fetchUserTopics();
+                        }} />;
             case '3':
-                return <ListTopicOfTab list={newList} activeTab={3} />;
+                return <ListTopicOfTab list={newList} activeTab={3} onTopicCreated={() => {
+                            fetchUserTopics();
+                        }}/>;
             case "4":
-                return <ListTopicOfTab list={reviewList} activeTab={4} />;
+                return <ListTopicOfTab list={reviewList} activeTab={4} onTopicCreated={() => {
+                            fetchUserTopics();
+                        }}/>;
             case "5":
-                return <ListTopicOfTab list={masterList} activeTab={5} />;
+                return <ListTopicOfTab list={masterList} activeTab={5} onTopicCreated={() => {
+                            fetchUserTopics();
+                        }}/>;
             case "6":
-                return <ListTopicOfTab list={exploreList} activeTab={6} />;
+                return <ListTopicOfTab list={exploreList} activeTab={6} onTopicCreated={() => {
+                            fetchUserTopics();
+                        }}/>;
             default:
                 return null;
         }
@@ -81,7 +90,7 @@ export default function VocabularyTopic() {
                 <div className="MainContainer">
                     <h2 className="VocabularyTopic-page__header-title">📖 Topics</h2>
                     <Tabs defaultActiveKey="1" onChange={setActiveTab}>
-                        <TabPane tab="Bộ từ vựng của tôi" key="1" />
+                        <TabPane tab="Chủ đề từ vựng của tôi" key="1" />
                         <TabPane tab="Đang học" key="2" />
                         <TabPane tab="Mới" key="3" />
                         <TabPane tab="Cần xem lại" key="4" />

@@ -104,10 +104,6 @@ export default function PersonalInformationForm(props) {
     }
   };
 
-  const onGenderChange = (value) => {
-    form.setFieldsValue({ gender: value });
-  };
-
   return (
     <>
       <Form

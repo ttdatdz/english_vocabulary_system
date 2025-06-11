@@ -1,47 +1,82 @@
 import "./DetailTopic.scss";
 import { Tabs } from 'antd';
-import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import ListFlashCardOfTab from "../../components/ListFlashCardOfTab";
+import { get } from "../../utils/request";
+import { showErrorMessage } from "../../utils/alertHelper";
 
 const { TabPane } = Tabs;
 
 export default function DetailTopic() {
-    const myVocabList = [
-        { id: 1, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 2, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 3, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 4, title: 'TOEIC Vocab ETS 2024 - Listening' },
-        { id: 5, title: 'TOEIC Vocab ETS 2024 - Listening' },
-    ];
 
-    const studyingList = [
-        { id: 6, title: 'TOEIC Vocab ETS 2024 - Reading' },
-        { id: 7, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-        { id: 8, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-        { id: 9, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-        { id: 10, title: 'TOEIC Vocab ETS 2024 - Part 5' },
-    ];
+    const { topicId } = useParams();
+    const [topic, setTopic] = useState(null);
 
-    const exploreList = [
-        { id: 11, title: 'Business English Basics' },
-        { id: 12, title: 'IELTS Common Topics' },
-        { id: 13, title: 'IELTS Common Topics' },
-        { id: 14, title: 'IELTS Common Topics' },
-        { id: 15, title: 'IELTS Common Topics' },
-    ];
+    const [myVocabList, setMyVocabList] = useState([]);
+    const [studyingList, setStudyingList] = useState([]);
+    const [newList, setNewList] = useState([]);
+    const [reviewList, setReviewList] = useState([]);
+    const [masterList, setMasterList] = useState([]);
+
+    const fetchListFlashCard = async () => {
+        const data = await get(`/api/flashcard/getFlashCardsByTopic/${topicId}`);
+        if (data && Array.isArray(data)) {
+            setMyVocabList(data);
+            setStudyingList(
+                data.filter((item) => item.learningStatus === "IN_PROGRESS")
+            );
+            setNewList(data.filter((item) => item.learningStatus === "NEW"));
+            setReviewList(
+                data.filter((item) => item.learningStatus === "REVIEW_NEEDED")
+            );
+            setMasterList(data.filter((item) => item.learningStatus === "MASTERED"));
+        }
+    }
+
+    useEffect(() => {
+        const fetchTopic = async () => {
+            try {
+                const data = await get(`api/flashcard/topic/${topicId}`);
+                if (data) {
+                    setTopic(data);
+                }
+                else {
+                    showErrorMessage("Có lỗi xảy ra khi lấy dữ liệu!");
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+        fetchListFlashCard();
+        fetchTopic();
+    }, [])
 
     const [activeTab, setActiveTab] = useState('1');
 
     const renderFlashcardList = () => {
         switch (activeTab) {
-            case '1':
-                return <ListFlashCardOfTab list={myVocabList} activeTab={1} />;
+            case "1":
+                return (
+                    <ListFlashCardOfTab
+                        topicId={topicId}
+                        list={myVocabList}
+                        activeTab={1}
+                        onFlashCardCreated={() => {
+                            fetchListFlashCard();
+                        }}
+                    />
+                );
             case '2':
-                return <ListFlashCardOfTab list={studyingList} activeTab={2} />;
+                return <ListFlashCardOfTab topicId={topicId} list={studyingList} activeTab={2} />;
             case '3':
-                return <ListFlashCardOfTab list={exploreList} activeTab={3} />;
+                return <ListFlashCardOfTab topicId={topicId} list={newList} activeTab={3} />;
+            case "4":
+                return <ListFlashCardOfTab topicId={topicId} list={reviewList} activeTab={4} />;
+            case "5":
+                return <ListFlashCardOfTab topicId={topicId} list={masterList} activeTab={5} />;
             default:
-                return [];
+                return null;
         }
     };
 
@@ -53,12 +88,15 @@ export default function DetailTopic() {
                     <Tabs defaultActiveKey="1" onChange={setActiveTab}>
                         <TabPane tab="Danh sách từ vựng" key="1" />
                         <TabPane tab="Đang học" key="2" />
-                        <TabPane tab="Khám phá" key="3" />
+                        <TabPane tab="Mới" key="3" />
+                        <TabPane tab="Cần xem lại" key="4" />
+                        <TabPane tab="Đã thành thạo" key="5" />
                     </Tabs>
                 </div>
             </div>
 
             <div className="MainContainer">
+                <h2 style={{ textAlign: "left", marginTop: 20 }}>{topic?.title || "Không tìm thấy chủ đề"}</h2>
                 <div className="DetailTopic-page__listFlashcards">{renderFlashcardList()}</div>
             </div>
         </div>
