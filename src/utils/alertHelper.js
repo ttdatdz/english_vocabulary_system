@@ -14,6 +14,20 @@ export const confirmDelete = async (title = "Bạn có chắc muốn xóa?") => 
   return result.isConfirmed;
 };
 
+export const confirmBasic = async (title = "Xác nhận thao tác?") => {
+  const result = await Swal.fire({
+    title,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Xác nhận",
+    cancelButtonText: "Hủy",
+    confirmButtonColor: "Green",
+    cancelButtonColor: "#3085d6",
+    allowOutsideClick: false,
+  });
+  return result.isConfirmed;
+};
+
 export const showSuccess = (text = "Thành công!") => {
   Swal.fire({
     icon: "success",

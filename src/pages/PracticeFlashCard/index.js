@@ -11,6 +11,7 @@ import CardPractice from "../../components/CardPractice";
 import { useNavigate, useParams } from "react-router-dom";
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import { get, put } from "../../utils/request";
+import dayjs from "dayjs";
 
 export default function PracticeFlashCard() {
     const [open, setOpen] = useState(false);
@@ -108,10 +109,17 @@ export default function PracticeFlashCard() {
         }
     }
 
-    const handleResetAllCards = async ()=>{
-        await put({},`api/card/resetAll/${flashcardId}`);
+    const handleResetAllCards = async () => {
+        await put({}, `api/card/resetAll/${flashcardId}`);
         message.success("Reset Danh sách " + flashcard.title);
         await loadDataList();
+    }
+
+    const handleFinishRehearse = async () => {
+        const nexReview = dayjs().add(flashcard.cycle, 'day').format('YYYY-MM-DD');
+        await put({ reviewDate: nexReview, id: flashcardId }, "api/flashcard/updateFlashCard");
+        showSuccess("Rất tốt. Thời gian ôn lại được cập nhật.")
+        navigate(`/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`);
     }
 
     function makeWeightedArray(cards) {
@@ -132,9 +140,9 @@ export default function PracticeFlashCard() {
                         <div className="PracticeFlashCard__start-header">
                             <h2 className="PracticeFlashCard__title">{(flashcard.title) ? flashcard.title : "Không có tiêu đề"}</h2>
                             <div className="PracticeFlashCard__actions">
-                                <Button onClick={()=>handleBackToList()} className="PracticeFlashCard__btn PracticeFlashCard__btnViewAll" >Xem tất cả</Button>
+                                <Button onClick={() => handleBackToList()} className="PracticeFlashCard__btn PracticeFlashCard__btnViewAll" >Xem tất cả</Button>
                                 <Button className="PracticeFlashCard__btn PracticeFlashCard__btnViewMemory" onClick={showModal}>Các từ đã nhớ</Button>
-                                <Button onClick={()=>handleResetAllCards()} className="PracticeFlashCard__btn PracticeFlashCard__btn--Stop">Dừng học list này</Button>
+                                <Button onClick={() => handleResetAllCards()} className="PracticeFlashCard__btn PracticeFlashCard__btn--Stop">Dừng học list này</Button>
                             </div>
 
                         </div>
@@ -147,6 +155,7 @@ export default function PracticeFlashCard() {
                         </div>
                         <div style={{ textAlign: 'center', marginTop: 24 }}>
                             <Button type="primary" onClick={nextCard}>Từ tiếp theo</Button>
+                            <Button className="PracticeFlashCard__btnGeneral finish_btn"  onClick={()=> handleFinishRehearse() }>Hoàn thành ôn tập</Button>
                         </div>
                     </div>
                     <div className="PracticeFlashCard__Footer">

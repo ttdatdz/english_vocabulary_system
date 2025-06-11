@@ -3,10 +3,10 @@ import { Button, Pagination } from "antd";
 import { EditOutlined, DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import BaseModal from "../BaseModal";
 import { useState } from "react";
-import { confirmDelete, showErrorMessage, showSuccess } from "../../utils/alertHelper";
+import { confirmBasic, confirmDelete, showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import AddAndEditTopicForm from "../AddAndEditTopicForm";
 import { useNavigate } from "react-router-dom";
-import { del } from "../../utils/request";
+import { del, post, put } from "../../utils/request";
 
 export default function ListTopicOfTab(props) {
     const { list, activeTab, onCreateTopic } = props;
@@ -54,6 +54,14 @@ export default function ListTopicOfTab(props) {
             }
         }
     }
+    const handleSavePublishTopic = async (item) => {
+        const confirmed = await confirmBasic("Lưu chủ đề này vào kho từ vựng của bạn?");
+        if (confirmed) {
+            await post({}, `api/flashcard/savePublishTopic/${item.id}`, true);
+            showSuccess("Đã lưu chủ đề thành công.");
+            if (props.onTopicCreated) props.onTopicCreated(); // fetch lại list
+        }
+    }
 
     return (
         <>
@@ -70,21 +78,24 @@ export default function ListTopicOfTab(props) {
                     <div className="no-topic-text">Không có chủ đề nào</div>
                 ) : (
                     topicsToShow.map((item, index) => (
-                        <div key={item.id} className="topic-item" onClick={()=>{handleClick(item)}}>
+                        <div key={item.id} className="topic-item" onClick={() => { handleClick(item) }}>
                             <div className="topic-item__index">{(currentPage - 1) * pageSize + index + 1}</div>
                             <div className="topic-item__title">{item.title}</div>
 
                             {activeTab === 1 && (
-                                <div className="topic-item__actions">
-                                    <EditOutlined onClick={(e) => { e.stopPropagation(); showModal(item) }} style={{ color: "#f59e0b" }} />
-                                    <DeleteOutlined onClick={async (e) => { e.stopPropagation(); await handleDelete(item.id); }} style={{ color: "#ef4444", marginLeft: 10 }} />
+                                <div>
+                                    <div className="topic-item__actions">
+                                        <EditOutlined onClick={(e) => { e.stopPropagation(); showModal(item) }} style={{ color: "#f59e0b" }} />
+                                        <DeleteOutlined onClick={async (e) => { e.stopPropagation(); await handleDelete(item.id); }} style={{ color: "#ef4444", marginLeft: 10 }} />
+                                    </div>
+
                                 </div>
                             )}
 
                             <InfoCircleOutlined className="topic-item__info" />
 
                             {activeTab === 6 && (
-                                <Button className="btnApply" type="link" style={{ marginLeft: "auto" }}>
+                                <Button onClick={ async(e) => { e.stopPropagation(); await handleSavePublishTopic(item); }} className="btnApply" type="link" style={{ marginLeft: "auto" }}>
                                     Áp dụng
                                 </Button>
                             )}
