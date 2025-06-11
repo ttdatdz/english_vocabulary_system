@@ -13,6 +13,7 @@ import {
   showSuccess,
 } from "../../utils/alertHelper";
 import { DeleteUser, GetAllUsers } from "../../services/User/userService";
+import { removeVietnameseTones } from "../../utils/formatData";
 
 export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null); // lấy thông tin người dùng đưa vào modal
@@ -20,9 +21,16 @@ export default function UserManagement() {
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
   const [allUsers, setAllUsers] = useState([]);
   const [listUsers, setListUsers] = useState([]);
+  const [formKey, setFormKey] = useState(Date.now());
+  const [searchValue, setSearchValue] = useState("");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
   const showModal = (record) => {
     setSelectedUser(record);
     setOpen(true);
+    setFormKey(Date.now());
   };
   const handleOk = () => {
     setConfirmLoading(true);
@@ -31,7 +39,20 @@ export default function UserManagement() {
       setConfirmLoading(false);
     }, 2000);
   };
-
+  const reloadUser = async () => {
+    try {
+      const res = await GetAllUsers();
+      //đoạn này để fix warning key trong bảng
+      const usersWithKey = res.map((user) => ({
+        ...user,
+        key: user.id,
+      }));
+      setAllUsers(usersWithKey);
+      setListUsers(usersWithKey);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách user:", error);
+    }
+  };
   const handleClose = () => {
     setOpen(false);
     setSelectedUser(null);
@@ -65,18 +86,22 @@ export default function UserManagement() {
     {
       title: "Họ và tên",
       dataIndex: "fullName",
+      render: (text) => text || "Chưa cập nhật",
     },
     {
       title: "Ngày sinh",
       dataIndex: "birthday",
+      render: (text) => text || "Chưa cập nhật",
     },
     {
       title: "Số điện thoại",
       dataIndex: "phoneNumber",
+      render: (text) => text || "Chưa cập nhật",
     },
     {
       title: "Đia chỉ",
       dataIndex: "address",
+      render: (text) => text || "Chưa cập nhật",
     },
     {
       title: "Action",
@@ -112,22 +137,23 @@ export default function UserManagement() {
     };
     fetchUsers();
   }, []);
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
-  };
+  useEffect(() => {
+    let filtered = allUsers;
 
-  const handleSearch = (e) => {
-    const searchValue = e.target.value.toLowerCase();
     if (searchValue) {
-      const filteredUsers = allUsers.filter(
-        (user) =>
-          user.fullName.toLowerCase().includes(searchValue) ||
-          user.phoneNumber.includes(searchValue)
+      const keyword = removeVietnameseTones(searchValue.trim());
+      filtered = filtered.filter((user) =>
+        removeVietnameseTones(user.fullName || "").includes(keyword)
       );
-      setListUsers(filteredUsers);
-    } else {
-      setListUsers(allUsers); // Reset lại danh sách hiển thị, không cần gọi lại API
     }
+    setPagination((prev) => ({ ...prev, current: 1 })); // Luôn reset về trang 1
+    setListUsers(filtered);
+  }, [allUsers, searchValue]);
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
+  };
+  const handleSearch = (e) => {
+    setSearchValue(e.target.value.toLowerCase());
   };
   return (
     <>
@@ -139,7 +165,17 @@ export default function UserManagement() {
         allowClear
         onChange={handleSearch}
       />
-      <BaseTable columns={columns} data={listUsers} onChange={onChange} />
+      <BaseTable
+        columns={columns}
+        data={listUsers}
+        onChange={handleTableChange}
+        pagination={{
+          ...pagination,
+          total: listUsers.length,
+          showSizeChanger: false,
+        }}
+        rowKey="id"
+      />
 
       <BaseModal
         open={open}
@@ -155,6 +191,10 @@ export default function UserManagement() {
             onOk={handleOk}
             confirmLoading={confirmLoading}
             selectedUser={selectedUser}
+            setConfirmLoading={setConfirmLoading}
+            reloadUser={reloadUser}
+            key={formKey}
+            setSelectedUser={setSelectedUser}
           />
         ) : null}
       </BaseModal>

@@ -1,42 +1,88 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import "./DetailUserForm.scss";
 import dayjs from "dayjs";
 import { Button, Col, DatePicker, Form, Input, Row, Upload } from "antd";
-import { UpdateUser } from "../../services/User/userService";
+import { GetDetailUser, UpdateUser } from "../../services/User/userService";
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 export default function DetailUserForm(props) {
-  const { onOk, confirmLoading, selectedUser } = props;
+  const {
+    onOk,
+    confirmLoading,
+    selectedUser,
+    setConfirmLoading,
+    reloadUser,
+    setSelectedUser,
+  } = props;
   const [isEditing, setIsEditing] = useState(false);
   const [fileList, setFileList] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  console.log(">>>>>>>>check selectedUser", selectedUser);
   const initialValues = {
     ...selectedUser,
     birthday: selectedUser?.birthday ? dayjs(selectedUser.birthday) : null,
   };
   const [form] = Form.useForm();
 
+  useEffect(() => {
+    if (selectedUser) {
+      // Cập nhật lại form khi selectedUser thay đổi
+      form.setFieldsValue({
+        ...selectedUser,
+        birthday: selectedUser.birthday ? dayjs(selectedUser.birthday) : null,
+      });
+
+      // Cập nhật lại preview avatar nếu có
+      if (selectedUser.avatar) {
+        setPreviewUrl(selectedUser.avatar);
+      }
+    }
+  }, [selectedUser, form]);
   const fetchData = async (values) => {
+    setConfirmLoading(true);
     try {
       // Xử lý ngày sinh về dạng string nếu cần
+      // Format lại ngày sinh
+      const formattedBirthday = values.birthday
+        ? values.birthday.format("YYYY-MM-DD")
+        : null;
+
+      // Tạo object chứa toàn bộ dữ liệu người dùng (trừ ảnh)
       const data = {
-        ...values,
-        birthday: values.birthday ? values.birthday.format("YYYY-MM-DD") : null,
-        id: selectedUser.id, // Thêm id vào data gửi lên
+        id: selectedUser.id,
+        fullName: values.fullName,
+        birthday: formattedBirthday,
+        phoneNumber: values.phoneNumber,
+        address: values.address,
+        email: values.email,
+        accountName: values.accountName,
+        password: values.password, // có thể kiểm tra nếu muốn bỏ qua khi rỗng
       };
+
+      const formData = new FormData();
+      formData.append("dataJson", JSON.stringify(data));
+      // Gắn ảnh nếu có
+      if (fileList.length > 0 && fileList[0].originFileObj) {
+        formData.append("avatar", fileList[0].originFileObj);
+      }
       console.log(">>>>check data:", data);
-      const result = await UpdateUser(data);
+      const result = await UpdateUser(formData);
       if (result) {
-        showSuccess("Cập nhật thành công!");
+        setConfirmLoading(false);
         setIsEditing(false);
-        onOk();
+        showSuccess("Cập nhật User thành công!");
+        const resultDetail = await GetDetailUser(selectedUser.id);
+        setSelectedUser(resultDetail);
+        reloadUser();
       } else {
-        showErrorMessage("Cập nhật thất bại!");
+        // showErrorMessage("Cập nhật thất bại!");
+        setConfirmLoading(false);
+        return;
       }
     } catch (error) {
-      showErrorMessage(error.message || "Cập nhật thất bại!");
+      showErrorMessage(error.message || "Cập nhật User thất bại!");
     }
   };
 
@@ -90,20 +136,30 @@ export default function DetailUserForm(props) {
     setIsEditing(false);
     form.resetFields();
     setFileList([]);
-    setPreviewUrl(null);
+    setPreviewUrl(selectedUser?.avatar || null);
   };
   // Xử lý upload avatar
-  const handleAvatarChange =
-    (setFileList, setPreviewUrl) =>
-    ({ fileList }) => {
-      setFileList(fileList);
-      const file = fileList[0]?.originFileObj;
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => setPreviewUrl(reader.result);
-        reader.readAsDataURL(file);
-      }
-    };
+  const handleAvatarChange = ({ fileList }) => {
+    // Chỉ giữ lại file cuối cùng nếu có
+    const newFileList =
+      fileList.length > 0 ? [fileList[fileList.length - 1]] : [];
+    setFileList(newFileList);
+
+    if (newFileList.length > 0 && newFileList[0].originFileObj) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target.result);
+      };
+      reader.onerror = () => {
+        setPreviewUrl(selectedUser?.avatar || null);
+      };
+      reader.readAsDataURL(newFileList[0].originFileObj);
+    } else {
+      setPreviewUrl(selectedUser?.avatar || null);
+    }
+  };
+  console.log(">>>>>>Check previewUrl", previewUrl);
+  console.log(">>>>>>>>>>>.check fileList", fileList);
   return (
     <>
       <Form
@@ -195,7 +251,8 @@ export default function DetailUserForm(props) {
                   <Upload
                     showUploadList={false}
                     beforeUpload={() => false}
-                    onChange={handleAvatarChange(setFileList, setPreviewUrl)}
+                    onChange={handleAvatarChange}
+                    maxCount={1} // Thêm dòng này
                   >
                     <Button
                       className="UserForm__ChangeAvatarBtn"
