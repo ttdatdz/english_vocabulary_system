@@ -14,6 +14,7 @@ import {
 import AddAndEditExam from "../../components/AddAndEditExam";
 import { DeleteExam, GetAllExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
+import { removeVietnameseTones } from "../../utils/formatData";
 
 export default function ToeicTestManagement() {
   const [open, setOpen] = useState(false);
@@ -23,8 +24,13 @@ export default function ToeicTestManagement() {
   const [listExams, setListExams] = useState([]);
   const [listTestSets, setListTestSets] = useState([]);
   const [formKey, setFormKey] = useState(Date.now());
-  const [searchValue, setSearchValue] = useState("");
+  const [selectedYear, setSelectedYear] = useState("All");
   const [selectedCollection, setSelectedCollection] = useState("All");
+  const [searchValue, setSearchValue] = useState("");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
 
   const showModal = (record) => {
     setDetailingExam(record);
@@ -111,29 +117,33 @@ export default function ToeicTestManagement() {
   useEffect(() => {
     let filtered = allExams;
 
-    // Tìm kiếm trên nhiều trường (ở đây là title, có thể mở rộng)
-    if (searchValue) {
-      filtered = filtered.filter(
-        (exam) => exam.title?.toLowerCase().includes(searchValue)
-        // Có thể thêm các trường khác ở đây nếu muốn
-      );
-    }
-
-    // Lọc theo bộ đề
     if (selectedCollection !== "All") {
       filtered = filtered.filter(
         (exam) => exam.collection === selectedCollection
       );
     }
 
-    setListExams(filtered);
-  }, [allExams, searchValue, selectedCollection]);
+    if (selectedYear !== "All") {
+      filtered = filtered.filter(
+        (exam) => Number(exam.year) === Number(selectedYear)
+      );
+    }
 
+    if (searchValue) {
+      const keyword = removeVietnameseTones(searchValue.trim());
+      filtered = filtered.filter((exam) =>
+        removeVietnameseTones(exam.title || "").includes(keyword)
+      );
+    }
+    setPagination((prev) => ({ ...prev, current: 1 })); // Luôn reset về trang 1
+    setListExams(filtered);
+  }, [allExams, searchValue, selectedCollection, selectedYear]);
   const columns = [
     {
       title: "Số thứ tự",
       key: "index",
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
     },
     {
       title: "Tên bài thi",
@@ -150,6 +160,11 @@ export default function ToeicTestManagement() {
       title: "Bộ đề",
       dataIndex: "collection",
       key: "collection",
+    },
+    {
+      title: "Năm",
+      dataIndex: "year",
+      key: "year",
     },
     {
       title: "Action",
@@ -170,10 +185,24 @@ export default function ToeicTestManagement() {
     setSearchValue(e.target.value.toLowerCase());
   };
 
-  const handleChange = (value) => {
-    setSelectedCollection(value);
+  const yearSet = new Set();
+  for (let i = 0; i < allExams.length; i++) {
+    const year = allExams[i].year;
+    if (year) {
+      yearSet.add(year);
+    }
+  }
+  const uniqueYears = Array.from(yearSet).sort((a, b) => b - a);
+  const yearOptions = [
+    { label: "Tất cả", value: "All" },
+    ...uniqueYears?.map((year) => ({
+      label: year,
+      value: year,
+    })),
+  ];
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
   };
-
   return (
     <div className="ToeicTestManagement">
       <h2 className="PageTitle">Toiec test Management</h2>
@@ -189,7 +218,7 @@ export default function ToeicTestManagement() {
           <Select
             defaultValue="All"
             placeholder="Lọc theo bộ đề"
-            onChange={handleChange}
+            onChange={(val) => setSelectedCollection(val)}
             options={[
               { label: "Tất cả", value: "All" },
               ...listTestSets.map((testSet) => ({
@@ -197,6 +226,13 @@ export default function ToeicTestManagement() {
                 value: testSet.collection,
               })),
             ]}
+            className="filter"
+          />
+          <Select
+            defaultValue="All"
+            placeholder="Lọc theo năm"
+            onChange={(val) => setSelectedYear(val)}
+            options={yearOptions}
             className="filter"
           />
         </div>
@@ -208,7 +244,17 @@ export default function ToeicTestManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={listExams} onChange={() => {}} />
+      <BaseTable
+        columns={columns}
+        data={listExams}
+        pagination={{
+          ...pagination,
+          total: listExams.length,
+          showSizeChanger: false,
+        }}
+        rowKey="id"
+        onChange={handleTableChange}
+      />
 
       <BaseModal
         open={open}
@@ -228,6 +274,7 @@ export default function ToeicTestManagement() {
           setConfirmLoading={setConfirmLoading}
           open={open}
           key={formKey}
+          reloadExams={reloadExams}
         />
       </BaseModal>
     </div>

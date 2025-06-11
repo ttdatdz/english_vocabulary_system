@@ -18,6 +18,10 @@ export const importFileQuestion = async (formData) => {
   return result;
 };
 export const UpdateExam = async (value, id) => {
-  const result = await put(value, `api/exam/collection/update/${id}`);
+  const result = await put(value, `api/exam/update/${id}`);
+  return result;
+};
+export const getDetailExam = async (id) => {
+  const result = await get(`api/exam/detail/${id}`);
   return result;
 };

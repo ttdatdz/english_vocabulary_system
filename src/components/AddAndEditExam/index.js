@@ -6,6 +6,8 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import { RiDeleteBinLine } from "react-icons/ri";
 import {
   CreateExam,
+  DeleteExam,
+  getDetailExam,
   importFileQuestion,
   UpdateExam,
 } from "../../services/Exam/examService";
@@ -20,24 +22,47 @@ export default function AddAndEditExam(props) {
     listTestSets,
     setConfirmLoading,
     open,
+    reloadExams,
   } = props;
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef();
+  const [detailExamData, setDetailExamData] = useState(null);
 
+  console.log("Check initial", initialValues);
   // Reset form & file khi initialValues đổi (mở modal mới)
+  // useEffect(() => {
+  //   setSelectedFile(null);
+  //   form.resetFields();
+  //   form.setFieldsValue({
+  //     title: initialValues?.title || "",
+  //     collection: initialValues?.collection || "",
+  //     duration: initialValues?.duration || "",
+  //     type: initialValues?.type || "",
+  //     year: initialValues?.year || "",
+  //     file: initialValues?.file || null,
+  //   });
+  // }, [initialValues, form]);
+
   useEffect(() => {
-    setSelectedFile(null);
-    form.resetFields();
-    form.setFieldsValue({
-      title: initialValues?.title || "",
-      collection: initialValues?.collection || "",
-      duration: initialValues?.duration || "",
-      type: initialValues?.type || "",
-      year: initialValues?.year || "",
-      file: initialValues?.file || null,
-    });
+    const getDetail = async () => {
+      const result = await getDetailExam(initialValues.id);
+      setDetailExamData(result); // <== lưu lại
+      setSelectedFile(result.fileImportName);
+      form.resetFields();
+      form.setFieldsValue({
+        title: result?.title || "",
+        collection: result?.collection || "",
+        duration: result?.duration || "",
+        type: result?.type || "",
+        year: result?.year || "",
+        file: result?.fileImportName || null,
+      });
+    };
+    if (initialValues) {
+      getDetail();
+    }
   }, [initialValues, form]);
 
   // Reset file khi đóng modal
@@ -78,8 +103,8 @@ export default function AddAndEditExam(props) {
       };
       const result = await CreateExam(examData);
       if (!result) {
-        showErrorMessage("Thêm thông tin đề thi thất bại!");
         setConfirmLoading(false);
+        // showErrorMessage("Thêm thông tin đề thi thất bại!");
         return;
       }
 
@@ -90,8 +115,9 @@ export default function AddAndEditExam(props) {
         formData.append("examID", result.id);
         importResult = await importFileQuestion(formData);
         if (!importResult) {
-          showErrorMessage("Import câu hỏi thất bại!");
           setConfirmLoading(false);
+          await DeleteExam(result.id);
+          // showErrorMessage("Import câu hỏi thất bại!");
           return;
         }
       }
@@ -104,43 +130,73 @@ export default function AddAndEditExam(props) {
       setConfirmLoading(false);
     } else {
       // Chỉnh sửa
-      const formData = new FormData();
-      formData.append("title", values.title);
-      formData.append("collection", values.collection);
-      formData.append("duration", values.duration);
-      if (values.file) formData.append("file", values.file);
-
-      const result = await UpdateExam(formData, initialValues.id);
+      const examData = {
+        title: values?.title,
+        collection: values?.collection,
+        duration: values?.duration,
+        type: values?.type,
+        year: values?.year,
+      };
+      const result = await UpdateExam(examData, initialValues.id);
       if (!result) {
-        showErrorMessage("Cập nhật đề thi thất bại!");
+        setConfirmLoading(false);
         return;
       }
-      setConfirmLoading(true);
-      setTimeout(() => {
+      let importResult = true;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("examID", initialValues.id);
+        importResult = await importFileQuestion(formData);
+        if (!importResult) {
+          setConfirmLoading(false);
+          await UpdateExam(detailExamData, detailExamData.id);
+          return;
+        }
+      }
+
+      if (result && importResult) {
+        const updatedDetail = await getDetailExam(initialValues.id);
+        setDetailExamData(updatedDetail); // Cập nhật lại detailExamData
+        form.setFieldsValue({
+          title: updatedDetail?.title || "",
+          collection: updatedDetail?.collection || "",
+          duration: updatedDetail?.duration || "",
+          type: updatedDetail?.type || "",
+          year: updatedDetail?.year || "",
+          file: updatedDetail?.fileImportName || null,
+        });
+        setSelectedFile(updatedDetail?.fileImportName || null);
+
         setConfirmLoading(false);
         setIsEditing(false);
-      }, 2000);
-      showSuccess("Cập nhật đề thi thành công!");
+        showSuccess("Cập nhật đề thi thành công!");
+        reloadExams();
+      }
     }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setSelectedFile(file);
-    form.setFieldsValue({ file });
+    if (file) {
+      setSelectedFile(file);
+      form.setFieldsValue({ file });
+    }
   };
 
   const onCancel = () => {
     setIsEditing(false);
-    form.setFieldsValue({
-      title: initialValues?.title || "",
-      collection: initialValues?.collection || "",
-      duration: initialValues?.duration || "",
-      type: initialValues?.type || "",
-      year: initialValues?.year || "",
-      file: initialValues?.file || null,
-    });
-    setSelectedFile(null);
+    if (detailExamData) {
+      form.setFieldsValue({
+        title: detailExamData?.title || "",
+        collection: detailExamData?.collection || "",
+        duration: detailExamData?.duration || "",
+        type: detailExamData?.type || "",
+        year: detailExamData?.year || "",
+        file: detailExamData?.fileImportName || null,
+      });
+      setSelectedFile(detailExamData.fileImportName || null);
+    }
   };
 
   return (
@@ -220,8 +276,9 @@ export default function AddAndEditExam(props) {
               ref={fileInputRef}
               style={{ display: "none" }}
               onChange={handleFileChange}
+              onClick={(e) => (e.target.value = "")}
             />
-            {selectedFile && (
+            {selectedFile instanceof File ? (
               <div
                 style={{
                   marginTop: 8,
@@ -259,7 +316,12 @@ export default function AddAndEditExam(props) {
                   <RiDeleteBinLine />
                 </Button>
               </div>
-            )}
+            ) : selectedFile ? (
+              <div style={{ marginTop: 8 }}>
+                <p>File đã upload: {selectedFile}</p>
+              </div>
+            ) : null}
+
             {!selectedFile && initialValues?.file && (
               <div style={{ marginTop: 8 }}>
                 <a

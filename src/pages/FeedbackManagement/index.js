@@ -200,10 +200,6 @@ export default function FeedbackManagement() {
         columns={columns}
         data={listFeedbacks}
         onChange={handleTableChange}
-        // pagination={{
-        //   pageSize: 6,
-        //   showSizeChanger: false,
-        // }}
         pagination={{
           ...pagination,
           total: listFeedbacks.length,
