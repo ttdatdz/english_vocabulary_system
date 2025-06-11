@@ -17,6 +17,7 @@ import {
   GetAllEvaluate,
 } from "../../services/Evaluate/evaluateService";
 import dayjs from "dayjs";
+import { removeVietnameseTones } from "../../utils/formatData";
 
 export default function FeedbackManagement() {
   const [open, setOpen] = useState(false);
@@ -66,8 +67,9 @@ export default function FeedbackManagement() {
     let filtered = allFeedbacks;
 
     if (searchValue) {
+      const keyword = removeVietnameseTones(searchValue.trim());
       filtered = filtered.filter((feedback) =>
-        feedback.fullName?.toLowerCase().includes(searchValue)
+        removeVietnameseTones(feedback.fullName || "").includes(keyword)
       );
     }
 

@@ -81,7 +81,8 @@ export default function UserManagement() {
     {
       title: "Số thứ tự",
       key: "index",
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
     },
     {
       title: "Họ và tên",

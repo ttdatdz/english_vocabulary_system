@@ -14,6 +14,7 @@ import {
 import AddAndEditBlog from "../../components/AddAndEditBlog";
 import { DeleteBlog, GetAllBlogs } from "../../services/Blog/blogService";
 import { GetAllCategoryBlogs } from "../../services/Blog/categoryBlogService";
+import { removeVietnameseTones } from "../../utils/formatData";
 
 export default function BlogManagement() {
   const [open, setOpen] = useState(false);
@@ -23,9 +24,12 @@ export default function BlogManagement() {
   const [listBlogs, setListBlogs] = useState([]);
   const [formKey, setFormKey] = useState(Date.now());
   const [listCategoryBlogs, setListCategoryBlogs] = useState([]);
-  const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-
+  const [searchValue, setSearchValue] = useState("");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
   const showModal = (record = null) => {
     setDetailingBlog(record);
     setOpen(true);
@@ -33,7 +37,7 @@ export default function BlogManagement() {
   };
   const reloadBlogs = async () => {
     const res = await GetAllBlogs();
-    // Thêm key cho mỗi exam (key = id)
+    // Thêm key cho mỗi blog (key = id)
     const BlogsWithKey = res.map((blog) => ({
       ...blog,
       key: blog.id,
@@ -106,8 +110,9 @@ export default function BlogManagement() {
 
     // Tìm kiếm trên nhiều trường (title, shortDetail)
     if (searchValue) {
+      const keyword = removeVietnameseTones(searchValue.trim());
       filtered = filtered.filter((blog) =>
-        blog.title?.toLowerCase().includes(searchValue)
+        removeVietnameseTones(blog.title || "").includes(keyword)
       );
     }
 
@@ -115,7 +120,7 @@ export default function BlogManagement() {
     if (selectedCategory !== "All") {
       filtered = filtered.filter((blog) => blog.category === selectedCategory);
     }
-
+    setPagination((prev) => ({ ...prev, current: 1 }));
     setListBlogs(filtered);
   }, [allBlogs, searchValue, selectedCategory]);
 
@@ -123,7 +128,8 @@ export default function BlogManagement() {
     {
       title: "STT",
       key: "index",
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
     },
     {
       title: "Tiêu đề",
@@ -162,7 +168,9 @@ export default function BlogManagement() {
   const handleChange = (value) => {
     setSelectedCategory(value);
   };
-
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
+  };
   return (
     <div className="BlogManagement">
       <h2 className="PageTitle">Blog Management</h2>
@@ -197,7 +205,17 @@ export default function BlogManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={listBlogs} onChange={() => {}} />
+      <BaseTable
+        columns={columns}
+        data={listBlogs}
+        onChange={handleTableChange}
+        pagination={{
+          ...pagination,
+          total: listBlogs.length,
+          showSizeChanger: false,
+        }}
+        rowKey="id"
+      />
 
       <BaseModal
         open={open}

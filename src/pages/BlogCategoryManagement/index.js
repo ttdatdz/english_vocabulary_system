@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
 import "./BlogCategoryManagement.scss";
-import { Button, Input, Select } from "antd";
+import { Button, Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
@@ -11,19 +11,23 @@ import {
   showErrorMessage,
   showSuccess,
 } from "../../utils/alertHelper";
-import AddAndEditExam from "../../components/AddAndEditExam";
 import AddAndEditCategory from "../../components/AddAndEditCategory";
 import {
   DeleteCategoryBlog,
   GetAllCategoryBlogs,
-  UpdateCategoryBlog,
 } from "../../services/Blog/categoryBlogService";
+import { removeVietnameseTones } from "../../utils/formatData";
 export default function BlogCategoryManagent() {
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
   const [detailingCategory, setDetailingCategory] = useState(null);
   const [allCategoryBlogs, setAllCategoryBlogs] = useState([]);
   const [listCategoryBlogs, setListCategoryBlogs] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
   const [formKey, setFormKey] = useState(Date.now());
   const showModal = (record) => {
     setDetailingCategory(record);
@@ -47,7 +51,8 @@ export default function BlogCategoryManagent() {
       title: "Số thứ tự",
       key: "index",
       // Số thứ tự (STT) nên phản ánh đúng vị trí hiện tại của dòng trên bảng, không phải vị trí gốc trong mảng data.
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
     },
     {
       title: "Tên danh mục",
@@ -116,20 +121,24 @@ export default function BlogCategoryManagent() {
     setAllCategoryBlogs(CategoryBlogsWithKey);
   };
   const handleSearch = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    if (searchValue) {
-      const filteredCategory = allCategoryBlogs.filter((category) =>
-        category.title?.toLowerCase().includes(searchValue)
-      );
-      setListCategoryBlogs(filteredCategory);
-    } else {
-      setListCategoryBlogs(allCategoryBlogs); // Reset lại danh sách hiển thị
-    }
+    setSearchValue(e.target.value.toLowerCase());
   };
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
-  };
+  useEffect(() => {
+    let filtered = allCategoryBlogs;
 
+    if (searchValue) {
+      const keyword = removeVietnameseTones(searchValue.trim());
+      filtered = filtered.filter((category) =>
+        removeVietnameseTones(category.title || "").includes(keyword)
+      );
+    }
+
+    setPagination((prev) => ({ ...prev, current: 1 })); // Luôn reset về trang 1
+    setListCategoryBlogs(filtered);
+  }, [allCategoryBlogs, searchValue]);
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
+  };
   return (
     <div className="CategoryManagement">
       <h2 className="PageTitle">Blog Category Management</h2>
@@ -154,7 +163,13 @@ export default function BlogCategoryManagent() {
       <BaseTable
         columns={columns}
         data={listCategoryBlogs}
-        onChange={onChange}
+        onChange={handleTableChange}
+        pagination={{
+          ...pagination,
+          total: listCategoryBlogs.length,
+          showSizeChanger: false,
+        }}
+        rowKey="id"
       />
 
       <BaseModal

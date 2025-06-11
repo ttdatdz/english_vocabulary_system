@@ -16,6 +16,7 @@ import {
   DeleteTestSet,
   GetAllTestSets,
 } from "../../services/Exam/testSetService";
+import { removeVietnameseTones } from "../../utils/formatData";
 export default function TestSetManagement() {
   const [open, setOpen] = useState(false); // mở modal
   const [confirmLoading, setConfirmLoading] = useState(false); // loading khi bấm ok trong modal
@@ -23,6 +24,11 @@ export default function TestSetManagement() {
   const [allTestSets, setAllTestSets] = useState([]);
   const [listTestSets, setListTestSets] = useState([]);
   const [formKey, setFormKey] = useState(Date.now());
+  const [searchValue, setSearchValue] = useState("");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 6,
+  });
   const showModal = (record) => {
     setDetailingTestSet(record);
     setOpen(true);
@@ -70,7 +76,8 @@ export default function TestSetManagement() {
       title: "Số thứ tự",
       key: "index",
       // Số thứ tự (STT) nên phản ánh đúng vị trí hiện tại của dòng trên bảng, không phải vị trí gốc trong mảng data.
-      render: (_, __, index) => index + 1,
+      render: (_, __, index) =>
+        (pagination.current - 1) * pagination.pageSize + index + 1,
     },
     {
       title: "Tên bộ đề",
@@ -112,20 +119,24 @@ export default function TestSetManagement() {
     };
     fetchUsers();
   }, []);
-
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
-  };
   const handleSearch = (e) => {
-    const searchValue = e.target.value.toLowerCase();
+    setSearchValue(e.target.value.toLowerCase());
+  };
+  useEffect(() => {
+    let filtered = allTestSets;
+
     if (searchValue) {
-      const filteredTestSet = allTestSets.filter((testSet) =>
-        testSet.collection?.toLowerCase().includes(searchValue)
+      const keyword = removeVietnameseTones(searchValue.trim());
+      filtered = filtered.filter((testSet) =>
+        removeVietnameseTones(testSet.collection || "").includes(keyword)
       );
-      setListTestSets(filteredTestSet);
-    } else {
-      setListTestSets(allTestSets); // Reset lại danh sách hiển thị
     }
+
+    setPagination((prev) => ({ ...prev, current: 1 })); // Luôn reset về trang 1
+    setListTestSets(filtered);
+  }, [allTestSets, searchValue]);
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
   };
   return (
     <div className="TestSetManagement">
@@ -148,7 +159,17 @@ export default function TestSetManagement() {
           + Thêm
         </Button>
       </div>
-      <BaseTable columns={columns} data={listTestSets} onChange={onChange} />
+      <BaseTable
+        columns={columns}
+        data={listTestSets}
+        onChange={handleTableChange}
+        pagination={{
+          ...pagination,
+          total: listTestSets.length,
+          showSizeChanger: false,
+        }}
+        rowKey="id"
+      />
 
       <BaseModal
         open={open}
