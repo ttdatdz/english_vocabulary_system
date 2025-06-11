@@ -10,20 +10,24 @@ const { RangePicker } = DatePicker;
 
 export default function BasicLine() {
   const today = dayjs();
-  const defaultStart = today.subtract(29, "day"); // 30 ngày gần nhất
-  const [dateRange, setDateRange] = useState([defaultStart, today]); // dùng để fetch API
-  const [tempRange, setTempRange] = useState([defaultStart, today]); // hiển thị trên RangePicker
-  const [rawInput, setRawInput] = useState([]); // giữ thứ tự người dùng nhập
+  const defaultStart = today.subtract(29, "day");
+
+  const [dateRange, setDateRange] = useState([defaultStart, today]); // data fetch
+  const [tempRange, setTempRange] = useState([defaultStart, today]); // UI display
+  const [rawInput, setRawInput] = useState([defaultStart, today]); // lưu input thô
   const [showData, setShowData] = useState([]);
 
-  const validateDateRange = (start, end, rawStart, rawEnd) => {
-    if (rawStart && rawEnd && rawStart.isAfter(rawEnd)) {
+  const validateDateRange = (start, end) => {
+    if (!dayjs.isDayjs(start) || !dayjs.isDayjs(end)) {
+      return false;
+    }
+
+    if (start.isAfter(end)) {
       showErrorMessage("Ngày bắt đầu không được lớn hơn ngày kết thúc");
       return false;
     }
 
-    const diffDays = end.diff(start, "day");
-    if (diffDays > 30) {
+    if (end.diff(start, "day") > 30) {
       showErrorMessage("Chỉ được chọn tối đa 30 ngày");
       return false;
     }
@@ -57,14 +61,31 @@ export default function BasicLine() {
     fetchData(start, end);
   }, [dateRange]);
 
-  const onDateChange = (dates) => {
-    if (!dates || dates.length !== 2) return;
-    const [start, end] = dates;
-    setTempRange(dates); // luôn hiển thị theo RangePicker
-    const [rawStart, rawEnd] = rawInput;
+  const handleCalendarChange = (dates) => {
+    if (
+      Array.isArray(dates) &&
+      dayjs.isDayjs(dates[0]) &&
+      dayjs.isDayjs(dates[1])
+    ) {
+      setRawInput(dates);
+    }
+  };
 
-    if (validateDateRange(start, end, rawStart, rawEnd)) {
-      setDateRange(dates); // chỉ update khi hợp lệ
+  const handleDateChange = (dates) => {
+    if (
+      !Array.isArray(dates) ||
+      !dayjs.isDayjs(dates[0]) ||
+      !dayjs.isDayjs(dates[1])
+    ) {
+      return;
+    }
+
+    const [start, end] = dates;
+
+    setTempRange(dates); // UI sẽ luôn phản ánh chọn hiện tại
+
+    if (validateDateRange(start, end)) {
+      setDateRange(dates); // chỉ update data nếu hợp lệ
     }
   };
 
@@ -99,10 +120,8 @@ export default function BasicLine() {
       >
         <RangePicker
           value={tempRange}
-          onCalendarChange={(dates) => {
-            setRawInput(dates); // giữ thứ tự thật
-          }}
-          onChange={onDateChange}
+          onCalendarChange={handleCalendarChange}
+          onChange={handleDateChange}
           format="YYYY-MM-DD"
           allowClear={false}
           disabledDate={(current) => current && current > today}

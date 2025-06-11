@@ -3,7 +3,7 @@ import "./PieChart.scss";
 import { MdHeight } from "react-icons/md";
 export default function PieChart(props) {
   const { data } = props;
-  console.log("PieChart data", data?.value);
+  // console.log("PieChart data", data?.value);
   const config = {
     data: data?.value || [],
     height: 470,
