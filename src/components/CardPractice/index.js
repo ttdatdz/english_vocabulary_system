@@ -3,8 +3,14 @@ import { HiMiniSpeakerWave } from "react-icons/hi2";
 import { FaRandom } from "react-icons/fa";
 import { useState } from "react";
 
-export default function CardPractice() {
+export default function CardPractice({data}) {
     const [flipped, setFlipped] = useState(false);
+
+    const levelMap = {
+        1: "Dễ",
+        2: "Trung bình",
+        3: "Khó"
+    };
 
     // Click vào thẻ thì lật
     const handleFlip = () => {
@@ -19,8 +25,10 @@ export default function CardPractice() {
     // Xử lý khi click vào loa (ví dụ phát âm)
     const handlePronounceClick = (e) => {
         e.stopPropagation(); // Ngăn lật thẻ
-        // TODO: logic phát âm
-        alert("Phát âm từ mới");
+        if(data.audio){
+            const audio = new Audio(data.audio);
+            audio.play();
+        }
     };
 
     return (
@@ -33,7 +41,7 @@ export default function CardPractice() {
 
             {/* Label, ngăn không cho lật */}
             <p className="CardPractice__label" onClick={stopFlip}>
-                Từ mới
+                {levelMap[data.level]}
             </p>
 
             <div className="CardPractice__flip">
@@ -42,14 +50,14 @@ export default function CardPractice() {
                     <div className="flip__face flip__front">
                         <div className="flip__content">
                             <div className="CardPractice__word-container">
-                                <h2 className="CardPractice__word">alignment (N)</h2>
+                                <h2 className="CardPractice__word">{data.terminology} ({data.partOfSpeech})</h2>
                                 <HiMiniSpeakerWave
                                     className="CardPractice__icon CardPractice__icon--pronounce"
                                     title="Nghe phát âm"
                                     onClick={handlePronounceClick}
                                 />
                             </div>
-                            <h2 className="CardPractice__phonetic">/əˈlaɪnmənt/</h2>
+                            <h2 className="CardPractice__phonetic">{data?.pronounce}</h2>
                         </div>
                     </div>
 
@@ -58,16 +66,14 @@ export default function CardPractice() {
                         <div className="flip__content flip__back-content">
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '65%', fontSize: '16px' }}>
                                 <h3>Định nghĩa:</h3>
-                                <p>Sự sắp xếp đúng vị trí hoặc sự đồng thuận về ý kiến.</p>
+                                <p>{data.definition}</p>
 
                                 <h3>Ví dụ:</h3>
-                                <p>The two countries are now in alignment on trade issues.</p>
-                                <h3>Chú thích:</h3>
-                                <p>The two countries are now in alignment on trade issues.</p>
+                                <p>{(data.example)? data.example: "Không có ví dụ."}</p>
                             </div>
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <img
-                                    src="https://study4.com/media/vocabs_media/img/10_abandon.jpg"
+                                    src={data.image}
                                     alt="minh họa"
                                     className="CardPractice__img"
                                 />

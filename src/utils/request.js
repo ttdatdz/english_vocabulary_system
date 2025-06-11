@@ -201,21 +201,29 @@ export const putFormData = async (path, formData) => {
     const token = localStorage.getItem("accessToken");
     const headers = token
       ? {
-          Authorization: `Bearer ${token}`,
-        }
+        Authorization: `Bearer ${token}`,
+      }
       : undefined;
 
     const response = await fetch(API_DOMAIN + path, {
       method: "PUT",
-      headers, // KHÔNG đặt Content-Type thủ công
+      headers,
       body: formData,
     });
 
+    let result;
+    try {
+      result = await response.clone().json();
+    } catch {
+      result = await response.text();
+    }
+
     if (!response.ok) {
-      const result = await response.json();
-      throw new Error(result.detail || "Lỗi khi cập nhật dữ liệu");
+      throw new Error(
+        (result && result.detail) || result || "Lỗi không xác định"
+      );
     } else {
-      return true;
+      return result;
     }
   } catch (error) {
     showErrorMessage(error.message);

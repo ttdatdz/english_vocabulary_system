@@ -39,8 +39,8 @@ export default function ListTopicOfTab(props) {
     const handleClose = () => {
         setOpen(false);
     };
-    const handleClick = () => {
-        navigate('/VocabularyTopics/DetailTopic');
+    const handleClick = (item) => {
+        navigate(`/VocabularyTopics/DetailTopic/${item.id}`);
     }
     const handleDelete = async (id) => {
         const confirmed = await confirmDelete("Bạn có chắc chắn muốn xóa chủ đề này?");
@@ -70,7 +70,7 @@ export default function ListTopicOfTab(props) {
                     <div className="no-topic-text">Không có chủ đề nào</div>
                 ) : (
                     topicsToShow.map((item, index) => (
-                        <div key={item.id} className="topic-item" onClick={handleClick}>
+                        <div key={item.id} className="topic-item" onClick={()=>{handleClick(item)}}>
                             <div className="topic-item__index">{(currentPage - 1) * pageSize + index + 1}</div>
                             <div className="topic-item__title">{item.title}</div>
 

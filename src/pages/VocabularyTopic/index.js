@@ -55,9 +55,7 @@ export default function VocabularyTopic() {
                         activeTab={1}
                         onTopicCreated={() => {
                             fetchUserTopics();
-                            //setFormKey(Date.now());
                         }}
-                    //formKey={formKey}
                     />
                 );
             case '2':
