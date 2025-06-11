@@ -1,33 +1,108 @@
 import "./Feedback.scss";
-import React, { useState } from 'react';
-
-import { Button, Col, Form, Input, Progress, Rate, Row, Upload } from 'antd';
+import React, { useEffect, useState } from 'react';
+import defaultImage from '../../../src/assets/images/user.png';
+import { Button, Col, Form, Input, message, Pagination, Progress, Rate, Row, Select, Upload } from 'antd';
 import TextArea from "antd/es/input/TextArea";
-import { PlusOutlined, StarFilled } from "@ant-design/icons";
+import { PlusOutlined, StarFilled, MoreOutlined, DeleteOutlined } from "@ant-design/icons";
 import CardItemFeedback from "../../components/CardItemFeedback";
+import { del, get, postFormData } from '../../utils/request';
+import { showErrorMessage, showSuccess, confirmDelete } from "../../utils/alertHelper";
 
 export default function Feedback() {
     const [showForm, setShowForm] = useState(true);
-    // const [submittedFeedback, setSubmittedFeedback] = useState(null);
-    const [submittedFeedback, setSubmittedFeedback] = useState({
-        userName: "Nguyễn Văn A",
-        userAvatar: "/path/to/avatar.jpg",
-        rating: 5,
-        comment: "Dịch vụ rất tuyệt vời!",
-        images: [], // hoặc mảng file upload
-        time: "19/05/2025 10:34",
 
-        reply: "Cảm ơn bạn rất nhiều!",
-        replyTime: "19/05/2025 11:00",
+    const [evaluates, setEvaluates] = useState([]);
+
+    const [submittedFeedback, setSubmittedFeedback] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+
+    const [starFilter, setStarFilter] = useState("");
+    const [sortOption, setSortOption] = useState("starDesc");
+
+    const filteredEvaluates = evaluates.filter(e => {
+        return starFilter ? e.star === starFilter : true;
     });
-    const onFinish = values => {
-        setSubmittedFeedback({
-            comment: values.comment,
-            rating: values.rating,
-            images: values.upload || [],
-            reply: "Cảm ơn bạn rất nhiều!", // Giả sử admin chưa trả lời
-        });
-        setShowForm(false); // Ẩn form sau khi gửi
+
+    const sortedEvaluates = [...filteredEvaluates].sort((a, b) => {
+        switch (sortOption) {
+            case "newest":
+                return new Date(b.createAt) - new Date(a.createAt);
+            case "oldest":
+                return new Date(a.createAt) - new Date(b.createAt);
+            case "starDesc":
+                return b.star - a.star;
+            case "starAsc":
+                return a.star - b.star;
+            default:
+                return 0;
+        }
+    });
+    const evaluateToShow = sortedEvaluates.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const { Option } = Select;
+    const loadUserFeedback = async () => {
+        try {
+            const data = await fetch("http://143.198.83.161/api/evaluate/getByUser", {
+                method: "GET",
+                headers: {
+                    "Content-type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+                }
+            });
+            if (data.ok) {
+                setSubmittedFeedback(await data.json());
+                setShowForm(false);
+            } else {
+                setShowForm(true);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    const loadEvaluates = async () => {
+        const data = await get("api/evaluate/get");
+        if (data) {
+            const sortData = [...data].sort((a, b) => b.star - a.star);
+            setEvaluates(sortData);
+            console.log(sortData);
+        }
+    }
+    useEffect(() => {
+        loadUserFeedback();
+        loadEvaluates();
+    }, [])
+
+    const onFinish = async (values) => {
+        try {
+            const formData = new FormData();
+            formData.append("data", JSON.stringify({
+                content: values.content,
+                star: values.star,
+            })); // 👈 phần data JSON
+
+            // Nếu có hình ảnh thì thêm vào formData
+            const file = values.upload?.[0]?.originFileObj;
+            if (file) {
+                if (file.size > 10 * 1024 * 1024) { // 10MB
+                    showErrorMessage("Ảnh không được vượt quá 10MB");
+                    return;
+                }
+                formData.append("image", file);
+            }
+
+            const result = await postFormData("api/evaluate/create", formData);
+            if (result === true) {
+                showSuccess("Gửi đánh giá thành công!");
+                setShowForm(false); // Ẩn form sau khi gửi
+                await loadEvaluates();
+                await loadUserFeedback();
+                renderUserFeedback();
+            }
+        } catch (err) {
+            console.error("Lỗi gửi đánh giá:", err);
+        }
     };
 
     const onFinishFailed = errorInfo => {
@@ -38,6 +113,40 @@ export default function Feedback() {
         if (Array.isArray(e)) return e;
         return e?.fileList;
     };
+    function calculateAverageStar(evaluates) {
+        if (!evaluates.length) return 0;
+        const totalStars = evaluates.reduce((sum, item) => sum + item.star, 0);
+        return (totalStars / evaluates.length).toFixed(1); // Giữ 1 số thập phân
+    }
+    function getStarPercentages(evaluates) {
+        const total = evaluates.length;
+        const percentages = {};
+
+        // Đếm số lượng từng sao
+        for (let star = 1; star <= 5; star++) {
+            const count = evaluates.filter(item => item.star === star).length;
+            percentages[star] = total === 0 ? 0 : Math.round((count / total) * 100);
+        }
+
+        return percentages; // {1: xx, 2: xx, 3: xx, 4: xx, 5: xx}
+    }
+
+    const percentages = getStarPercentages(evaluates);
+
+    const handleDelete = async () => {
+        const isConfirmed = await confirmDelete("Bạn có muốn xóa bài đánh giá của bạn?");
+        if (isConfirmed) {
+            if (submittedFeedback != null) {
+                await del(`api/evaluate/delete/${submittedFeedback.id}`);
+                message.success("Đã xóa bài đánh giá.")
+                setSubmittedFeedback(null);
+                setShowForm(true);
+                renderUserFeedback();
+                await loadEvaluates();
+                await loadUserFeedback();
+            }
+        }
+    }
     const renderUserFeedback = () => {
         if (!submittedFeedback) return null;
 
@@ -47,35 +156,51 @@ export default function Feedback() {
                     {/* Avatar + Header */}
                     <div className="user-feedback__header">
                         <img
-                            src={submittedFeedback.userAvatar || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"}
+                            src={submittedFeedback.avatar || defaultImage}
                             alt="User Avatar"
                             className="user-feedback__avatar"
                         />
-                        <div className="user-feedback__info">
-                            <span className="user-feedback__name">{submittedFeedback.userName || "Người dùng ẩn danh"}</span>
-                            <span className="user-feedback__time">{submittedFeedback.time || "Vừa xong"}</span>
+                        <div className="user-feedback__info-row" style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div>
+                                    <div className="user-feedback__name" style={{ fontWeight: 'bold' }}>{submittedFeedback.fullName || "Ẩn danh"}</div>
+                                    <div className="user-feedback__time" style={{ color: '#888' }}>{submittedFeedback.createAt ? new Date(submittedFeedback.createAt).toLocaleString('vi-VN', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    }) : "Thời gian không xác định"}</div>
+                                </div>
+                            </div>
+                            <DeleteOutlined
+                                onClick={() => handleDelete()}
+                                style={{ color: "#ef4444", cursor: "pointer", fontSize: 20 }}
+                            />
                         </div>
+
                     </div>
 
                     {/* Rating + Comment */}
-                    <Rate disabled value={submittedFeedback.rating} style={{ fontSize: 20 }} />
-                    <p className="user-feedback__comment">{submittedFeedback.comment}</p>
+                    <Rate disabled value={submittedFeedback.star} style={{ fontSize: 20 }} />
+                    <p className="user-feedback__comment">{submittedFeedback.content}</p>
 
                     {/* Uploaded Images */}
                     <div className="user-feedback__images">
-                        {submittedFeedback.images?.map((file, idx) => (
+                        {submittedFeedback.image && (
                             <img
-                                key={idx}
-                                src={file.thumbUrl || file.url}
+                                src={submittedFeedback.image}
                                 alt="feedback"
                                 style={{ width: 80, marginRight: 8, borderRadius: 4 }}
                             />
-                        ))}
+                        )}
                     </div>
                 </div>
 
                 {/* Admin Reply */}
-                {submittedFeedback.reply && (
+                {submittedFeedback.adminReply && (
                     <div className="user-feedback__reply">
                         <div className="user-feedback__header">
                             <img
@@ -85,10 +210,16 @@ export default function Feedback() {
                             />
                             <div className="user-feedback__info">
                                 <span className="user-feedback__name">Admin</span>
-                                <span className="user-feedback__time">{submittedFeedback.replyTime || "1 giờ trước"}</span>
+                                <span className="user-feedback__time">{submittedFeedback.replyAt ? new Date(submittedFeedback.replyAt).toLocaleString('vi-VN', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                }) : "Thời gian không xác định"}</span>
                             </div>
                         </div>
-                        <p className="user-feedback__comment">{submittedFeedback.reply}</p>
+                        <p className="user-feedback__comment">{submittedFeedback.adminReply}</p>
                     </div>
                 )}
             </div>
@@ -118,7 +249,7 @@ export default function Feedback() {
                                 <Col span={24}>
                                     <Form.Item
                                         label="Nhận xét"
-                                        name="comment"
+                                        name="content"
                                         wrapperCol={{ span: 24 }}
                                         rules={[{ required: true, message: 'Vui lòng nhập nhận xét!' }]}
                                     >
@@ -130,7 +261,7 @@ export default function Feedback() {
                                 <Col span={12}>
                                     <Form.Item
                                         label="Số sao"
-                                        name="rating"
+                                        name="star"
                                         rules={[{ required: true, message: 'Vui lòng chọn số sao!' }]}
                                     >
                                         <Rate style={{ fontSize: 26 }} />
@@ -177,33 +308,70 @@ export default function Feedback() {
                                 <p className="feedback__label">Tổng quan</p>
                                 <div className="feedback__ratio">
                                     <p className="feedback__score">
-                                        <StarFilled style={{ color: "#f59e0b" }} /> 4.8
+                                        <StarFilled style={{ color: "#f59e0b" }} /> {calculateAverageStar(evaluates)}
                                     </p>
                                     <p className="feedback__max">/ 5</p>
                                 </div>
 
-                                <p className="feedback__count">44 nhận xét</p>
+                                <p className="feedback__count">{evaluates.length} nhận xét</p>
                             </div>
                             <div className="feedback__bars">
                                 {[5, 4, 3, 2, 1].map((star) => (
                                     <div key={star} className="feedback__bar-row">
                                         <span className="feedback__bar-label">{star} <StarFilled style={{ color: "#f59e0b" }} /></span>
                                         <Progress
-                                            percent={100}
+                                            percent={percentages[star]}
                                             strokeColor="#f97316"
                                             showInfo={false}
                                             className="feedback__progress"
                                         />
-                                        <span className="feedback__bar-percent">100%</span>
+                                        <span className="feedback__bar-percent">{percentages[star]} %</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <div className="feedback__list">
-                            <CardItemFeedback />
-                            <CardItemFeedback />
-                            <CardItemFeedback />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginBottom: 20, marginTop: 20 }}>
+                            <Select
+                                defaultValue=""
+                                style={{ width: 160 }}
+                                onChange={value => setStarFilter(value)}
+                            >
+                                <Option value="">Tất cả số sao</Option>
+                                <Option value={5}>5 sao</Option>
+                                <Option value={4}>4 sao</Option>
+                                <Option value={3}>3 sao</Option>
+                                <Option value={2}>2 sao</Option>
+                                <Option value={1}>1 sao</Option>
+                            </Select>
+
+                            <Select
+                                defaultValue="starDesc"
+                                style={{ width: 160 }}
+                                onChange={value => setSortOption(value)}
+                            >
+                                <Option value="newest">Mới nhất</Option>
+                                <Option value="oldest">Cũ nhất</Option>
+                                <Option value="starDesc">Sao cao nhất</Option>
+                                <Option value="starAsc">Sao thấp nhất</Option>
+                            </Select>
                         </div>
+
+                        <div className="feedback__list">
+                            {(!evaluates || evaluates.length === 0) ? (
+                                <div>Chưa có đánh giá nào</div>
+                            ) : (evaluateToShow.map((item) => (
+                                <CardItemFeedback data={item} />
+                            ))
+                            )}
+                        </div>
+                        <Pagination
+                            style={{ display: "flex", justifyContent: "center", marginTop: 20 }}
+                            current={currentPage}
+                            pageSize={pageSize}
+                            total={evaluateToShow.length}
+                            onChange={page => setCurrentPage(page)}
+                        />
+
                     </div>
                 </div>
 

@@ -23,6 +23,7 @@ import PracticeExam from "../pages/PracticeExam";
 import BlogCategoryManagent from "../pages/BlogCategoryManagement";
 import TestSetManagement from "../pages/TestSetManagement";
 import FeedbackManagement from "../pages/FeedbackManagement";
+import BlogDetail from "../pages/BlogDetail";
 
 function MainRoutes() {
   return (
@@ -38,6 +39,7 @@ function MainRoutes() {
           <Route path="VocabularyTopics" element={<VocabularyTopic />} />
           <Route path="ToiecTests" element={<ToeicTests />} />
           <Route path="Blogs" element={<Blogs />} />
+          <Route path="Blogs/BlogDetail/:blogId" element={<BlogDetail />} />
           <Route path="PersonalInformation" element={<PersonalInformation />} />
           <Route
             path="VocabularyTopics/DetailTopic/:topicId"
