@@ -134,8 +134,8 @@ export default function ToiecTests() {
     })),
   ];
 
-  const handleClick = () => {
-    navigate("/DetailExam");
+  const handleClick = (id) => {
+    navigate(`/DetailExam/${id}`);
   };
 
   const handlePageChange = (page) => {
@@ -192,7 +192,11 @@ export default function ToiecTests() {
           <div className="ToeicTests-page__listTest">
             <div className="Test-list">
               {currentItems?.map((item, index) => (
-                <div key={item.id} className="Test-item" onClick={handleClick}>
+                <div
+                  key={item.id}
+                  className="Test-item"
+                  onClick={() => handleClick(item.id)}
+                >
                   <div className="Test-item__index">
                     {startIndex + index + 1}
                   </div>

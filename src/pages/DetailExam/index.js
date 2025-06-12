@@ -2,15 +2,28 @@ import { Button, Divider, Input, Tabs } from "antd";
 import "./DetailExam.scss";
 import BaseTable from "../../components/BaseTable";
 import ListPartSection from "../../components/ListPartSection";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CommentItem from "../../components/CommentItem";
+import {
+  CreateComment,
+  GetAllComment,
+} from "../../services/Exam/commentExamService";
+import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
+import { useAuth } from "../../utils/AuthContext";
 const { TabPane } = Tabs;
 export default function DetailExam() {
   const [activeTab, setActiveTab] = useState("1");
   const [selectedParts, setSelectedParts] = useState([]);
   const [practiceTime, setPracticeTime] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [commentContent, setCommentContent] = useState("");
+  const { id } = useParams();
+  const { user } = useAuth(); // Lấy user từ AuthContext
+  const currentUserId = user?.id;
   const navigate = useNavigate();
+
+  // console.log(">>>.check id", id);
   const columns = [
     {
       title: "Ngày làm",
@@ -102,7 +115,7 @@ export default function DetailExam() {
     },
   ];
   const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
+    // console.log("params", pagination, filters, sorter, extra);
   };
   const parts = [
     { number: 1, title: "Part 1", questions: 6 },
@@ -125,11 +138,11 @@ export default function DetailExam() {
       return newParts.sort((a, b) => a - b);
     });
   };
-  console.log(">>>>>>>>>>check selectedParts", selectedParts);
+  // console.log(">>>>>>>>>>check selectedParts", selectedParts);
   const handleTimeChange = (value) => {
     setPracticeTime(Number(value));
   };
-  console.log(">>>>>>>>>>check PracticeTime", practiceTime);
+  // console.log(">>>>>>>>>>check PracticeTime", practiceTime);
   const renderTopicList = () => {
     switch (activeTab) {
       case "1":
@@ -158,75 +171,56 @@ export default function DetailExam() {
         return [];
     }
   };
-  const comments = [
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-      replies: [
-        {
-          avatar:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-          name: "Trần Tiến Đạt",
-          date: "10 - 9 - 2025",
-          text: "Thật hả bạn? Mình mới làm được 100 câu thôi.",
-        },
-      ],
-    },
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-      replies: [
-        {
-          avatar:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-          name: "Trần Tiến Đạt",
-          date: "10 - 9 - 2025",
-          text: "Thật hả bạn? Mình mới làm được 100 câu thôi.",
-        },
-      ],
-    },
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-    },
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-    },
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-    },
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-    },
-    {
-      avatar:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s",
-      name: "Trần Tiến Đạt",
-      date: "10 - 9 - 2025",
-      text: "Đề này rất hay, mình đã làm được 150 câu trong 120 phút.",
-    },
-  ];
+  useEffect(() => {
+    const getData = async () => {
+      const result = await GetAllComment(id);
+      if (!result) {
+        return;
+      } else {
+        setComments(result);
+      }
+    };
+    getData();
+  }, [id]);
+  const ReloadListComment = async () => {
+    const result = await GetAllComment(id);
+    if (!result) {
+      return;
+    } else {
+      setComments(result);
+    }
+  };
+  const handleCommentChange = (e) => {
+    setCommentContent(e.target.value);
+  };
+
+  const handleSend = async () => {
+    try {
+      // Kiểm tra nội dung comment không được rỗng
+      if (!commentContent.trim()) {
+        showErrorMessage(
+          "Nội dung không được để trống.Vui lòng nhập nội dung bình luận"
+        );
+        return;
+      }
+      const values = {
+        examID: id,
+        content: commentContent,
+      };
+
+      const result = await CreateComment(values); // Truyền values vào hàm CreateComment
+      if (!result) return;
+
+      showSuccess("Bình luận thành công");
+      setCommentContent(""); // Reset input sau khi gửi thành công
+      ReloadListComment();
+    } catch (error) {
+      showErrorMessage("Gửi bình luận thất bại! ", error);
+    }
+  };
+
+  // console.log(">>>>>>>>>>.check comment", comments);
+  // console.log(">>>>>>>>>>.check commentContent", commentContent);
   const [visibleComments, setVisibleComments] = useState(3);
   const handleLoadMore = () => {
     setVisibleComments((prev) => prev + 3);
@@ -283,13 +277,22 @@ export default function DetailExam() {
                 className="detail-exam__inputfeedback"
                 placeholder="Nhận xét của bạn.."
                 allowClear
+                value={commentContent}
+                onChange={handleCommentChange}
               />
-              <Button className="detail-exam__comment-btn">Gửi</Button>
+              <Button className="detail-exam__comment-btn" onClick={handleSend}>
+                Gửi
+              </Button>
             </div>
           </div>
           <div className="detail-exam__comments-content">
             {comments.slice(0, visibleComments).map((comment, index) => (
-              <CommentItem key={index} {...comment} />
+              <CommentItem
+                key={index}
+                {...comment}
+                ReloadListComment={ReloadListComment}
+                currentUserId={currentUserId}
+              />
             ))}
             {visibleComments < comments.length && (
               <Button

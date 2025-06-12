@@ -53,10 +53,10 @@ function MainRoutes() {
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/:flashcardId"
             element={<PracticeFlashCard />}
           />
-          <Route path="DetailExam" element={<DetailExam />} />
+          {/* <Route path="DetailExam" element={<DetailExam />} /> */}
+          <Route path="/DetailExam/:id" element={<DetailExam />} />
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="PracticeExam" element={<PracticeExam />} />
-
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>
