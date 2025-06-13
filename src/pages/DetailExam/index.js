@@ -3,13 +3,24 @@ import "./DetailExam.scss";
 import BaseTable from "../../components/BaseTable";
 import ListPartSection from "../../components/ListPartSection";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import CommentItem from "../../components/CommentItem";
 import {
   CreateComment,
   GetAllComment,
+  GetDetailExam,
 } from "../../services/Exam/commentExamService";
-import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
+import {
+  showErrorMessage,
+  showSuccess,
+  showWaringMessage,
+} from "../../utils/alertHelper";
 import { useAuth } from "../../utils/AuthContext";
 const { TabPane } = Tabs;
 export default function DetailExam() {
@@ -17,12 +28,14 @@ export default function DetailExam() {
   const [selectedParts, setSelectedParts] = useState([]);
   const [practiceTime, setPracticeTime] = useState(0);
   const [comments, setComments] = useState([]);
+  const [detailExam, setDetailExam] = useState({});
   const [commentContent, setCommentContent] = useState("");
   const { id } = useParams();
   const { user } = useAuth(); // Lấy user từ AuthContext
   const currentUserId = user?.id;
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const isResultExam = location.pathname.includes("ResultExam"); // Kiểm tra có ở ResultExam không
   // console.log(">>>.check id", id);
   const columns = [
     {
@@ -63,7 +76,10 @@ export default function DetailExam() {
             className="Action__Delete"
             onClick={() => confirmDelete()}
           /> */}
-          <Link className="viewDetail" to={"/"}>
+          <Link
+            className="viewDetail"
+            to={`/DetailExam/${id}/ResultExam/${record.key}`}
+          >
             Xem chi tiết
           </Link>
         </div>
@@ -182,6 +198,17 @@ export default function DetailExam() {
     };
     getData();
   }, [id]);
+  useEffect(() => {
+    const getData = async () => {
+      const result = await GetDetailExam(id);
+      if (!result) {
+        return;
+      } else {
+        setDetailExam(result);
+      }
+    };
+    getData();
+  }, [id]);
   const ReloadListComment = async () => {
     const result = await GetAllComment(id);
     if (!result) {
@@ -228,47 +255,56 @@ export default function DetailExam() {
   return (
     <div className="detail-exam">
       <div className="MainContainer">
-        <div className="detail-exam__header">
-          <h1 className="detail-exam__title">ETS 2024 - Test 1</h1>
-          <p className="detail-exam__description">
-            Thời gian làm bài: 120 phút | 7 phần thi | 200 câu hỏi
-          </p>
-        </div>
-        <div className="detail-exam__results">
-          <h2 className="detail-exam__subtitle">Kết quả làm bài</h2>
-          <BaseTable columns={columns} data={data} onChange={onChange} />
-        </div>
-        <div className="detail-exam__tab-practice">
-          <div className="detail-exam__tab-header">
-            <Tabs defaultActiveKey="1" onChange={setActiveTab}>
-              <TabPane tab="Luyện tập" key="1" />
-              <TabPane tab="Làm full test" key="2" />
-            </Tabs>
-          </div>
-
-          <div className="detail-exam__tab-content">
-            {renderTopicList()}
-            <Button
-              className="detail-exam__practice-btn"
-              onClick={() => {
-                if (activeTab === "1" && selectedParts.length === 0) {
-                  alert("Hãy chọn ít nhất một Part!");
-                  return;
-                }
-                navigate("/PracticeExam", {
-                  state: {
-                    selectedParts:
-                      activeTab === "1" ? selectedParts : [1, 2, 3, 4, 5, 6, 7],
-                    practiceTime,
-                    mode: activeTab === "1" ? "practice" : "fulltest",
-                  },
-                });
-              }}
-            >
-              Luyện tập
-            </Button>
-          </div>
-        </div>
+        {/* Chỉ hiển thị khi không ở ResultExam */}
+        {!isResultExam && (
+          <>
+            <div className="detail-exam__header">
+              <h1 className="detail-exam__title">{detailExam.title}</h1>
+              <p className="detail-exam__description">
+                Thời gian làm bài: 120 phút | 7 phần thi | 200 câu hỏi
+              </p>
+            </div>
+            <div className="detail-exam__results">
+              <h2 className="detail-exam__subtitle">Kết quả làm bài</h2>
+              <BaseTable columns={columns} data={data} onChange={onChange} />
+            </div>
+            <div className="detail-exam__tab-practice">
+              <div className="detail-exam__tab-header">
+                <Tabs defaultActiveKey="1" onChange={setActiveTab}>
+                  <TabPane tab="Luyện tập" key="1" />
+                  <TabPane tab="Làm full test" key="2" />
+                </Tabs>
+              </div>
+              <div className="detail-exam__tab-content">
+                {renderTopicList()}
+                <Button
+                  className="detail-exam__practice-btn"
+                  onClick={() => {
+                    if (activeTab === "1" && selectedParts.length === 0) {
+                      showWaringMessage("Hãy chọn ít nhất một Part!");
+                      return;
+                    }
+                    navigate("/PracticeExam", {
+                      state: {
+                        selectedParts:
+                          activeTab === "1"
+                            ? selectedParts
+                            : [1, 2, 3, 4, 5, 6, 7],
+                        practiceTime,
+                        mode: activeTab === "1" ? "practice" : "fulltest",
+                      },
+                    });
+                  }}
+                >
+                  Luyện tập
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+        {/* Hiển thị ResultExam nếu có */}
+        <Outlet />
+        {/* Luôn hiển thị phần bình luận */}
         <div className="detail-exam__comments">
           <div className="detail-exam__comments-header">
             <h2 className="detail-exam__subtitle">Bình luận</h2>

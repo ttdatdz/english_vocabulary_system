@@ -45,3 +45,12 @@ export const showErrorMessage = (message = "Đã xảy ra lỗi!") => {
     confirmButtonText: "Đóng",
   });
 };
+
+export const showWaringMessage = (message = "Đã xảy ra lỗi!") => {
+  Swal.fire({
+    icon: "warning",
+    title: "Cảnh báo",
+    text: message,
+    confirmButtonText: "Đóng",
+  });
+};

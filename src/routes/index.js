@@ -24,6 +24,7 @@ import BlogCategoryManagent from "../pages/BlogCategoryManagement";
 import TestSetManagement from "../pages/TestSetManagement";
 import FeedbackManagement from "../pages/FeedbackManagement";
 import BlogDetail from "../pages/BlogDetail";
+import ResultExam from "../pages/ResultExam";
 
 function MainRoutes() {
   return (
@@ -54,7 +55,9 @@ function MainRoutes() {
             element={<PracticeFlashCard />}
           />
           {/* <Route path="DetailExam" element={<DetailExam />} /> */}
-          <Route path="/DetailExam/:id" element={<DetailExam />} />
+          <Route path="DetailExam/:id" element={<DetailExam />}>
+            <Route path="ResultExam/:resultId" element={<ResultExam />} />
+          </Route>
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="PracticeExam" element={<PracticeExam />} />
         </Route>

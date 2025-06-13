@@ -4,7 +4,10 @@ export const GetAllComment = async (id) => {
   const result = await get(`api/exam/${id}/comments`);
   return result;
 };
-
+export const GetDetailExam = async (id) => {
+  const result = await get(`api/exam/detail/${id}`);
+  return result;
+};
 export const DeleteReplyComment = async (id) => {
   const result = await del(`api/exam/reply-comment/delete/${id}`);
   return result;

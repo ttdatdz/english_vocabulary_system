@@ -25,3 +25,7 @@ export const getDetailExam = async (id) => {
   const result = await get(`api/exam/detail/${id}`);
   return result;
 };
+export const SubmitExam = async (value) => {
+  const result = await post(value, "api/exam/submit", true);
+  return result;
+};

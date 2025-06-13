@@ -10,6 +10,7 @@ import Part5 from "../../components/Part5";
 import PartSix from "../../components/PartSix";
 import PartSeven from "../../components/PartSeven";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const { TabPane } = Tabs;
 
 export default function PracticeExam() {
@@ -22,7 +23,7 @@ export default function PracticeExam() {
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
-
+  const navigate = useNavigate();
   // cuộn lên đầu trang
   useEffect(() => {
     window.scrollTo(0, 0);
