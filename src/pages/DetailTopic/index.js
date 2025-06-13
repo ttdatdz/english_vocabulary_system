@@ -84,7 +84,7 @@ export default function DetailTopic() {
         <div className="DetailTopic-page">
             <div className="DetailTopic-page__header">
                 <div className="MainContainer">
-                    <h2 className="DetailTopic-page__header-title">📖 FlashCards</h2>
+                    <h2 className="DetailTopic-page__header-title">📖 {topic?.title}</h2>
                     <Tabs defaultActiveKey="1" onChange={setActiveTab}>
                         <TabPane tab="Danh sách từ vựng" key="1" />
                         <TabPane tab="Đang học" key="2" />

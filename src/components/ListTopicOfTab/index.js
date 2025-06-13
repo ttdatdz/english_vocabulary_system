@@ -23,6 +23,10 @@ export default function ListTopicOfTab(props) {
     const topicsToShow = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     const showModal = (topic = null) => {
+        if(localStorage.getItem("accessToken")==null){
+            showErrorMessage("Bạn chưa Đăng nhập.");
+            return;
+        }
         setEditingTopic(topic);
         setOpen(true);
     };
@@ -40,7 +44,10 @@ export default function ListTopicOfTab(props) {
         setOpen(false);
     };
     const handleClick = (item) => {
-        navigate(`/VocabularyTopics/DetailTopic/${item.id}`);
+        if (localStorage.getItem("accessToken"))
+            navigate(`/VocabularyTopics/DetailTopic/${item.id}`);
+        else
+            navigate(`/ReviewFlashCard/${item.id}`);
     }
     const handleDelete = async (id) => {
         const confirmed = await confirmDelete("Bạn có chắc chắn muốn xóa chủ đề này?");
@@ -55,6 +62,10 @@ export default function ListTopicOfTab(props) {
         }
     }
     const handleSavePublishTopic = async (item) => {
+        if (localStorage.getItem("accessToken") == null) {
+            showErrorMessage("Bạn chưa Đăng nhập.");
+            return;
+        }
         const confirmed = await confirmBasic("Lưu chủ đề này vào kho từ vựng của bạn?");
         if (confirmed) {
             await post({}, `api/flashcard/savePublishTopic/${item.id}`, true);
@@ -95,7 +106,7 @@ export default function ListTopicOfTab(props) {
                             <InfoCircleOutlined className="topic-item__info" />
 
                             {activeTab === 6 && (
-                                <Button onClick={ async(e) => { e.stopPropagation(); await handleSavePublishTopic(item); }} className="btnApply" type="link" style={{ marginLeft: "auto" }}>
+                                <Button onClick={async (e) => { e.stopPropagation(); await handleSavePublishTopic(item); }} className="btnApply" type="link" style={{ marginLeft: "auto" }}>
                                     Áp dụng
                                 </Button>
                             )}

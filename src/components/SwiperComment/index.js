@@ -8,7 +8,7 @@ import 'swiper/css/pagination';
 
 import './SwiperComment.scss';
 
-export default function SwiperComment() {
+export default function SwiperComment({ evaluates }) {
     return (
         <div className="swiper-comment-wrapper">
             <Swiper
@@ -22,14 +22,13 @@ export default function SwiperComment() {
                 loop={true}
                 className="Container-listComments__Swiper"
             >
-
-                <SwiperSlide><CardItemComment /></SwiperSlide>
-                <SwiperSlide><CardItemComment /></SwiperSlide>
-                <SwiperSlide><CardItemComment /></SwiperSlide>
-                <SwiperSlide><CardItemComment /></SwiperSlide>
-                <SwiperSlide><CardItemComment /></SwiperSlide>
-
-
+                {
+                    (evaluates.map((item) => {
+                        return (
+                            <SwiperSlide><CardItemComment item={item} /></SwiperSlide>
+                        )
+                    }))
+                }
             </Swiper>
         </div>
     );

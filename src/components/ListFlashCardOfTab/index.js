@@ -23,6 +23,10 @@ export default function ListFlashCardOfTab(props) {
 
     const topicsToShow = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const showModal = (FlashCards = null) => {
+        if(localStorage.getItem("accessToken")==null){
+            showErrorMessage("Bạn chưa Đăng nhập.");
+            return;
+        }
         setEditingListFlashCard(FlashCards);
         setOpen(true);
     };

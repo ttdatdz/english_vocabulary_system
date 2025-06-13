@@ -16,8 +16,6 @@ const { Header, Footer, Content } = Layout;
 function CustomerLayout() {
   const navigate = useNavigate();
 
-  // console.log(localStorage.getItem("accessToken"));
-
   const { user, logout } = useAuth();
 
   const handleLogin = () => {

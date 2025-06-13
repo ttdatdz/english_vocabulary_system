@@ -25,6 +25,9 @@ import TestSetManagement from "../pages/TestSetManagement";
 import FeedbackManagement from "../pages/FeedbackManagement";
 import BlogDetail from "../pages/BlogDetail";
 import ResultExam from "../pages/ResultExam";
+import ReviewFlashCard from "../pages/ReviewFlashCard";
+import ReviewDetailListCard from "../pages/ReviewDetailListCard";
+import ReviewExam from "../pages/ReviewExam";
 
 function MainRoutes() {
   return (
@@ -42,6 +45,9 @@ function MainRoutes() {
           <Route path="Blogs" element={<Blogs />} />
           <Route path="Blogs/BlogDetail/:blogId" element={<BlogDetail />} />
           <Route path="PersonalInformation" element={<PersonalInformation />} />
+          <Route path="ReviewFlashCard/:topicId" element={<ReviewFlashCard/>}/>
+          <Route path="ReviewFlashCard/ReviewDetailListCard/:flashcardId" element={<ReviewDetailListCard/>} />
+          <Route path="ReviewExam" element={<ReviewExam/>}/>
           <Route
             path="VocabularyTopics/DetailTopic/:topicId"
             element={<DetailTopic />}

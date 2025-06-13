@@ -3,7 +3,7 @@ import CardItemFlashCard from "../../components/CardItemFlashCard";
 import SwiperBanner from "../../components/SwiperBanner";
 import SwiperComment from "../../components/SwiperComment";
 import { useEffect, useState } from "react";
-import { get } from "../../utils/request";
+import { get, getWithParams } from "../../utils/request";
 import TopicItemFlashCard from "../../components/CardItemFlashCard";
 
 import "./Home.scss";
@@ -12,6 +12,8 @@ export default function Home() {
 
     const [examList, setExamList] = useState([]);
     const [topicFlashCardList, setTopicFlashCardList] = useState([]);
+    const [topEvaluate, setTopEvaluate] = useState([]);
+
     useEffect(() => {
         const fetchExams = async () => {
             try {
@@ -28,13 +30,25 @@ export default function Home() {
             try {
                 const data = await get("api/flashcard/getTopicPopular");
                 if (data && Array.isArray(data)) {
-                    setTopicFlashCardList(data.slice(0, 5)); // Lấy 5 chủ đề phổ biến
+                    if (localStorage.getItem("accountName")) {
+                        const filterNotMyTopic = data.filter((item) => item.userName != localStorage.getItem("accountName"));
+                        setTopicFlashCardList(filterNotMyTopic.slice(0, 5));
+                    } else
+                        setTopicFlashCardList(data.slice(0, 5));
                 }
             } catch (error) {
                 console.error("Lỗi khi tải chủ đề từ vựng:", error);
             }
         };
 
+        const fetchEvaluate = async () => {
+            const params = { star: 5 };
+            const data = await getWithParams("api/evaluate/get", params);
+            if (data) {
+                setTopEvaluate(data);
+            }
+        }
+        fetchEvaluate();
         fetchTopics();
         fetchExams();
     }, []);
@@ -61,7 +75,7 @@ export default function Home() {
                 </div>
                 <div className='Container-listComments'>
                     <h2 className='Container-listComments__Title'>Người dùng nói gì về VocaLearn</h2>
-                    <SwiperComment />
+                    <SwiperComment evaluates={topEvaluate} />
                 </div>
 
             </div>

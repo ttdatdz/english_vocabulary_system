@@ -344,7 +344,7 @@ export default function Feedback() {
                       valuePropName="fileList"
                       getValueFromEvent={normFile}
                     >
-                      <Upload action="/upload.do" listType="picture-card">
+                      <Upload listType="picture-card">
                         <button
                           style={{
                             color: "inherit",

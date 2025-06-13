@@ -16,6 +16,9 @@ export default function VocabularyTopic() {
 
   const fetchUserTopics = async () => {
     const userId = localStorage.getItem("userId");
+    if(userId==null){
+      return;
+    }
     const data = await get(`/api/flashcard/getTopicsByUser/${userId}`);
     if (data && Array.isArray(data)) {
       setMyVocabList(data);
