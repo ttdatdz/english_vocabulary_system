@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./ResultExam.scss";
 import { Button } from "antd";
 import { FaCheck } from "react-icons/fa6";
@@ -7,20 +7,46 @@ import { IoMdTime } from "react-icons/io";
 import { FaCheckCircle } from "react-icons/fa";
 import { FaTimesCircle } from "react-icons/fa";
 import { FaMinusCircle } from "react-icons/fa";
+import { get } from "../../utils/request";
+import { useEffect, useState } from "react";
 const ResultExam = () => {
   const { resultId } = useParams();
+  const navigate = useNavigate();
+  const [result, setResult] = useState(null);
+  const loadExamResults = async () => {
+    const data = await get(`api/exam/result/id/${resultId}`);
+    if (data)
+      setResult(data);
+    console.log(data);
+  }
+  useEffect(() => {
+    loadExamResults();
+  }, []);
+  const handleReviewDetailResult = () => {
+    navigate(`/ReviewExam/${resultId}`);
+  }
+  const handleReturnDetailExam = (id) => {
+    navigate(`/DetailExam/${id}`);
+  }
 
+  function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  }
+  if (!result) return null;
   return (
     <div className="result-exam">
       <div className="result-exam__header">
         <h1 className="result-exam__title">
-          Kết quả luyện tập: Practice Set TOEIC 2022 Test 1 Part 7
+          Kết quả luyện tập: Practice {result?.examCollection} - {result?.examTitle} - {result?.section}
         </h1>
         <div className="result-exam__buttons">
-          <Button className="result-exam__button result-exam__button--review">
+          <Button onClick={() => handleReviewDetailResult()} className="result-exam__button result-exam__button--review">
             Xem chi tiết đáp án
           </Button>
-          <Button className="result-exam__button result-exam__button--back">
+          <Button onClick={() => handleReturnDetailExam(result.examID)} className="result-exam__button result-exam__button--back">
             Quay về trang đề thi
           </Button>
         </div>
@@ -47,7 +73,7 @@ const ResultExam = () => {
               <span className="result-exam__label">
                 Kết quả làm <br /> bài
               </span>
-              <span className="result-exam__value">14/54</span>
+              <span className="result-exam__value">{result?.correctAnswers}/{result?.totalQuestions}</span>
             </div>
 
             <div className="result-exam__progress">
@@ -55,14 +81,14 @@ const ResultExam = () => {
               <span className="result-exam__label">
                 Độ chính xác <br /> (đúng/tổng)
               </span>
-              <span className="result-exam__value">77.8%</span>
+              <span className="result-exam__value">{((result?.correctAnswers / result?.totalQuestions) * 100).toFixed(1)}%</span>
             </div>
             <div className="result-exam__time-complete">
               <IoMdTime className="result-exam__icon" />
               <span className="result-exam__label">
                 Thời gian hoàn <br /> thành
               </span>
-              <span className="result-exam__value">0:42:25</span>
+              <span className="result-exam__value">{formatTime(result?.duration)}</span>
             </div>
           </div>
         </div>
@@ -72,7 +98,7 @@ const ResultExam = () => {
           <span className="result-exam__label result-exam__label--correct">
             Trả lời đúng
           </span>
-          <span className="result-exam__title">14</span>
+          <span className="result-exam__title">{result?.correctAnswers}</span>
           <span className="result-exam__subTitle">câu hỏi</span>
         </div>
         <div className="result-exam__stat">
@@ -81,7 +107,7 @@ const ResultExam = () => {
           <span className="result-exam__label result-exam__label--incorrect">
             Trả lời sai
           </span>
-          <span className="result-exam__title">4</span>
+          <span className="result-exam__title">{result?.incorrectAnswers}</span>
           <span className="result-exam__subTitle">câu hỏi</span>
         </div>
         <div className="result-exam__stat">
@@ -90,7 +116,7 @@ const ResultExam = () => {
           <span className="result-exam__label result-exam__label--skipped">
             Bỏ qua
           </span>
-          <span className="result-exam__title">36</span>
+          <span className="result-exam__title">{result?.nullAnswers}</span>
           <span className="result-exam__subTitle">câu hỏi</span>
         </div>
       </div>

@@ -85,7 +85,7 @@ export const post = async (values, path, auth = false) => {
     });
 
     if (response.ok) {
-      if (path === "api/user/login" || path === "api/exam/create")
+      if (path === "api/user/login" || path === "api/exam/create" || path === "api/exam/submit")
         return await response.json(); // nếu là đăng nhập thì trả về dữ liệu người dùng
       return true;
     } else {

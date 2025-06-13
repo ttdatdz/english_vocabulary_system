@@ -1,178 +1,100 @@
 .PracticeExam {
   &__header {
-    background: linear-gradient(to right, #fda98e, #f9cccc);
-    padding: 40px 0;
+    background: linear-gradient(to right, #4f46e5, #3b82f6);
+    padding: 32px 0;
+    color: white;
 
     .MainContainer {
       display: flex;
-      gap: 20px;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
     }
 
     &-title {
       font-size: 24px;
       font-weight: bold;
-      color: #fff;
     }
-  }
 
-  &__btnExit {
-    padding: 10px 20px;
-    width: 100px;
-    border: none;
-    color: #35509a;
-    font-weight: 600;
-    background-color: #e8f2ff;
-    font-size: 16px;
-
-    &:hover {
-      background-color: #e8f2ff !important;
-      color: #35509a !important;
+    &-timer {
+      font-size: 20px;
+      font-weight: 500;
     }
   }
 
   &__content {
     display: flex;
-    align-items: flex-start;
-    margin: 20px 0px;
-    gap: 5px;
+    gap: 24px;
+    margin-top: 24px;
 
     &-left {
-      width: 80%;
-      padding: 20px;
-      border: 1px solid #ddd;
-      background-color: #fff;
-      border-radius: 10px;
-
-      .ant-tabs-nav {
-        margin-bottom: 0;
-      }
-
-      .ant-tabs-tab {
-        background-color: #f8f9fa;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-weight: 500;
-        color: #333;
-        font-size: 16px;
-        margin-right: 15px !important;
-        margin-left: 0px !important;
-        transition: all;
-
-        &:hover {
-          background-color: #e8f2ff;
-          color: #35509a !important;
-          transition: all;
-        }
-      }
-
-      .ant-tabs-tab-active {
-        background-color: #e8f2ff !important;
-        color: #35509a !important;
-        transition: all;
-      }
-
-      .ant-tabs-ink-bar {
-        display: none !important;
-        list-style: none;
-      }
-
-      .ant-tabs-nav::before {
-        display: none !important;
-      }
+      flex: 1;
     }
 
     &-right {
-      flex: 1;
-      padding: 20px;
-      border: 1px solid #ddd;
-      background-color: #fff;
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: start;
-
-      position: sticky;
-      top: 100px;
-      max-height: calc(100vh - 120px);
-      overflow-y: auto;
+      width: 200px;
     }
   }
 
-  &__practiceTime {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 20px;
+  &__groupCard {
+    margin-bottom: 24px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
   }
 
-  &__btnSubmit {
-    color: #ff8059;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 18px;
-    border-radius: 5px;
-    border: 1px solid #ff8059;
-    transition: all 0.3s;
-    width: 100%;
-    margin-bottom: 20px;
-
-    &:hover {
-      background-color: #ff6a4d !important;
-      color: white !important;
-      border-color: #ff6a4d !important;
-    }
+  &__questionCard {
+    margin-top: 16px;
+    background-color: white;
+    border: 1px solid #e0e0e0;
   }
 
-  &__note {
-    margin-bottom: 10px;
-    line-height: 1.5;
-    font-size: 15px;
-    font-weight: 500;
-    color: #ffb001;
-  }
-
-  &__title-part {
-    margin: 10px 0px;
+  &__image {
+    display: block;
+    margin-bottom: 12px;
+    max-width: 100%;
+    max-height: 360px;
+    border-radius: 8px;
+    object-fit: contain;
   }
 
   &__btnQuestion {
-    margin-right: 5px;
-    margin-bottom: 5px;
     width: 40px;
     height: 40px;
-    border: 1px solid #f66233;
-    color: black;
-    font-weight: 500;
+    margin: 4px;
+    padding: 0;
+    border-radius: 50%;
+    font-weight: bold;
 
-    &:hover {
-      background-color: #f66233 !important;
-      color: white !important;
-      border-color: #f66233 !important;
+    &.answered {
+      background-color: #22c55e;
+      color: white;
     }
   }
+}
 
-  .answered {
-    background-color: #f66233 !important;
-    color: white !important;
-    border-color: #f66233 !important;
+.PracticeExam__content-right {
+  width: 220px;
+  padding-left: 16px;
+}
 
-    &:hover {
-      background-color: #f66233 !important;
-      color: white !important;
-      border-color: #f66233 !important;
-    }
+.PracticeExam__title-part {
+  margin-top: 16px;
+  font-weight: bold;
+}
+
+.PracticeExam__btnQuestion {
+  width: 40px;
+  height: 40px;
+  margin: 4px;
+  padding: 0;
+  border-radius: 50%;
+  font-weight: bold;
+
+  &.answered {
+    background-color: #22c55e;
+    color: white;
   }
 
-  .marked {
-    border: 1px solid #ffbb25 !important;
-    color: #fff !important;
-    background-color: #ffbb25 !important;
-
-    &:hover {
-      background-color: #ffbb25 !important;
-      color: white !important;
-      border-color: #ffbb25 !important;
-    }
+  &.active {
+    border: 2px solid #3b82f6;
   }
 }

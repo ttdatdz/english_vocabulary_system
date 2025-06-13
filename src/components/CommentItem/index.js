@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./CommentItem.scss";
 import { BiEdit } from "react-icons/bi";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -38,7 +38,9 @@ export default function CommentItem({
   const [editedText, setEditedText] = useState(content);
   const isOwnComment = currentUserId === userId;
   const isReply = parentReplyID !== null; // Xác định đây là phản hồi hay bình luận
-
+  useEffect(() => {
+    setEditedText(content);
+  }, [content]);
   const handleSendReply = async () => {
     // console.log(
     //   "Check rootCommentID, parentReplyID, id:",

@@ -6,7 +6,8 @@
     &__header-title {
         font-size: 24px;
         font-weight: bold;
-        color: #fff;
+        color: #000;
+        margin-top: 20px;
     }
 
     // Ghi đè hoặc bổ sung nếu cần
@@ -38,4 +39,36 @@
             border-color: #dc3545;
         }
     }
+}
+
+/* ✅ Ảnh Part 1–6: phóng vừa đủ, không scroll */
+.ReviewExam__imageWrapper {
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.ReviewExam__image {
+    display: block;
+    max-width: 100%;
+    max-height: 350px;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    margin: 0;
+}
+
+/* ✅ Ảnh Part 7: khung cuộn nếu ảnh lớn */
+.ReviewExam__imageWrapper--scrollable {
+    overflow: auto;
+    max-height: 500px;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+.ReviewExam__image.scrollable {
+    max-width: none;
+    max-height: none;
+    width: auto;
+    height: auto;
 }

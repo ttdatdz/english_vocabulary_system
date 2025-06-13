@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { Tabs, Card, Button, Divider } from "antd";
+import { useParams } from "react-router-dom";
+import { Tabs, Card, Button } from "antd";
 import "./ReviewExam.scss";
+import { get } from "../../utils/request";
 
 const { TabPane } = Tabs;
 
 export default function ReviewExam() {
-    const location = useLocation();
-    const {
-        examTitle,
-        createdAt,
-        duration,
-        correctAnswers,
-        totalQuestions,
-        questionReviews = [],
-    } = location.state || {};
+    const { reviewExamId } = useParams();
+    const [reviewExam, setReviewExam] = useState(null);
+    const [activeTab, setActiveTab] = useState("1");
+    const [activeQuestionIndex, setActiveQuestionIndex] = useState(null);
+    const [pendingScrollIndex, setPendingScrollIndex] = useState(null);
+    const questionRefs = {};
 
     const getPart = (index) => {
         if (index <= 6) return 1;
@@ -26,29 +24,25 @@ export default function ReviewExam() {
         return 7;
     };
 
-    const [activeQuestionIndex, setActiveQuestionIndex] = useState(null);
-    const [pendingScrollIndex, setPendingScrollIndex] = useState(null);
-
-    const grouped = {};
-    const questionRefs = {};
-    questionReviews.forEach((q) => {
-        const part = getPart(q.indexNumber);
-        if (!grouped[part]) grouped[part] = [];
-        grouped[part].push(q);
-    });
-
-    const [activeTab, setActiveTab] = useState("1");
+    useEffect(() => {
+        const loadReviewExam = async () => {
+            const data = await get(`api/exam/result/id/18`);
+            if (data) setReviewExam(data);
+        };
+        loadReviewExam();
+    }, [reviewExamId]);
 
     const scrollToQuestion = (index) => {
         const el = questionRefs[index];
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     };
+
     useEffect(() => {
         if (pendingScrollIndex !== null) {
             setTimeout(() => {
                 scrollToQuestion(pendingScrollIndex);
                 setPendingScrollIndex(null);
-            }, 120); // delay để DOM kịp render
+            }, 120);
         }
     }, [pendingScrollIndex]);
 
@@ -59,11 +53,24 @@ export default function ReviewExam() {
         return `${h}:${m}:${s}`;
     };
 
+    if (!reviewExam) return null;
+
+    const grouped = {};
+    reviewExam.questionReviews.forEach((q) => {
+        const part = getPart(q.indexNumber);
+        const groupKey = q.conversation || `single-${q.indexNumber}`;
+        if (!grouped[part]) grouped[part] = {};
+        if (!grouped[part][groupKey]) grouped[part][groupKey] = [];
+        grouped[part][groupKey].push(q);
+    });
+
     return (
         <div className="ReviewExam">
             <div className="ReviewExam__header">
                 <div className="MainContainer">
-                    <h2 className="ReviewExam__header-title">{examTitle} - Xem lại bài làm</h2>
+                    <h2 className="ReviewExam__header-title">
+                        {reviewExam.examTitle} - Xem lại bài làm
+                    </h2>
                 </div>
             </div>
 
@@ -71,72 +78,98 @@ export default function ReviewExam() {
                 <div className="PracticeExam__content">
                     <div className="PracticeExam__content-left">
                         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-                            {Object.keys(grouped).map((part) => (
-                                <TabPane tab={`Part ${part}`} key={part}>
-                                    {grouped[part].map((q) => (
-                                        <div ref={(el) => (questionRefs[q.indexNumber] = el)}>
-                                            <Card
-                                                key={q.indexNumber}
-                                                title={`Câu ${q.indexNumber}`}
-                                                ref={(el) => (questionRefs[q.indexNumber] = el)}
-                                                className="ReviewExam__questionCard"
-                                            >
-                                                {q.detail && <p>{q.detail}</p>}
-                                                {q.image && (
-                                                    <img
-                                                        src={q.image}
-                                                        alt="img"
-                                                        style={{ maxWidth: "100%", marginBottom: 8 }}
-                                                    />
-                                                )}
-                                                {q.audio && (
-                                                    <audio controls src={q.audio} style={{ marginBottom: 10 }} />
-                                                )}
-                                                {q.options.map((opt) => {
-                                                    const isUser = opt.mark === q.userAnswer;
-                                                    const isCorrect = opt.mark === q.correctAnswer;
-                                                    const className = isCorrect
-                                                        ? "correct"
-                                                        : isUser
-                                                            ? "incorrect"
-                                                            : "";
-                                                    return (
-                                                        <div
-                                                            key={opt.mark}
-                                                            className={`ReviewExam__option ${className}`}
-                                                        >
-                                                            <strong>{opt.mark}. </strong> {opt.detail}
-                                                            {isCorrect && " ✅"}
-                                                            {isUser && !isCorrect && " ❌"}
+                            {Object.entries(grouped).map(([part, groups]) => {
+                                const isScrollableImage = part === "7"; // chỉ Part 7 scroll ảnh
+                                return (
+                                    <TabPane tab={`Part ${part}`} key={part}>
+                                        {Object.values(groups).map((group, idx) => {
+                                            const firstQuestion = group[0];
+                                            const sharedImage = firstQuestion.image;
+                                            const sharedAudio = firstQuestion.audio;
+
+                                            return (
+                                                <Card
+                                                    key={`group-${idx}`}
+                                                    className="ReviewExam__questionGroup"
+                                                    style={{ marginBottom: 24 }}
+                                                >
+                                                    {(sharedImage || sharedAudio) && (
+                                                        <div className={isScrollableImage ? "ReviewExam__imageWrapper--scrollable" : "ReviewExam__imageWrapper"}>
+                                                            {sharedImage && (
+                                                                <img
+                                                                    src={sharedImage}
+                                                                    alt="group"
+                                                                    className={`ReviewExam__image ${isScrollableImage ? "scrollable" : ""}`}
+                                                                />
+                                                            )}
+                                                            {sharedAudio && (
+                                                                <audio
+                                                                    controls
+                                                                    src={sharedAudio}
+                                                                    style={{ marginTop: 10 }}
+                                                                />
+                                                            )}
                                                         </div>
-                                                    );
-                                                })}
-                                            </Card>
-                                        </div>
-                                    ))}
-                                </TabPane>
-                            ))}
+                                                    )}
+
+                                                    {group.map((q) => (
+                                                        <Card
+                                                            key={q.indexNumber}
+                                                            title={`Câu ${q.indexNumber}`}
+                                                            className="ReviewExam__questionCard"
+                                                            ref={(el) => (questionRefs[q.indexNumber] = el)}
+                                                            style={{ marginBottom: 16 }}
+                                                        >
+                                                            {q.detail && <p>{q.detail}</p>}
+                                                            {q.options.map((opt) => {
+                                                                const isUser =q.userAnswer !== null && opt.mark === q.userAnswer;
+                                                                const isCorrect = opt.mark === q.correctAnswer;
+                                                                const className = isCorrect
+                                                                    ? "correct"
+                                                                    : isUser
+                                                                        ? "incorrect"
+                                                                        : "";
+                                                                return (
+                                                                    <div key={opt.mark} className={`ReviewExam__option ${className}`}>
+                                                                        <strong>{opt.mark}. </strong> {opt.detail}
+                                                                        {isCorrect && " ✅"}
+                                                                        {isUser && !isCorrect && " ❌"}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </Card>
+                                                    ))}
+                                                </Card>
+                                            );
+                                        })}
+                                    </TabPane>
+                                );
+                            })}
+
                         </Tabs>
                     </div>
 
-                    <div className="PracticeExam__content-right" >
+                    <div className="PracticeExam__content-right">
                         <p className="PracticeExam__practiceTime">
-                            Thời gian làm bài: <strong>{formatDuration(duration)}</strong>
+                            Thời gian làm bài: <strong>{formatDuration(reviewExam.duration)}</strong>
                         </p>
                         <p className="PracticeExam__note">
-                            Kết quả: {correctAnswers}/{totalQuestions}
+                            Kết quả: {reviewExam.correctAnswers}/{reviewExam.totalQuestions}
                         </p>
-                        {Object.entries(grouped).map(([part, questions]) => (
+                        <p className="PracticeExam__note" style={{ color: "red" }}>
+                            Câu sai: {reviewExam.incorrectAnswers}
+                        </p>
+                        <p className="PracticeExam__note" style={{ color: "blue" }}>
+                            Bỏ qua: {reviewExam.nullAnswers}
+                        </p>
+                        {Object.entries(grouped).map(([part, groups]) => (
                             <div key={part}>
                                 <h4 className="PracticeExam__title-part">Part {part}</h4>
-                                {questions.map((q) => {
-                                    const isCorrect = q.userAnswer === q.correctAnswer;
-                                    const isAnswered = q.userAnswer !== null;
+                                {Object.values(groups).flat().map((q) => {
                                     return (
                                         <Button
                                             key={q.indexNumber}
-                                            className={`PracticeExam__btnQuestion ${activeQuestionIndex === q.indexNumber ? "answered" : ""
-                                                }`}
+                                            className={`PracticeExam__btnQuestion ${activeQuestionIndex === q.indexNumber ? "answered" : ""}`}
                                             onClick={() => {
                                                 setActiveTab(String(part));
                                                 setActiveQuestionIndex(q.indexNumber);

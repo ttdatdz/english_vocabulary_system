@@ -47,7 +47,7 @@ function MainRoutes() {
           <Route path="PersonalInformation" element={<PersonalInformation />} />
           <Route path="ReviewFlashCard/:topicId" element={<ReviewFlashCard/>}/>
           <Route path="ReviewFlashCard/ReviewDetailListCard/:flashcardId" element={<ReviewDetailListCard/>} />
-          <Route path="ReviewExam" element={<ReviewExam/>}/>
+          <Route path="ReviewExam/:examReviewId" element={<ReviewExam/>}/>
           <Route
             path="VocabularyTopics/DetailTopic/:topicId"
             element={<DetailTopic />}
@@ -65,7 +65,7 @@ function MainRoutes() {
             <Route path="ResultExam/:resultId" element={<ResultExam />} />
           </Route>
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
-          <Route path="PracticeExam" element={<PracticeExam />} />
+          <Route path="PracticeExam/:examId" element={<PracticeExam />} />
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>

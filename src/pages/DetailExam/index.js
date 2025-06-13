@@ -28,7 +28,7 @@ const { TabPane } = Tabs;
 export default function DetailExam() {
   const [activeTab, setActiveTab] = useState("1");
   const [selectedParts, setSelectedParts] = useState([]);
-  const [practiceTime, setPracticeTime] = useState(0);
+  const [practiceTime, setPracticeTime] = useState(120);
   const [comments, setComments] = useState([]);
   const [detailExam, setDetailExam] = useState({});
   const [commentContent, setCommentContent] = useState("");
@@ -74,11 +74,6 @@ export default function DetailExam() {
       key: "action",
       render: (_, record) => (
         <div className="Action">
-          {/* <IoEye className="Action__Detail" onClick={() => showModal(record)} />
-          <MdDelete
-            className="Action__Delete"
-            onClick={() => confirmDelete()}
-          /> */}
           <Link
             className="viewDetail"
             to={`/DetailExam/${id}/ResultExam/${record.key}`}
@@ -105,6 +100,7 @@ export default function DetailExam() {
   useEffect(() => {
     loadExamResults();
   }, []);
+
   const onChange = (pagination, filters, sorter, extra) => {
     // console.log("params", pagination, filters, sorter, extra);
   };
@@ -173,6 +169,7 @@ export default function DetailExam() {
     };
     getData();
   }, [id]);
+
   useEffect(() => {
     const getData = async () => {
       const result = await GetDetailExam(id);
@@ -182,8 +179,11 @@ export default function DetailExam() {
         setDetailExam(result);
       }
     };
+
     getData();
   }, [id]);
+
+
   const ReloadListComment = async () => {
     const result = await GetAllComment(id);
     if (!result) {
@@ -259,7 +259,7 @@ export default function DetailExam() {
                       showWaringMessage("Hãy chọn ít nhất một Part!");
                       return;
                     }
-                    navigate("/PracticeExam", {
+                    navigate(`/PracticeExam/${detailExam.id}`, {
                       state: {
                         selectedParts:
                           activeTab === "1"
