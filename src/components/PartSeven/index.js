@@ -100,6 +100,9 @@ export default function PartSeven(props) {
                   </div>
 
                   <div className="CardPartSeven__container-options">
+                    <div className="CardPartSeven__question-text">
+                      {question.text}
+                    </div>
                     <div className="CardPartSeven__options">
                       {question.options.map((option) => (
                         <div className="CardPartSeven__option" key={option}>

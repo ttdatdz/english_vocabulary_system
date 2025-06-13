@@ -61,6 +61,13 @@
   &__container-options {
     flex: 1;
   }
+  &__question-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
   &__questionNumber {
     font-size: 20px;
     font-weight: bold;

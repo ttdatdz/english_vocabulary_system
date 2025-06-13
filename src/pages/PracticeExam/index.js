@@ -311,62 +311,64 @@ export default function PracticeExam() {
             </div>
           </div>
           <div className="PracticeExam__content-right">
-            <p className="PracticeExam__practiceTime">
-              {displayTime === null
-                ? "Thời gian làm bài :"
-                : "Thời gian còn lại :"}{" "}
-              <strong style={{ fontSize: "19px" }}>
-                {" "}
+            <div className="PracticeExam__container-right">
+              <p className="PracticeExam__practiceTime">
                 {displayTime === null
-                  ? `${formatElapsed(elapsedSeconds)}`
-                  : `${formatTime(secondsLeft)}`}
-              </strong>
-            </p>
-            <Button className="PracticeExam__btnSubmit">Nộp bài</Button>
-            <p className="PracticeExam__note">
-              Chú ý: bạn có thể click vào số thứ tự câu hỏi trong bài để đánh
-              dấu review
-            </p>
-            <div>
-              {filteredQuestionOrder.map((item) => (
-                <React.Fragment key={item}>
-                  {item === 1 && (
-                    <h3 className="PracticeExam__title-part">Part 1</h3>
-                  )}
-                  {item === 7 && (
-                    <h3 className="PracticeExam__title-part">Part 2</h3>
-                  )}
-                  {item === 32 && (
-                    <h3 className="PracticeExam__title-part">Part 3</h3>
-                  )}
-                  {item === 71 && (
-                    <h3 className="PracticeExam__title-part">Part 4</h3>
-                  )}
-                  {item === 101 && (
-                    <h3 className="PracticeExam__title-part">Part 5</h3>
-                  )}
-                  {item === 131 && (
-                    <h3 className="PracticeExam__title-part">Part 6</h3>
-                  )}
-                  {item === 147 && (
-                    <h3 className="PracticeExam__title-part">Part 7</h3>
-                  )}
-                  <Button
-                    className={`PracticeExam__btnQuestion ${
-                      markedQuestions.includes(item) ? "marked" : ""
-                    } ${answeredQuestions[item] ? "answered" : ""}`}
-                    onClick={() => {
-                      const part = getPartByQuestion(item);
-                      setActiveTab(part);
-                      setTimeout(() => {
-                        scrollToQuestion(item);
-                      }, 300);
-                    }}
-                  >
-                    {item}
-                  </Button>
-                </React.Fragment>
-              ))}
+                  ? "Thời gian làm bài :"
+                  : "Thời gian còn lại :"}{" "}
+                <strong style={{ fontSize: "19px" }}>
+                  {" "}
+                  {displayTime === null
+                    ? `${formatElapsed(elapsedSeconds)}`
+                    : `${formatTime(secondsLeft)}`}
+                </strong>
+              </p>
+              <Button className="PracticeExam__btnSubmit">Nộp bài</Button>
+              <p className="PracticeExam__note">
+                Chú ý: bạn có thể click vào số thứ tự câu hỏi trong bài để đánh
+                dấu review
+              </p>
+              <div>
+                {filteredQuestionOrder.map((item) => (
+                  <React.Fragment key={item}>
+                    {item === 1 && (
+                      <h3 className="PracticeExam__title-part">Part 1</h3>
+                    )}
+                    {item === 7 && (
+                      <h3 className="PracticeExam__title-part">Part 2</h3>
+                    )}
+                    {item === 32 && (
+                      <h3 className="PracticeExam__title-part">Part 3</h3>
+                    )}
+                    {item === 71 && (
+                      <h3 className="PracticeExam__title-part">Part 4</h3>
+                    )}
+                    {item === 101 && (
+                      <h3 className="PracticeExam__title-part">Part 5</h3>
+                    )}
+                    {item === 131 && (
+                      <h3 className="PracticeExam__title-part">Part 6</h3>
+                    )}
+                    {item === 147 && (
+                      <h3 className="PracticeExam__title-part">Part 7</h3>
+                    )}
+                    <Button
+                      className={`PracticeExam__btnQuestion ${
+                        markedQuestions.includes(item) ? "marked" : ""
+                      } ${answeredQuestions[item] ? "answered" : ""}`}
+                      onClick={() => {
+                        const part = getPartByQuestion(item);
+                        setActiveTab(part);
+                        setTimeout(() => {
+                          scrollToQuestion(item);
+                        }, 300);
+                      }}
+                    >
+                      {item}
+                    </Button>
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
           </div>
         </div>

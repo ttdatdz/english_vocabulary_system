@@ -85,7 +85,14 @@
       display: flex;
       flex-direction: column;
       align-items: start;
+      // position: sticky;
     }
+  }
+  &__container-right {
+    top: 0;
+    position: sticky;
+    overflow-y: auto;
+    max-height: 100vh;
   }
   &__practiceTime {
     font-size: 16px;
