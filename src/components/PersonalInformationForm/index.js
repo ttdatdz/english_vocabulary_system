@@ -13,8 +13,9 @@ import {
   Select,
   Upload,
 } from "antd";
-import { showSuccess } from "../../utils/alertHelper";
+import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import dayjs from "dayjs";
+import { useAuth } from "../../utils/AuthContext";
 
 const { Option } = Select;
 export default function PersonalInformationForm(props) {
@@ -25,6 +26,7 @@ export default function PersonalInformationForm(props) {
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [form] = Form.useForm();
+  const { updateUser } = useAuth();
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -48,7 +50,7 @@ export default function PersonalInformationForm(props) {
             address: data?.address,
           };
           form.setFieldsValue(initVals);
-          setInitialValues(initVals); // lưu lại
+          setInitialValues(initVals);
         }
       } catch (error) {
         console.error("Lỗi khi lấy thông tin người dùng:", error);
@@ -58,7 +60,43 @@ export default function PersonalInformationForm(props) {
     fetchUserInfo();
   }, []);
 
+  const validateData = (values) => {
+    const now = dayjs();
+    const minDate = now.subtract(5, "year");
+    if (values.birthday.isAfter(now)) {
+      showErrorMessage("Ngày sinh phải nhỏ hơn ngày hiện tại!");
+      return false;
+    }
+    if (values.birthday.isAfter(minDate)) {
+      showErrorMessage("Tuổi phải lớn hơn 5!");
+      return false;
+    }
+    if (values.birthday.year() <= 1969) {
+      showErrorMessage("Năm sinh phải lớn hơn 1969!");
+      return false;
+    }
+    if (!/^0\d{9}$/.test(values.phoneNumber || "")) {
+      showErrorMessage("Số điện thoại phải có 10 số và bắt đầu bằng 0!");
+      return false;
+    }
+    if (!values.address) {
+      showErrorMessage("Vui lòng nhập địa chỉ!");
+      return false;
+    }
+    if (!/^[\w-\.]+@gmail\.com$/.test(values.email || "")) {
+      showErrorMessage("Email phải có dạng @gmail.com!");
+      return false;
+    }
+    if (!values.accountName) {
+      showErrorMessage("Vui lòng nhập tài khoản!");
+      return false;
+    }
+
+    return true;
+  };
+
   const onFinish = async (values) => {
+    if (!validateData(values)) return;
     setLoading(true);
     try {
       const formData = new FormData();
@@ -78,8 +116,31 @@ export default function PersonalInformationForm(props) {
       }
       console.log(">>>>check formData:", formData);
       await putFormData("api/user/updateProfile", formData);
+
+      // Fetch lại thông tin người dùng và cập nhật AuthContext
+      const updatedData = await getWithParams("api/user/getUserByFilter", {
+        userID: localStorage.getItem("userId"),
+        accountName: localStorage.getItem("accountName"),
+      });
+      if (updatedData) {
+        const newInitialValues = {
+          avatar: updatedData?.avatar,
+          fullName: updatedData.fullName,
+          birthday: dayjs(updatedData.birthday),
+          email: updatedData.email,
+          accountName: updatedData.accountName,
+          phoneNumber: updatedData?.phoneNumber,
+          address: updatedData?.address,
+        };
+        setInitialValues(newInitialValues);
+        form.setFieldsValue(newInitialValues);
+        if (updateUser) updateUser(updatedData); // Cập nhật user trong AuthContext
+      }
+
       showSuccess("Cập nhật thông tin thành công!");
       setIsEditing(false);
+      setFileList([]);
+      setPreviewUrl(null);
     } catch (error) {
       console.error("Lỗi cập nhật thông tin:", error.message);
     } finally {
@@ -89,7 +150,7 @@ export default function PersonalInformationForm(props) {
 
   const onCancel = () => {
     setIsEditing(false);
-    form.setFieldsValue(initialValues); // Reset lại giá trị form về ban đầu
+    form.setFieldsValue(initialValues);
     setFileList([]);
     setPreviewUrl(null);
   };
@@ -117,7 +178,6 @@ export default function PersonalInformationForm(props) {
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-        // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>
@@ -175,12 +235,13 @@ export default function PersonalInformationForm(props) {
             <Form.Item
               name="avatar"
               className="UserForm__Avatar-FormItem"
-              wrapperCol={{ span: 24 }} // canh thẳng hàng với input
+              wrapperCol={{ span: 24 }}
             >
               {isEditing ? (
                 <div className="UserForm__Avatar-EditBlock">
                   <img
                     src={
+                      previewUrl ||
                       form.getFieldValue("avatar") ||
                       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
                     }
@@ -216,9 +277,7 @@ export default function PersonalInformationForm(props) {
 
           {isEditing && (
             <Col span={24}>
-              <Form.Item
-                wrapperCol={{ offset: 8, span: 24 }} // canh thẳng hàng với input
-              >
+              <Form.Item wrapperCol={{ offset: 8, span: 24 }}>
                 <div className="UserForm__Contain-Button">
                   <Button
                     className="UserForm__Cancel"

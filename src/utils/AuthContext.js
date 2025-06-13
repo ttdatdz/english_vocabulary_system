@@ -5,6 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+
   // Hàm fetch lại thông tin user theo token hiện tại
   const fetchUser = async () => {
     const userId = localStorage.getItem("userId");
@@ -18,7 +19,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       // Nếu hết hạn token
       if (error.response && [401, 403].includes(error.response.status)) {
-        const doRenew = window.confirm("Phiên đăng nhập đã hết hạn. Bạn có muốn gia hạn phiên không?");
+        const doRenew = window.confirm(
+          "Phiên đăng nhập đã hết hạn. Bạn có muốn gia hạn phiên không?"
+        );
         if (doRenew) {
           try {
             const renewalToken = localStorage.getItem("renewalToken");
@@ -39,7 +42,6 @@ export const AuthProvider = ({ children }) => {
       }
     }
   };
-
 
   useEffect(() => {
     const accountName = localStorage.getItem("accountName");
@@ -65,8 +67,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = async (updatedUser) => {
+    setUser(updatedUser); // Cập nhật user trong context ngay lập tức
+    localStorage.setItem("user", JSON.stringify(updatedUser)); // Cập nhật localStorage
+    await fetchUser(); // Đảm bảo fetch lại dữ liệu từ server để đồng bộ
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, fetchUser, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

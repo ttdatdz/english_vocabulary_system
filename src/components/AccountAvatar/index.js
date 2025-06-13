@@ -5,15 +5,16 @@ import { MdExitToApp } from "react-icons/md";
 import "./AccountAvatar.scss";
 import { useAuth } from "../../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+
 export default function AccountAvatar() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth(); // Loại bỏ fetchUser khỏi dependency
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout(); // xóa localStorage và reset user
-    navigate("/login"); // chuyển hướng
+    logout();
+    navigate("/login");
   };
+
   const items = [
     {
       label: (
@@ -36,10 +37,7 @@ export default function AccountAvatar() {
       key: "1",
     },
   ];
-  // const userId = localStorage.getItem("userId");
-  // // console.log(">>>>>>>check user", user);
-  // useEffect(() => {}, [userId]);
-  const user = JSON.parse(localStorage.getItem("user"));
+
   return (
     <Dropdown menu={{ items }} trigger={["click"]}>
       <a className="AccountAvatar" onClick={(e) => e.preventDefault()}>

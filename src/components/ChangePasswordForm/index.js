@@ -17,7 +17,16 @@ export default function ChangePasswordForm() {
 
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const validateData = (values) => {
+    // Mật khẩu
+    if (values.newPassword.length < 5) {
+      showErrorMessage("Mật khẩu mới phải có ít nhất 5 ký tự!");
+      return false;
+    }
+    return true;
+  };
   const onFinish = async (values) => {
+    if (!validateData(values)) return;
     setLoading(true);
     try {
       const updateData = {
@@ -26,17 +35,21 @@ export default function ChangePasswordForm() {
       };
       const data = await post(updateData, "/api/user/reset-password", true);
       if (data) {
+        setLoading(false);
         showSuccess("Cập nhật thông tin thành công!");
         setIsEditing(false);
         form.resetFields();
         logout();
         navigate("/Login");
-      } else showErrorMessage("Có lỗi xảy ra khi đổi mật khẩu");
-
+      } else {
+        // const test = data.
+        // json();
+        // showErrorMessage("Có lỗi xảy ra khi đổi mật khẩu", test.detail);
+        setLoading(false);
+        return;
+      }
     } catch (error) {
       console.error("Lỗi cập nhật thông tin:", error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -73,7 +86,7 @@ export default function ChangePasswordForm() {
         initialValues={{}}
         onFinish={onFinish}
         autoComplete="off"
-      // Khóa tất cả input khi không chỉnh sửa
+        // Khóa tất cả input khi không chỉnh sửa
       >
         <Row gutter={24}>
           <Col span={14}>

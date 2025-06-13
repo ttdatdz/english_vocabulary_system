@@ -71,6 +71,10 @@ export const post = async (values, path, auth = false) => {
       return true;
     } else {
       const result = await response.text();
+      if (path === "/api/user/reset-password") {
+        const test = JSON.parse(result);
+        throw new Error(test.detail || test.message);
+      }
       // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
       throw new Error(`${result}`);
     }
@@ -201,8 +205,8 @@ export const putFormData = async (path, formData) => {
     const token = localStorage.getItem("accessToken");
     const headers = token
       ? {
-        Authorization: `Bearer ${token}`,
-      }
+          Authorization: `Bearer ${token}`,
+        }
       : undefined;
 
     const response = await fetch(API_DOMAIN + path, {
