@@ -16,6 +16,7 @@
       color: #fff;
     }
   }
+
   &__btnExit {
     padding: 10px 20px;
     width: 100px;
@@ -24,15 +25,19 @@
     font-weight: 600;
     background-color: #e8f2ff;
     font-size: 16px;
+
     &:hover {
       background-color: #e8f2ff !important;
       color: #35509a !important;
     }
   }
+
   &__content {
     display: flex;
+    align-items: flex-start;
     margin: 20px 0px;
     gap: 5px;
+
     &-left {
       width: 80%;
       padding: 20px;
@@ -54,6 +59,7 @@
         margin-right: 15px !important;
         margin-left: 0px !important;
         transition: all;
+
         &:hover {
           background-color: #e8f2ff;
           color: #35509a !important;
@@ -76,6 +82,7 @@
         display: none !important;
       }
     }
+
     &-right {
       flex: 1;
       padding: 20px;
@@ -85,20 +92,20 @@
       display: flex;
       flex-direction: column;
       align-items: start;
-      // position: sticky;
+
+      position: sticky;
+      top: 100px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
     }
   }
-  &__container-right {
-    top: 0;
-    position: sticky;
-    overflow-y: auto;
-    max-height: 100vh;
-  }
+
   &__practiceTime {
     font-size: 16px;
     font-weight: 500;
     margin-bottom: 20px;
   }
+
   &__btnSubmit {
     color: #ff8059;
     font-size: 16px;
@@ -116,6 +123,7 @@
       border-color: #ff6a4d !important;
     }
   }
+
   &__note {
     margin-bottom: 10px;
     line-height: 1.5;
@@ -123,9 +131,11 @@
     font-weight: 500;
     color: #ffb001;
   }
+
   &__title-part {
     margin: 10px 0px;
   }
+
   &__btnQuestion {
     margin-right: 5px;
     margin-bottom: 5px;
@@ -134,26 +144,31 @@
     border: 1px solid #f66233;
     color: black;
     font-weight: 500;
+
     &:hover {
       background-color: #f66233 !important;
       color: white !important;
       border-color: #f66233 !important;
     }
   }
+
   .answered {
     background-color: #f66233 !important;
     color: white !important;
     border-color: #f66233 !important;
+
     &:hover {
       background-color: #f66233 !important;
       color: white !important;
       border-color: #f66233 !important;
     }
   }
+
   .marked {
     border: 1px solid #ffbb25 !important;
     color: #fff !important;
     background-color: #ffbb25 !important;
+
     &:hover {
       background-color: #ffbb25 !important;
       color: white !important;

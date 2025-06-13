@@ -49,6 +49,25 @@ export const get = async (path) => {
     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
 };
+export const getNoAuth = async (path) => {
+  try {
+    const response = await fetch(API_DOMAIN + path, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+    });
+    if (!response.ok) {
+      // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
+      throw new Error(`Lỗi: ${response.status}`);
+    }
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
+  }
+};
 export const post = async (values, path, auth = false) => {
   try {
     const headers = {

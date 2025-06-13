@@ -7,7 +7,7 @@ import { del } from "../../utils/request";
 import { confirmDelete, showSuccess } from "../../utils/alertHelper";
 import { useEffect } from "react";
 export default function CardVocabulary(props) {
-    const { onFetchingData, data, showModal } = props;
+    const { onFetchingData, data, showModal, onReview } = props;
     // const handleOpenModal = () => {
     //     showModal();
     // }
@@ -17,7 +17,7 @@ export default function CardVocabulary(props) {
         2: "Trung bình",
         3: "Khó"
     };
-    
+
     const handleDelete = async () => {
         const confirmed = await confirmDelete("Bạn có chắc chắn muốn xóa từ này?");
         if (confirmed) {
@@ -44,8 +44,12 @@ export default function CardVocabulary(props) {
                             <span className="vocab-card__phonetic">{data.pronounce}</span>
                             <div className="vocab-card__actions">
                                 <HiMiniSpeakerWave className="vocab-card__icon vocab-card__icon--pronounce" title="Nghe phát âm" onClick={handlePlayAudio} />
-                                <BiEdit onClick={() => showModal(data)} className="vocab-card__icon vocab-card__icon--edit" />
-                                <RiDeleteBin6Line onClick={() => handleDelete()} className="vocab-card__icon vocab-card__icon--delete" />
+                                {!onReview && (
+                                    <>
+                                        <BiEdit onClick={() => showModal(data)} className="vocab-card__icon vocab-card__icon--edit" />
+                                        <RiDeleteBin6Line onClick={() => handleDelete()} className="vocab-card__icon vocab-card__icon--delete" />
+                                    </>
+                                )}
 
                             </div>
                         </div>

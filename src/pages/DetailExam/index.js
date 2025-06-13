@@ -22,6 +22,8 @@ import {
   showWaringMessage,
 } from "../../utils/alertHelper";
 import { useAuth } from "../../utils/AuthContext";
+
+import{get} from '../../utils/request';
 const { TabPane } = Tabs;
 export default function DetailExam() {
   const [activeTab, setActiveTab] = useState("1");
@@ -31,6 +33,7 @@ export default function DetailExam() {
   const [detailExam, setDetailExam] = useState({});
   const [commentContent, setCommentContent] = useState("");
   const { id } = useParams();
+  const [data,setData]=useState([]);
   const { user } = useAuth(); // Lấy user từ AuthContext
   const currentUserId = user?.id;
   const navigate = useNavigate();
@@ -40,31 +43,31 @@ export default function DetailExam() {
   const columns = [
     {
       title: "Ngày làm",
-      dataIndex: "date",
+      dataIndex: "createdAt",
+      render: (text) => new Date(text).toLocaleString(),
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: "Kết quả",
-      dataIndex: "result",
-      sorter: {
-        compare: (a, b) => a.chinese - b.chinese,
-        multiple: 3,
-      },
+      key: "result",
+      render: (_, record) => `${record.correctAnswers}/${record.totalQuestions}`,
+      sorter: (a, b) => a.correctAnswers - b.correctAnswers,
     },
     {
-      title: "Thời gian làm bài",
-      dataIndex: "time",
-      sorter: {
-        compare: (a, b) => a.math - b.math,
-        multiple: 2,
+      title: "Thời gian làm bài (phút)",
+      dataIndex: "duration",
+      render: (seconds) => {
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${s}`;
       },
+      sorter: (a, b) => a.duration - b.duration,
     },
     {
       title: "Phần thi",
-      dataIndex: "part",
-      sorter: {
-        compare: (a, b) => a.english - b.english,
-        multiple: 1,
-      },
+      dataIndex: "section",
+      sorter: (a, b) => a.section.localeCompare(b.section),
     },
     {
       title: "",
@@ -86,50 +89,22 @@ export default function DetailExam() {
       ),
     },
   ];
-  const data = [
-    {
-      key: "1",
-      date: "22/3/2025",
-      time: "0:15:32s",
-      part: "Part 5",
-      result: "22/30",
-    },
-    {
-      key: "2",
-      date: "22/3/2025",
-      time: "0:15:32s",
-      part: "Part 5",
-      result: "22/30",
-    },
-    {
-      key: "3",
-      date: "22/3/2025",
-      time: "0:15:32s",
-      part: "Part 5",
-      result: "22/30",
-    },
-    {
-      key: "4",
-      date: "22/3/2025",
-      time: "0:15:32s",
-      part: "Part 5",
-      result: "22/30",
-    },
-    {
-      key: "5",
-      date: "22/3/2025",
-      time: "0:15:32s",
-      part: "Part 5",
-      result: "22/30",
-    },
-    {
-      key: "6",
-      date: "22/3/2025",
-      time: "0:15:32s",
-      part: "Part 5",
-      result: "22/30",
-    },
-  ];
+
+
+  const loadExamResults = async () => {
+    if (localStorage.getItem("accessToken") == null) {
+      return;
+    }
+    const results = await get(`api/exam/result/getAllByExam/${id}`);
+    if (results)
+      setData(results);
+    console.log(results);
+
+  }
+
+  useEffect(() => {
+    loadExamResults();
+  }, []);
   const onChange = (pagination, filters, sorter, extra) => {
     // console.log("params", pagination, filters, sorter, extra);
   };
@@ -179,7 +154,7 @@ export default function DetailExam() {
             activeTab={2}
             hasCheckbox={false}
             selectedParts={[]} // không cần chọn part khi làm full test
-            onPartChange={() => {}}
+            onPartChange={() => { }}
             handleTimeChange={handleTimeChange}
           />
         );

@@ -14,10 +14,7 @@ import { useNavigate } from "react-router-dom";
 const { TabPane } = Tabs;
 
 export default function PracticeExam() {
-  // useRef() dùng để lưu trữ một giá trị bất kỳ (số, chuỗi, object, hàm, DOM element,...) mà không gây re-render khi giá trị đó thay đổi
-  // . useRef() luôn Luôn trả về một object có thuộc tính current.
-  //  Và chính .current là nơi bạn lưu giá trị của mình.
-  // Khi lưu object hoặc DOM element,.current giữ một tham chiếu đến giá trị gốc, tức là thay đổi giá trị gốc ở nơi khác thì .current cũng thấy thay đổi, và ngược lại.
+ 
   const questionRefs = useRef({});
 
   const [answeredQuestions, setAnsweredQuestions] = useState({});
