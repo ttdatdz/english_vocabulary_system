@@ -76,7 +76,7 @@ export default function DetailExam() {
         <div className="Action">
           <Link
             className="viewDetail"
-            to={`/DetailExam/${id}/ResultExam/${record.key}`}
+            to={`/DetailExam/${id}/ResultExam/${record.reviewId}`}
           >
             Xem chi tiết
           </Link>
@@ -99,7 +99,7 @@ export default function DetailExam() {
 
   useEffect(() => {
     loadExamResults();
-  }, []);
+  }, [id]);
 
   const onChange = (pagination, filters, sorter, extra) => {
     // console.log("params", pagination, filters, sorter, extra);
@@ -241,7 +241,7 @@ export default function DetailExam() {
             </div>
             <div className="detail-exam__results">
               <h2 className="detail-exam__subtitle">Kết quả làm bài</h2>
-              <BaseTable columns={columns} data={data} onChange={onChange} />
+              <BaseTable columns={columns} data={data} onChange={onChange} rowkey="reviewId"/>
             </div>
             <div className="detail-exam__tab-practice">
               <div className="detail-exam__tab-header">

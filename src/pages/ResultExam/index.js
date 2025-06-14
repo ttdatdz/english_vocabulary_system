@@ -21,7 +21,7 @@ const ResultExam = () => {
   }
   useEffect(() => {
     loadExamResults();
-  }, []);
+  }, [resultId]);
   const handleReviewDetailResult = () => {
     navigate(`/ReviewExam/${resultId}`);
   }
