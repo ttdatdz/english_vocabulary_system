@@ -1,7 +1,7 @@
 import { del, get, post, put } from "../../utils/request";
 
 export const GetAllComment = async (id) => {
-  const result = await get(`api/exam/${id}/comments`);
+  const result = await get(`api/exam/comments/${id}`);
   return result;
 };
 export const GetDetailExam = async (id) => {

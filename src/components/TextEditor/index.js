@@ -1,6 +1,7 @@
 import { Editor } from "@tinymce/tinymce-react";
 import { useRef } from "react";
-import "./TextEditor.scss"; // Import CSS styles for the editor
+
+import "./TextEditor.scss";
 
 export default function TextEditor({
   value,

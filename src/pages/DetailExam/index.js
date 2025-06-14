@@ -198,6 +198,10 @@ export default function DetailExam() {
 
   const handleSend = async () => {
     try {
+      if(localStorage.getItem("accessToken")==null){
+        showErrorMessage("Bạn cần đăng nhập để bình luận.");
+        return;
+      }
       // Kiểm tra nội dung comment không được rỗng
       if (!commentContent.trim()) {
         showErrorMessage(
