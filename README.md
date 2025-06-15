@@ -79,14 +79,14 @@ src/
 ├── services/        # API service
 ├── hooks/           # Custom hooks
 ├── layouts/         # Giao diện layout
-├── pages            # Các trang (Home, Vocabulary, TOEIC Test)
+├── pages/            # Các trang (Home, Vocabulary, TOEIC Test)
 ├── styles/          # SCSS global, mixin, biến
 ├── public/          # Tài nguyên công khai (favicon, index.html)
 ├── utils/           # Hàm tiện ích (helper functions, formatters)
 ├── store/           # Quản lý trạng thái (Redux/Redux Toolkit)
-├── routes/          # Quản lý trạng thái (Redux/Redux Toolkit)
+├── routes/          # Định nghĩa các routes
 ├── App.js
-└── main.js
+└── index.js
 ```
 ## Liên hệ
 - Email: trandat2622004@gmail.com
