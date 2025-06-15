@@ -55,7 +55,7 @@ Một ứng dụng web hỗ trợ học từ vựng tiếng Anh và luyện thi 
 ## Hướng Dẫn Cài Đặt
 1. Clone repository:
    ```bash
-   git clone https://github.com/VuBinhVL/SE100_WebsiteQuanLyPhongMachTu.git
+   git clone https://github.com/ttdatdz/english_vocabulary_system.git
    ```
 2. Cài đặt các thư viện yêu cầu:
    
@@ -73,6 +73,7 @@ Một ứng dụng web hỗ trợ học từ vựng tiếng Anh và luyện thi 
 ## 📁 Cấu trúc thư mục
 
 ```bash
+public/          # Tài nguyên công khai (favicon, index.html)
 src/
 ├── assets/          # Ảnh, icon
 ├── components/      # Component dùng chung
@@ -81,7 +82,6 @@ src/
 ├── layouts/         # Giao diện layout
 ├── pages/            # Các trang (Home, Vocabulary, TOEIC Test)
 ├── styles/          # SCSS global, mixin, biến
-├── public/          # Tài nguyên công khai (favicon, index.html)
 ├── utils/           # Hàm tiện ích (helper functions, formatters)
 ├── store/           # Quản lý trạng thái (Redux/Redux Toolkit)
 ├── routes/          # Định nghĩa các routes
