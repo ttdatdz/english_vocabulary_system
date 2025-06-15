@@ -1,70 +1,94 @@
-# Getting Started with Create React App
+# Ứng dụng Học Từ Vựng Tiếng Anh Online (Frontend)
+Một ứng dụng web hỗ trợ học từ vựng tiếng Anh và luyện thi TOEIC thông qua phương pháp flashcard và các bài thi thử, giúp người học ghi nhớ hiệu quả và cải thiện kỹ năng làm bài.
+## Nhóm Thực Hiện
+- **Văn Đại**: Trưởng nhóm, tích hợp API cho phía client.
+- **Tiến Đạt**: Thành viên, thiết kế FE và tích hợp API.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Mục lục
 
-## Available Scripts
+- Giới thiệu
+- Mục tiêu
+- Tính năng
+- Công nghệ sử dụng
+- Yêu cầu hệ thống
+- Hướng dẫn cài đặt
+- Cấu trúc thư mục
+- Liên hệ
 
-In the project directory, you can run:
 
-### `npm start`
+## Giới Thiệu
+Ứng dụng Học Từ Vựng Tiếng Anh Online (Frontend) là một nền tảng web giúp người học tiếng Anh, đặc biệt là những người chuẩn bị thi TOEIC. Sử dụng flashcard với kỹ thuật lặp lại ngắt quãng (spaced repetition) và các bài thi thử, ứng dụng mang đến trải nghiệm học tập trực quan, hiệu quả. Dự án tích hợp với Backend qua API, hỗ trợ quản lý nội dung và dữ liệu người dùng một cách chuyên nghiệp.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Mục Tiêu
+- Cung cấp giao diện thân thiện, trực quan cho người học.
+- Hỗ trợ học từ vựng và luyện thi TOEIC hiệu quả, tiết kiệm thời gian.
+- Cá nhân hóa lộ trình học và theo dõi tiến trình.
+- Đảm bảo tích hợp mượt mà với Backend qua API.
+- Xây dựng nền tảng mở rộng cho các tính năng tương lai.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Tính Năng
+- **Phía Khách Hàng:**
+  - Học từ vựng: Sử dụng flashcard để ghi nhớ từ vựng theo chủ đề và cấp độ.
+  - Luyện thi TOEIC: Cung cấp các bài thi thử mô phỏng đề thi thực tế
+  - Trao đổi, bình luận về đề thi toeic
+  - Đánh giá trải nghiệm khi sử dụng hệ thống.
+  - Xem các bài blog của hệ thống
 
-### `npm test`
+- **Phía Admin:**
+  - Thống kê báo cáo feedback, số lượt thi,...vv.
+  - Quản lý người dùng.
+  - Quản lý đề thi toiec.
+  - Quản lý bài blog
+  - Quản lý danh mục đề thi, bài blog
+  - Quản lý đánh giá từ người dùng.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
+## Công nghệ Được Sử Dụng
+- **Frontend:** React, SCSS, JavaScript, Ant Design.
+- **Công cụ phụ trợ:** Fetch (gọi API), Redux (quản lý trạng thái), React Router (điều hướng)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Yêu Cầu Hệ Thống
+- Trình duyệt hỗ trợ HTML5 và JavaScript.
+- Môi trường phát triển: Node.js v16.0 trở lên
+- Backend API: Yêu cầu kết nối với Backend (được triển khai riêng)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Hướng Dẫn Cài Đặt
+1. Clone repository:
+   ```bash
+   git clone https://github.com/VuBinhVL/SE100_WebsiteQuanLyPhongMachTu.git
+   ```
+2. Cài đặt các thư viện yêu cầu:
+   
+   ```bash
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Khởi động frontend:
+   ```bash
+   npm start
+   ```
+4. Truy cập tại http://localhost:3000
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 📁 Cấu trúc thư mục
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+src/
+├── assets/          # Ảnh, icon
+├── components/      # Component dùng chung
+├── services/        # API service
+├── hooks/           # Custom hooks
+├── layouts/         # Giao diện layout
+├── pages            # Các trang (Home, Vocabulary, TOEIC Test)
+├── styles/          # SCSS global, mixin, biến
+├── public/          # Tài nguyên công khai (favicon, index.html)
+├── utils/           # Hàm tiện ích (helper functions, formatters)
+├── store/           # Quản lý trạng thái (Redux/Redux Toolkit)
+├── routes/          # Quản lý trạng thái (Redux/Redux Toolkit)
+├── App.js
+└── main.js
+```
+## Liên hệ
+- Email: trandat2622004@gmail.com
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
