@@ -20,7 +20,7 @@ export default function DetailTopic() {
     const [masterList, setMasterList] = useState([]);
 
     const fetchListFlashCard = async () => {
-        const data = await get(`/api/flashcard/getFlashCardsByTopic/${topicId}`);
+        const data = await get(`api/flashcard/getFlashCardsByTopic/${topicId}`);
         if (data && Array.isArray(data)) {
             setMyVocabList(data);
             setStudyingList(

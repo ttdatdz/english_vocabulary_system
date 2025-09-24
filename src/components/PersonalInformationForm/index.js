@@ -16,7 +16,7 @@ import {
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import dayjs from "dayjs";
 import { useAuth } from "../../utils/AuthContext";
-
+import DefaultImage from "../../../src/assets/images/user.png"
 const { Option } = Select;
 export default function PersonalInformationForm(props) {
   const [isEditing, setIsEditing] = useState(false);
@@ -242,8 +242,7 @@ export default function PersonalInformationForm(props) {
                   <img
                     src={
                       previewUrl ||
-                      form.getFieldValue("avatar") ||
-                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
+                      form.getFieldValue("avatar") || DefaultImage
                     }
                     alt="avatar"
                     className="UserForm__Avatar-Img"
@@ -266,7 +265,7 @@ export default function PersonalInformationForm(props) {
                 <img
                   src={
                     form.getFieldValue("avatar") ||
-                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
+                    DefaultImage
                   }
                   alt="avatar"
                   className="UserForm__Avatar-Img"

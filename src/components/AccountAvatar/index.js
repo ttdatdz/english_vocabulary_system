@@ -5,6 +5,7 @@ import { MdExitToApp } from "react-icons/md";
 import "./AccountAvatar.scss";
 import { useAuth } from "../../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
+import DefaultImage from '../../../src/assets/images/user.png';
 
 export default function AccountAvatar() {
   const { logout, user } = useAuth(); // Loại bỏ fetchUser khỏi dependency
@@ -45,7 +46,7 @@ export default function AccountAvatar() {
           className="AccountAvatar__img"
           src={
             user?.avatar ||
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6p1uHt5NGPGppq1t48xlKt18PfNiIX5zCYQ&s"
+            DefaultImage
           }
           alt="Avatar"
         />

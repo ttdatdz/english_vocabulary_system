@@ -28,10 +28,19 @@ import ResultExam from "../pages/ResultExam";
 import ReviewFlashCard from "../pages/ReviewFlashCard";
 import ReviewDetailListCard from "../pages/ReviewDetailListCard";
 import ReviewExam from "../pages/ReviewExam";
-
+import ScrollToTop from "../components/ScrollToTop";
+import { useEffect } from "react";
 function MainRoutes() {
+  useEffect(() => {
+  if ("scrollRestoration" in window.history) {
+    const prev = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => { window.history.scrollRestoration = prev; };
+  }
+}, []);
   return (
     <BrowserRouter>
+      <ScrollToTop/>
       <Routes>
         {/* Layout khách hàng */}
         <Route path="/" element={<CustomerLayout />}>
@@ -60,7 +69,6 @@ function MainRoutes() {
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/:flashcardId"
             element={<PracticeFlashCard />}
           />
-          {/* <Route path="DetailExam" element={<DetailExam />} /> */}
           <Route path="DetailExam/:id" element={<DetailExam />}>
             <Route path="ResultExam/:resultId" element={<ResultExam />} />
           </Route>

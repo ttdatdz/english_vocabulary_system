@@ -6,56 +6,44 @@ import TextEditor from "../TextEditor";
 import { CreateBlog, UpdateBlog } from "../../services/Blog/blogService";
 import { showSuccess } from "../../utils/alertHelper";
 
-const { Option } = Select;
-
-export default function AddAndEditBlog(props) {
-  const {
-    onOK,
-    confirmLoading,
-    initialValues,
-    listCategoryBlogs,
-    setConfirmLoading,
-    reloadBlogs,
-    setDetailingBlog,
-  } = props;
+export default function AddAndEditBlog({
+  onOK,
+  confirmLoading,
+  initialValues,
+  listCategoryBlogs,
+  setConfirmLoading,
+  reloadBlogs,
+  setDetailingBlog,
+}) {
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(initialValues?.detail || "");
   const [thumbnail, setThumbnail] = useState(initialValues?.image || null);
 
+  // reset form mỗi khi initialValues thay đổi
   useEffect(() => {
     form.setFieldsValue({
       title: initialValues?.title || "",
       category: initialValues?.category || "",
       shortDetail: initialValues?.shortDetail || "",
       detail: initialValues?.detail || "",
-      image: initialValues?.image || null,
     });
     setContent(initialValues?.detail || "");
     setThumbnail(initialValues?.image || null);
     setIsEditing(false);
   }, [initialValues, form]);
-  // console.log(">>>check initialValues", initialValues);
-  // console.log(">>>check content", content);
-  console.log(">>>check thumbnail", thumbnail);
-  //  Hàm tải file từ URL về dạng File object
-  async function urlToFile(url, filename = "image.jpg") {
-    const response = await fetch(url);
-    console.log(">>>check response", response);
-    const contentType = response.headers.get("content-type");
-    if (!response.ok || !contentType || !contentType.startsWith("image/")) {
-      throw new Error("Không thể tải ảnh từ URL");
+
+  // xử lý chọn ảnh
+  const handleThumbnailChange = (info) => {
+    const f = info?.file?.originFileObj || info?.file;
+    if (f) {
+      setThumbnail(f);                 // lưu RcFile/Blob
+      form.setFieldsValue({ image: f });// để Form biết có giá trị
     }
-    const data = await response.blob();
-    // Lấy extension đúng từ url
-    const extMatch = url.match(/\.(\w+)(\?|$)/);
-    const ext = extMatch ? extMatch[1] : "jpg";
-    const fileNameWithExt = `old_image.${ext}`;
-    return new File([data], fileNameWithExt, { type: data.type });
-  }
+  };
+
+  // submit
   const onFinish = async (values) => {
-    console.log("Received values:", values);
-    // Tạo FormData
     const formData = new FormData();
     formData.append(
       "dataJson",
@@ -67,54 +55,30 @@ export default function AddAndEditBlog(props) {
       })
     );
 
-    // Xử lý ảnh
-    if (values.image && values.image.file) {
-      // Ảnh mới từ máy
-      formData.append("image", values.image.file.originFileObj);
-    } else if (
-      thumbnail &&
-      typeof thumbnail !== "string" &&
-      thumbnail instanceof File
-    ) {
-      // Ảnh mới từ máy (trường hợp khác)
-      formData.append("image", thumbnail);
-    } else if (typeof thumbnail === "string" && thumbnail) {
-      try {
-        const fileFromUrl = await urlToFile(thumbnail);
-        formData.append("image", fileFromUrl);
-      } catch (error) {
-        setConfirmLoading(false);
-        alert(
-          "Không thể tải ảnh cũ từ server.Bạn request quá nhiều lần. Vui lòng chọn lại ảnh!"
-        );
-        return;
-      }
-    }
+    // chỉ append nếu user có chọn ảnh mới
+    if (thumbnail && typeof thumbnail !== "string") {
+  formData.append("image", thumbnail, thumbnail.name || `upload_${Date.now()}.jpg`);
+}
 
-    // Nếu không có initialValues, nghĩa là đang thêm mới
+    setConfirmLoading(true);
+    let result;
     if (!initialValues) {
-      setConfirmLoading(true); // Bật loading NGAY khi bắt đầu
-      const result = await CreateBlog(formData); // Chỉnh CreateBlog nhận FormData
+      // create
+      result = await CreateBlog(formData);
+    } else {
+      // update
+      result = await UpdateBlog(formData, initialValues.id);
+    }
+    setConfirmLoading(false);
 
-      if (!result) {
-        setConfirmLoading(false); // Tắt loading nếu không thành công
-        return;
-      }
+    if (!result) return;
+
+    if (!initialValues) {
       onOK(result);
       form.resetFields();
-      setContent(null);
+      setContent("");
+      setThumbnail(null);
     } else {
-      // Nếu có initialValues, nghĩa là đang chỉnh sửa
-      // console.log("Editing test set:", values);
-      setConfirmLoading(true);
-      const result = await UpdateBlog(formData, initialValues.id);
-
-      if (!result) {
-        setConfirmLoading(false);
-        return;
-      }
-      setConfirmLoading(false);
-      setIsEditing(false);
       showSuccess("Cập nhật bài blog thành công!");
       setDetailingBlog({
         ...initialValues,
@@ -122,10 +86,9 @@ export default function AddAndEditBlog(props) {
         category: values.category,
         shortDetail: values.shortDetail,
         detail: content,
-        image: thumbnail, // hoặc giá trị ảnh mới nếu có
+        image: typeof thumbnail !== "string" ? URL.createObjectURL(thumbnail) : initialValues.image,
         id: initialValues.id,
       });
-
       reloadBlogs();
     }
   };
@@ -137,27 +100,11 @@ export default function AddAndEditBlog(props) {
       category: initialValues?.category || "",
       shortDetail: initialValues?.shortDetail || "",
       detail: initialValues?.detail || "",
-      image: initialValues?.image || null,
     });
     setContent(initialValues?.detail || "");
     setThumbnail(initialValues?.image || null);
   };
 
-  const handleThumbnailChange = (info) => {
-    // Lấy file cuối cùng trong danh sách file đã chọn
-    const file =
-      info.file.originFileObj ||
-      (info.fileList.length > 0 &&
-        info.fileList[info.fileList.length - 1].originFileObj);
-    if (file) {
-      setThumbnail(file); // Lưu file object, không phải URL
-      // Nếu muốn hiển thị ảnh, tạo thêm state thumbnailUrl để lưu URL
-      // setThumbnailUrl(URL.createObjectURL(file));
-      form.setFieldsValue({ image: file });
-    }
-  };
-
-  // console.log(">>>check thumbnail", thumbnail);
   return (
     <>
       <Form
@@ -180,6 +127,7 @@ export default function AddAndEditBlog(props) {
         >
           <Input />
         </Form.Item>
+
         <Form.Item
           label="Danh mục"
           name="category"
@@ -188,16 +136,15 @@ export default function AddAndEditBlog(props) {
         >
           <Select
             placeholder="Chọn danh mục"
-            options={[
-              ...listCategoryBlogs.map((category) => ({
-                label: category.title,
-                value: category.title,
-              })),
-            ]}
+            options={listCategoryBlogs.map((c) => ({
+              label: c.title,
+              value: c.title,
+            }))}
             className="filter"
             allowClear
           />
         </Form.Item>
+
         <Form.Item
           label="Tóm tắt ngắn"
           name="shortDetail"
@@ -206,90 +153,73 @@ export default function AddAndEditBlog(props) {
         >
           <Input />
         </Form.Item>
+
         <Form.Item
           label="Ảnh đại diện"
           name="image"
           wrapperCol={{ span: 18 }}
-          rules={[{ required: true, message: "Vui lòng chọn ảnh đại diện!" }]}
+          rules={[{ required: !initialValues, message: "Vui lòng chọn ảnh đại diện!" }]}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <Upload
               showUploadList={false}
-              beforeUpload={() => false}
-              onChange={handleThumbnailChange}
+              maxCount={1}
+              accept="image/*"
+              beforeUpload={(file) => {
+                // file là RcFile (Blob) CHUẨN
+                setThumbnail(file);
+                form.setFieldsValue({ image: file });
+                return false; // chặn antd auto-upload, để mình tự submit
+              }}
             >
               <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
             </Upload>
+
             {thumbnail && (
-              <div style={{ display: "inline-block" }}>
-                <Image
-                  src={
-                    thumbnail && typeof thumbnail !== "string"
-                      ? URL.createObjectURL(thumbnail)
-                      : thumbnail
-                  }
-                  alt="Ảnh đại diện"
-                  style={{
-                    width: 120,
-                    display: "inline-block",
-                  }}
-                />
-              </div>
+              <Image
+                src={typeof thumbnail === "string" ? thumbnail : URL.createObjectURL(thumbnail)}
+                alt="Ảnh đại diện"
+                style={{ width: 120 }}
+              />
             )}
           </div>
         </Form.Item>
+
         <Form.Item
           label="Nội dung chi tiết"
           name="detail"
-          rules={[
-            { required: true, message: "Vui lòng nhập nội dung chi tiết!" },
-          ]}
           wrapperCol={{ span: 18 }}
+          rules={[{ required: true, message: "Vui lòng nhập nội dung chi tiết!" }]}
         >
-          <TextEditor
-            value={content}
-            onChange={setContent}
-            disabled={!isEditing && initialValues}
-          />
+          <TextEditor value={content} onChange={setContent} disabled={!isEditing && initialValues} />
         </Form.Item>
+
         {!initialValues && (
           <Form.Item>
             <div style={{ display: "flex", justifyContent: "end" }}>
-              <Button
-                loading={confirmLoading}
-                className="UserForm__Accept"
-                type="primary"
-                htmlType="submit"
-              >
+              <Button loading={confirmLoading} className="UserForm__Accept" type="primary" htmlType="submit">
                 Xác nhận
               </Button>
             </div>
           </Form.Item>
         )}
+
         {isEditing && (
           <Form.Item wrapperCol={{ offset: 8, span: 24 }}>
             <div className="UserForm__Contain-Button">
               <Button className="UserForm__Cancel" danger onClick={onCancel}>
                 Hủy
               </Button>
-              <Button
-                loading={confirmLoading}
-                className="UserForm__Accept"
-                type="primary"
-                htmlType="submit"
-              >
+              <Button loading={confirmLoading} className="UserForm__Accept" type="primary" htmlType="submit">
                 Xác nhận
               </Button>
             </div>
           </Form.Item>
         )}
       </Form>
+
       {!isEditing && initialValues && (
-        <Button
-          className="ButtonIsEdit"
-          icon={<EditOutlined />}
-          onClick={() => setIsEditing(true)}
-        >
+        <Button className="ButtonIsEdit" icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
           Chỉnh sửa thông tin
         </Button>
       )}

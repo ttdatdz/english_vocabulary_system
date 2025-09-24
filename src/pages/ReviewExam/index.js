@@ -7,7 +7,7 @@ import { get } from "../../utils/request";
 const { TabPane } = Tabs;
 
 export default function ReviewExam() {
-    const { reviewExamId } = useParams();
+    const { examReviewId } = useParams();
     const [reviewExam, setReviewExam] = useState(null);
     const [activeTab, setActiveTab] = useState("1");
     const [activeQuestionIndex, setActiveQuestionIndex] = useState(null);
@@ -26,16 +26,27 @@ export default function ReviewExam() {
 
     useEffect(() => {
         const loadReviewExam = async () => {
-            const data = await get(`api/exam/result/id/18`);
+            const data = await get(`api/exam/result/id/${examReviewId}`);
             if (data) setReviewExam(data);
+            console.log("Chi tiet bai lam", data);
         };
         loadReviewExam();
-    }, [reviewExamId]);
+    }, [examReviewId]);
 
     const scrollToQuestion = (index) => {
         const el = questionRefs[index];
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     };
+    const parseAllowedParts = (section) => {
+        if (!section || section === "Toàn bộ") return [1, 2, 3, 4, 5, 6, 7];
+        return section
+            .split(",")
+            .map((s) => s.trim().match(/\d+/))
+            .filter(Boolean)
+            .map((match) => parseInt(match[0], 10));
+    };
+
+    const allowedParts = parseAllowedParts(reviewExam?.section);
 
     useEffect(() => {
         if (pendingScrollIndex !== null) {
@@ -58,6 +69,8 @@ export default function ReviewExam() {
     const grouped = {};
     reviewExam.questionReviews.forEach((q) => {
         const part = getPart(q.indexNumber);
+        if (!allowedParts.includes(part)) return; // ❗ Lọc ở đây
+
         const groupKey = q.conversation || `single-${q.indexNumber}`;
         if (!grouped[part]) grouped[part] = {};
         if (!grouped[part][groupKey]) grouped[part][groupKey] = [];
@@ -66,15 +79,12 @@ export default function ReviewExam() {
 
     return (
         <div className="ReviewExam">
-            <div className="ReviewExam__header">
-                <div className="MainContainer">
+            <div className="MainContainer">
+                <div className="ReviewExam__header">
                     <h2 className="ReviewExam__header-title">
                         {reviewExam.examTitle} - Xem lại bài làm
                     </h2>
                 </div>
-            </div>
-
-            <div className="MainContainer">
                 <div className="PracticeExam__content">
                     <div className="PracticeExam__content-left">
                         <Tabs activeKey={activeTab} onChange={setActiveTab}>
@@ -122,7 +132,7 @@ export default function ReviewExam() {
                                                         >
                                                             {q.detail && <p>{q.detail}</p>}
                                                             {q.options.map((opt) => {
-                                                                const isUser =q.userAnswer !== null && opt.mark === q.userAnswer;
+                                                                const isUser = q.userAnswer !== null && opt.mark === q.userAnswer;
                                                                 const isCorrect = opt.mark === q.correctAnswer;
                                                                 const className = isCorrect
                                                                     ? "correct"

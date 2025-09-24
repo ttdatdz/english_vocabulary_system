@@ -3,6 +3,7 @@ import { Tabs } from "antd";
 import { useEffect, useState } from "react";
 import ListTopicOfTab from "../../components/ListTopicOfTab";
 import { get } from "../../utils/request";
+import { showErrorMessage } from "../../utils/alertHelper";
 const { TabPane } = Tabs;
 
 export default function VocabularyTopic() {
@@ -16,20 +17,24 @@ export default function VocabularyTopic() {
 
   const fetchUserTopics = async () => {
     const userId = localStorage.getItem("userId");
-    if(userId==null){
+    if (userId == null) {
       return;
     }
-    const data = await get(`/api/flashcard/getTopicsByUser/${userId}`);
-    if (data && Array.isArray(data)) {
-      setMyVocabList(data);
-      setStudyingList(
-        data.filter((item) => item.learningStatus === "IN_PROGRESS")
-      );
-      setNewList(data.filter((item) => item.learningStatus === "NEW"));
-      setReviewList(
-        data.filter((item) => item.learningStatus === "REVIEW_NEEDED")
-      );
-      setMasterList(data.filter((item) => item.learningStatus === "MASTERED"));
+    try {
+      const data = await get(`api/flashcard/getTopicsByUser/${userId}`);
+      if (data && Array.isArray(data)) {
+        setMyVocabList(data);
+        setStudyingList(
+          data.filter((item) => item.learningStatus === "IN_PROGRESS")
+        );
+        setNewList(data.filter((item) => item.learningStatus === "NEW"));
+        setReviewList(
+          data.filter((item) => item.learningStatus === "REVIEW_NEEDED")
+        );
+        setMasterList(data.filter((item) => item.learningStatus === "MASTERED"));
+      }
+    } catch(error) {
+      showErrorMessage(error.message);
     }
   };
 
@@ -38,7 +43,6 @@ export default function VocabularyTopic() {
       try {
         const data = await get("api/flashcard/getTopicPopular");
         if (data && Array.isArray(data)) {
-          //console.log(item.userName, localStorage.getItem("accountName"));
           setExploreList(
             data.filter(
               (item) => item.userName !== localStorage.getItem("accountName")

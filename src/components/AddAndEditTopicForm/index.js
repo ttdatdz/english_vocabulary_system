@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./AddTopicForm.scss";
 import { Button, Form, Input, Select } from "antd";
-import { post, put } from "../../utils/request";
+import { get, post, put } from "../../utils/request";
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 export default function AddAndEditTopicForm(props) {
@@ -9,8 +9,6 @@ export default function AddAndEditTopicForm(props) {
   const { Option } = Select;
   const { onOK, confirmLoading, initialValues } = props;
   const [form] = Form.useForm();
-  const API_DOMAIN = "http://143.198.83.161/";
-
 
   useEffect(() => {
     form.setFieldsValue({
@@ -22,54 +20,22 @@ export default function AddAndEditTopicForm(props) {
 
   const onFinish = async (values) => {
     if (initialValues && initialValues.id) {  // goi update vi initialValues # null
+      console.log("Updating topic with values:", values);
       const data = { ...values, id: initialValues.id };
-      const headers = {
-        "Content-type": "application/json",
-        Accept: "application/json",
-      };
-      const token = localStorage.getItem("accessToken");
-      headers.Authorization = `Bearer ${token}`;
+      const response = await put(data, "api/flashcard/updateTopic", true);
 
-      const response = await fetch(API_DOMAIN + "api/flashcard/updateTopic", {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
+      if (response) {
         showSuccess("Cập nhật thành công");
         if (props.onTopicCreated) props.onTopicCreated();
         if (onOK) onOK();
         form.resetFields();
-      } else {
-        try {
-          const result = await response.json();
-          console.log("API error detail:", result.detail);
-          showErrorMessage(result.detail);
-        } catch (e) {
-          // Nếu không parse được JSON
-          const text = await response.text();
-          console.log("API error non-JSON:", text);
-          showErrorMessage("Có lỗi không xác định!");
-        }
       }
     }
     else {
+      console.log("Creating topic with values:", values);
       const data = { ...values };
-      const headers = {
-        "Content-type": "application/json",
-        Accept: "application/json",
-      };
-      const token = localStorage.getItem("accessToken");
-      headers.Authorization = `Bearer ${token}`;
-
-      const response = await fetch(API_DOMAIN + "api/flashcard/createTopic", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
+      const response = await post(data, "api/flashcard/createTopic", true);
+      if (response) {
         showSuccess("Tạo chủ đề mới thành công");
         if (props.onTopicCreated) props.onTopicCreated();
         if (onOK) onOK();

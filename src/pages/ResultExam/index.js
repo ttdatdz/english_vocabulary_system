@@ -116,7 +116,7 @@ const ResultExam = () => {
           <span className="result-exam__label result-exam__label--skipped">
             Bỏ qua
           </span>
-          <span className="result-exam__title">{result?.nullAnswers}</span>
+          <span className="result-exam__title">{result?.totalQuestions - result.correctAnswers - result.incorrectAnswers}</span>
           <span className="result-exam__subTitle">câu hỏi</span>
         </div>
       </div>

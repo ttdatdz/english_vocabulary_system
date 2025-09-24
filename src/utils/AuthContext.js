@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { GetDetailUser, RenewalTokenAPI } from "../services/User/userService";
+import { get } from "./request";
 
 const AuthContext = createContext();
+const API_DOMAIN = "http://localhost:8080/";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -13,10 +15,13 @@ export const AuthProvider = ({ children }) => {
     if (!userId || !accessToken) return;
 
     try {
-      const userDetail = await GetDetailUser(userId, accessToken);
-      setUser(userDetail);
-      localStorage.setItem("user", JSON.stringify(userDetail));
+      const data = await get(`api/user/getUserByFilter?userID=${userId}`);
+      if (data) {
+        setUser(data);
+        localStorage.setItem("user",JSON.stringify(data));
+      }
     } catch (error) {
+      console.log(error);
       // Nếu hết hạn token
       if (error.response && [401, 403].includes(error.response.status)) {
         const doRenew = window.confirm(
@@ -58,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accountName", data.accountName);
     localStorage.setItem("role", data.role);
     const result = await GetDetailUser(data.userId, data.accessToken);
-    localStorage.setItem("user", JSON.stringify(result));
+    localStorage.setItem("user", result);
     setUser(result);
   };
 

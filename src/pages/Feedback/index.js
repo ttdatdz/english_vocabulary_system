@@ -69,16 +69,9 @@ export default function Feedback() {
         console.log("Check token ", localStorage.getItem("accessToken"));
         console.log("Check renewalToken:", localStorage.getItem("renewalToken"));
         try {
-            const data = await fetch("http://143.198.83.161/api/evaluate/loadByUser", {
-                method: "GET",
-                headers: {
-                    "Content-type": "application/json",
-                    Accept: "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                },
-            });
-            if (data.ok) {
-                setSubmittedFeedback(await data.json());
+            const data = await get("api/evaluate/loadByUser");
+            if (data != null) {
+                setSubmittedFeedback(await data);
                 setShowForm(false);
             } else {
                 setShowForm(true);

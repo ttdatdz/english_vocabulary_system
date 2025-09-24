@@ -1,11 +1,10 @@
-import React from "react";
+import React, {useLayoutEffect, useRef} from "react";
 import "./CustomerLayout.scss";
 import { FaFacebookSquare } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 import { Button, Layout } from "antd";
 import Logo from "../../assets/images/logo.jpg";
-import { Link, Outlet } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Dropdown, Menu } from "antd";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
@@ -15,6 +14,29 @@ const { Header, Footer, Content } = Layout;
 
 function CustomerLayout() {
   const navigate = useNavigate();
+  const { pathname, hash } = useLocation();
+  const contentRef = useRef(null);
+  useLayoutEffect(() => {
+    if (hash) return; // nếu vào anchor (#id) thì giữ hành vi mặc định
+
+    // 1) cuộn window (dù bạn dùng container hay không, cứ làm trước cho chắc)
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // 2) cuộn container nếu có
+    contentRef.current?.scrollTo(0, 0);
+
+    // 3) double-tick để thắng reflow/lazy load
+    const t = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      contentRef.current?.scrollTo(0, 0);
+    }, 0);
+
+    return () => clearTimeout(t);
+  }, [pathname, hash]);
 
   const { user, logout } = useAuth();
 
@@ -29,7 +51,7 @@ function CustomerLayout() {
   const handleClick = () => {
     navigate("/");
   };
-  //   console.log(">>>>>>check user", user);
+
   return (
     <Layout>
       <Header className="Header-Customer">
@@ -67,7 +89,7 @@ function CustomerLayout() {
           </div>
         </div>
       </Header>
-      <Content className="Content-Customer">
+      <Content ref={contentRef} className="Content-Customer">
         <Outlet />
       </Content>
       <Footer className="Footer-Customer">

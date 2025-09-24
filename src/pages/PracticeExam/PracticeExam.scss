@@ -23,6 +23,7 @@
 
   &__content {
     display: flex;
+    align-items: flex-start;
     gap: 24px;
     margin-top: 24px;
 
@@ -32,6 +33,16 @@
 
     &-right {
       width: 200px;
+      position: sticky;
+      top: 100px; // 👈 điều chỉnh tùy theo chiều cao header
+      align-self: flex-start;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+      background-color: #fff;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
   }
 
@@ -69,11 +80,6 @@
       color: white;
     }
   }
-}
-
-.PracticeExam__content-right {
-  width: 220px;
-  padding-left: 16px;
 }
 
 .PracticeExam__title-part {

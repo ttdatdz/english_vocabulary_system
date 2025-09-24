@@ -1,20 +1,21 @@
+import { stringify } from "ajv";
 import { del, get, putFormData } from "../../utils/request";
 
 export const GetAllUsers = async () => {
-  const result = await get("api/user/getAllUsers");
-  return result;
-};
+  const response = await get("api/user/getAllUsers");
+  return response;
+}
 export const DeleteUser = async (id) => {
-  const result = await del(`api/user/delete/${id}`);
-  return result;
+  const response= await del(`api/user/delete/${id}`);
+  return response;
 };
 export const UpdateUser = async (value) => {
-  const result = await putFormData(`api/user/update`, value);
-  return result;
+  const response = await putFormData(`api/user/update`, value);
+  return response;
 };
 export const GetDetailUser = async (id) => {
-  const result = await get(`api/user/getUserByFilter?userID=${id}`);
-  return result;
+  const response = await get(`api/user/getUserByFilter?userID=${id}`);
+  return response;
 };
 export const RenewalTokenAPI = async (renewalToken) => {
   const response = await fetch("/api/user/renewalToken", {
@@ -30,6 +31,5 @@ export const RenewalTokenAPI = async (renewalToken) => {
     error.response = response;
     throw error;
   }
-
-  return await response.json(); // Giả sử backend trả về { token: ... }
+  return response;
 };

@@ -1,6 +1,6 @@
 import { showErrorMessage } from "./alertHelper";
 
-const API_DOMAIN = "http://143.198.83.161/";
+const API_DOMAIN = "http://localhost:8080/";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("accessToken");
@@ -21,11 +21,11 @@ export const getWithParams = async (path, params = {}) => {
       headers: getAuthHeaders(),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-      const result = await response.json();
-      throw new Error(`${result.detail}`);
+      throw new Error(`${result.message}: ${result.data.detail}`);
     }
-    return await response.json();
+    return result.data;
   } catch (error) {
     showErrorMessage(error.message);
   }
@@ -39,12 +39,13 @@ export const get = async (path) => {
       method: "GET",
       headers: getAuthHeaders(),
     });
+    
+    const result = await response.json();
     if (!response.ok) {
       // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`Lỗi: ${response.status}`);
+      throw new Error(`Lỗi: ${result.message}: ${result.data.detail}`);
     }
-    const result = await response.json();
-    return result;
+    return result.data;
   } catch (error) {
     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
@@ -58,12 +59,13 @@ export const getNoAuth = async (path) => {
         Accept: "application/json"
       },
     });
+
+    const result = await response.json();
     if (!response.ok) {
       // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`Lỗi: ${response.status}`);
+      throw new Error(`Lỗi: ${result.message}: ${result.data.detail}`);
     }
-    const result = await response.json();
-    return result;
+    return result.data;
   } catch (error) {
     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
@@ -84,18 +86,12 @@ export const post = async (values, path, auth = false) => {
       body: JSON.stringify(values), //nơi chứa data để gửi lên server. Trước khi gửi phải chuyển nó qua dạng json
     });
 
+    const result =await response.json();
+
     if (response.ok) {
-      if (path === "api/user/login" || path === "api/exam/create" || path === "api/exam/submit")
-        return await response.json(); // nếu là đăng nhập thì trả về dữ liệu người dùng
-      return true;
+        return result.data;
     } else {
-      const result = await response.text();
-      if (path === "/api/user/reset-password") {
-        const test = JSON.parse(result);
-        throw new Error(test.detail || test.message);
-      }
-      // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`${result}`);
+      throw new Error(`${result.message}: ${result.data.detail}`);
     }
   } catch (error) {
     setTimeout(() => {
@@ -119,13 +115,11 @@ export const del = async (path, auth = true) => {
       method: "DELETE",
       headers,
     });
-    // const result = await response.text(); // Lấy kết quả trả về dưới dạng text
-    // console.log("result:", result);
+    const result = await response.json();
     if (response.ok) {
       return true;
     } else {
-      const result = await response.json(); // Lấy kết quả trả về dưới dạng text
-      throw new Error(result.detail);
+      throw new Error(result.message + ": " + result.data.detail);
     }
   } catch (error) {
     showErrorMessage(error.message); // 🐞 Hiển thị lỗi
@@ -146,11 +140,13 @@ export const patch = async (value, path, auth = true) => {
       headers,
       body: JSON.stringify(value),
     });
-    if (!response.ok) {
-      throw new Error(`Lỗi: ${response.status}`);
-    }
+
     const result = await response.json();
-    return result;
+
+    if (!response.ok) {
+      throw new Error(`${result.message}: ${result.data.detail}`);
+    }
+    return result.data;
   } catch (error) {
     alert(`Lỗi khi gọi API: ${error.message}`);
   }
@@ -170,18 +166,13 @@ export const put = async (values, path, auth = true) => {
       headers,
       body: JSON.stringify(values),
     });
-    // const isJson = response.headers
-    //   .get("content-type")
-    //   ?.includes("application/json");
-    // const result = isJson ? await response.json() : await response.text();
+    
+    const result = await response.json();
 
-    // Lấy kết quả trả về dưới dạng json  console.log(">>>>>>>>>>>>>result11", result);
     if (response.ok) {
       return true;
     } else {
-      const result = await response.text();
-      const test = JSON.parse(result);
-      throw new Error(test.detail || test.message);
+      throw new Error(result.message + ": " + result.data.detail);
     }
   } catch (error) {
     setTimeout(() => {
@@ -203,18 +194,14 @@ export const postFormData = async (path, formData) => {
       body: formData,
     });
 
-    // const isJson = response.headers
-    //   .get("content-type")
-    //   ?.includes("application/json");
-    // const result = isJson ? await response.json() : await response.text();
-    // console.log(">>>>>>>>>>>>>result11", result);
+    const result = await response.json();
+
     if (!response.ok) {
-      const result = await response.text();
-      const test = JSON.parse(result);
-      throw new Error(test.detail || "Lỗi không xác định");
-    } else {
-      return true;
+      throw new Error(result.message + ": " + result.data.detail);
     }
+
+    return result.data ?? true; 
+    
   } catch (error) {
     showErrorMessage(error.message);
   }
@@ -234,20 +221,12 @@ export const putFormData = async (path, formData) => {
       body: formData,
     });
 
-    let result;
-    try {
-      result = await response.clone().json();
-    } catch {
-      result = await response.text();
-    }
+    const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        (result && result.detail) || result || "Lỗi không xác định"
-      );
-    } else {
-      return result;
+      throw new Error(result.message + ": " + result.data.detail);
     }
+    return result.data ?? true;
   } catch (error) {
     showErrorMessage(error.message);
   }

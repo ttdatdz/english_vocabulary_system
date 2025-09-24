@@ -72,3 +72,30 @@
     width: auto;
     height: auto;
 }
+
+.ReviewExam .PracticeExam__content {
+    margin-top: 0;
+    align-items: flex-start;
+}
+
+.ReviewExam__header {
+    margin: 0;
+    padding: 0;
+}
+
+.ReviewExam__header-title {
+    margin-top: 0;
+}
+
+.PracticeExam__content-right {
+    position: sticky;
+    top: 100px;
+    align-self: flex-start;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    background: #fff;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}

@@ -74,7 +74,7 @@ export default function PracticeFlashCard() {
     );
   };
   const handleUpdateLevel = async (newLevel) => {
-    if (!currentCard) return;
+    if (!currentCard && currentCard != null) return;
     try {
       await put(
         {
@@ -92,7 +92,7 @@ export default function PracticeFlashCard() {
   };
 
   const handleIsRememberCheck = async (cardId) => {
-    if (!currentCard) return;
+    if (!currentCard && currentCard != null) return;
     try {
       await put(
         { isRemember: 1, flashCardID: flashcardId },
@@ -105,7 +105,7 @@ export default function PracticeFlashCard() {
     }
   };
   const handleIsRememberRestore = async (cardId) => {
-    if (!currentCard) return;
+    if (!currentCard && currentCard != null) return;
     try {
       await put(
         { isRemember: 0, flashCardID: flashcardId },

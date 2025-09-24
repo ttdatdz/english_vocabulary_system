@@ -38,10 +38,10 @@ export default function BlogManagement() {
   const reloadBlogs = async () => {
     const res = await GetAllBlogs();
     // Thêm key cho mỗi blog (key = id)
-    const BlogsWithKey = res.map((blog) => ({
+    const BlogsWithKey = (res!=null ? res.map((blog) => ({
       ...blog,
       key: blog.id,
-    }));
+    })) : []);
     setListBlogs(BlogsWithKey);
     setAllBlogs(BlogsWithKey);
   };
@@ -76,10 +76,10 @@ export default function BlogManagement() {
     const fetchBlog = async () => {
       try {
         const res = await GetAllBlogs();
-        const BlogsWithKey = res.map((blog) => ({
+        const BlogsWithKey = (res!=null ?  res.map((blog) => ({
           ...blog,
-          key: blog.id,
-        }));
+          key: blog.id || null,
+        })): []);
         setAllBlogs(BlogsWithKey);
       } catch (error) {
         showErrorMessage("Lỗi khi lấy danh sách bài blog:", error);
@@ -92,13 +92,14 @@ export default function BlogManagement() {
     const fetchCategory = async () => {
       try {
         const res = await GetAllCategoryBlogs();
-        const CategoryWithKey = res.map((category) => ({
+        if(res == null) console.log("không có danh mục blog nào");
+        const CategoryWithKey = (res!=null? res.map((category) => ({
           ...category,
-          key: category.id,
-        }));
+          key: category.id || null,
+        })): []);
         setListCategoryBlogs(CategoryWithKey);
       } catch (error) {
-        showErrorMessage("Lỗi khi lấy danh sách bộ đề:", error);
+        showErrorMessage("Lỗi khi lấy danh sách danh mục", error);
       }
     };
     fetchCategory();
