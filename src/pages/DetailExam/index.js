@@ -54,7 +54,7 @@ export default function DetailExam() {
       sorter: (a, b) => a.correctAnswers - b.correctAnswers,
     },
     {
-      title: "Thời gian làm bài (phút)",
+      title: "Thời gian làm bài",
       dataIndex: "duration",
       render: (seconds) => {
         const h = Math.floor(seconds / 3600).toString().padStart(2, '0');

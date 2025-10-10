@@ -33,12 +33,12 @@ export default function PracticeExam() {
 
 
   const loadQuestions = async () => {
-    const data = await get(`api/exam/detail/${examId}`); // Sửa endpoint phù hợp
+    const data = await get(`api/exam/detail/${examId}`);
     if (!data) return;
     const filtered = data.questions.filter((q) =>
       selectedParts.includes(Number(q.part))
     );
-    console.log(data);
+    console.log(selectedParts);
     setQuestions(filtered);
   };
 
@@ -67,10 +67,20 @@ export default function PracticeExam() {
       questionId: q.id,
       answer: answers[q.id] ?? null
     }));
-    console.log(result);
+
+    const parts = selectedParts.join(", ");
+
+    console.log(selectedParts);
+    console.log(parts);
+
+    if (mode === "practice" && result.filter(r => r.answer !== null).length < 0.7 * questions.length) {
+      message.error(`Bạn cần trả lời ít nhất 70% số câu hỏi của các phần đã chọn (Phần ${parts}) để nộp bài!`);
+      return;
+    }
     const payload = {
       examID: examId,
       answers: result,
+      selectedPart: parts,
       duration: usedTime,
     };
     const response = await post(payload, "api/exam/submit", true);

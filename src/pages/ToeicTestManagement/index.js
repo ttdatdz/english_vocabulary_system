@@ -15,6 +15,7 @@ import AddAndEditExam from "../../components/AddAndEditExam";
 import { DeleteExam, GetAllExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
 import { removeVietnameseTones } from "../../utils/formatData";
+import { get } from "../../utils/request";
 
 export default function ToeicTestManagement() {
   const [open, setOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function ToeicTestManagement() {
   const [allExams, setAllExams] = useState([]);
   const [listExams, setListExams] = useState([]);
   const [listTestSets, setListTestSets] = useState([]);
+  const [listTestTypes, setListTestTypes] = useState([]);
   const [formKey, setFormKey] = useState(Date.now());
   const [selectedYear, setSelectedYear] = useState("All");
   const [selectedCollection, setSelectedCollection] = useState("All");
@@ -79,7 +81,7 @@ export default function ToeicTestManagement() {
 
   // lấy danh sách bộ đề
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchTestSets = async () => {
       try {
         const res = await GetAllTestSets();
         const usersWithKey = res
@@ -93,7 +95,19 @@ export default function ToeicTestManagement() {
         console.error("Lỗi khi lấy danh sách bộ đề:", error);
       }
     };
-    fetchUsers();
+
+    const fetchTestTypes = async () => {
+      try {
+        const res = await get("api/exam/type/getAll");
+        if (res != null)
+          setListTestTypes(res);
+      } catch (error) {
+        showErrorMessage("Lỗi khi lấy danh sách loại đề thi");
+        console.error("Lỗi khi lấy danh sách loại đề thi:", error);
+      }
+    }
+    fetchTestTypes();
+    fetchTestSets();
   }, []);
 
   // Xóa đề thi
@@ -271,6 +285,7 @@ export default function ToeicTestManagement() {
           initialValues={detailingExam}
           setDetailingExam={setDetailingExam}
           listTestSets={listTestSets}
+          listTestTypes={listTestTypes}
           setConfirmLoading={setConfirmLoading}
           open={open}
           key={formKey}

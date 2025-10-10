@@ -20,6 +20,7 @@ export default function AddAndEditExam(props) {
     initialValues,
     setDetailingExam,
     listTestSets,
+    listTestTypes,
     setConfirmLoading,
     open,
     reloadExams,
@@ -30,6 +31,7 @@ export default function AddAndEditExam(props) {
   const fileInputRef = useRef();
   const [detailExamData, setDetailExamData] = useState(null);
 
+  console.log("Check listtestTypes", listTestTypes);
   console.log("Check initial", initialValues);
   // Reset form & file khi initialValues đổi (mở modal mới)
   // useEffect(() => {
@@ -251,7 +253,15 @@ export default function AddAndEditExam(props) {
           wrapperCol={{ span: 18 }}
           rules={[{ required: true, message: "Vui lòng nhập loại đề!" }]}
         >
-          <Input />
+          <Select
+            placeholder="Chọn loại đề"
+            options={[
+              ...listTestTypes.map((testType) => ({
+              label: testType.type,
+              value: testType.type,
+            })),
+          ]}
+          />
         </Form.Item>
         <Form.Item
           label="Năm"
