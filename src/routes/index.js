@@ -32,15 +32,17 @@ import ScrollToTop from "../components/ScrollToTop";
 import { useEffect } from "react";
 function MainRoutes() {
   useEffect(() => {
-  if ("scrollRestoration" in window.history) {
-    const prev = window.history.scrollRestoration;
-    window.history.scrollRestoration = "manual";
-    return () => { window.history.scrollRestoration = prev; };
-  }
-}, []);
+    if ("scrollRestoration" in window.history) {
+      const prev = window.history.scrollRestoration;
+      window.history.scrollRestoration = "manual";
+      return () => {
+        window.history.scrollRestoration = prev;
+      };
+    }
+  }, []);
   return (
     <BrowserRouter>
-      <ScrollToTop/>
+      <ScrollToTop />
       <Routes>
         {/* Layout khách hàng */}
         <Route path="/" element={<CustomerLayout />}>
@@ -54,9 +56,15 @@ function MainRoutes() {
           <Route path="Blogs" element={<Blogs />} />
           <Route path="Blogs/BlogDetail/:blogId" element={<BlogDetail />} />
           <Route path="PersonalInformation" element={<PersonalInformation />} />
-          <Route path="ReviewFlashCard/:topicId" element={<ReviewFlashCard/>}/>
-          <Route path="ReviewFlashCard/ReviewDetailListCard/:flashcardId" element={<ReviewDetailListCard/>} />
-          <Route path="ReviewExam/:examReviewId" element={<ReviewExam/>}/>
+          <Route
+            path="ReviewFlashCard/:topicId"
+            element={<ReviewFlashCard />}
+          />
+          <Route
+            path="ReviewFlashCard/ReviewDetailListCard/:flashcardId"
+            element={<ReviewDetailListCard />}
+          />
+          <Route path="ReviewExam/:examReviewId" element={<ReviewExam />} />
           <Route
             path="VocabularyTopics/DetailTopic/:topicId"
             element={<DetailTopic />}
@@ -67,6 +75,14 @@ function MainRoutes() {
           />
           <Route
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/:flashcardId"
+            element={<PracticeFlashCard />}
+          />
+          <Route
+            path="VocabularyTopics/DetailTopic/DetailListFlashCard/MiniGame/:flashcardId"
+            element={<PracticeFlashCard />}
+          />
+          <Route
+            path="VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/:flashcardId"
             element={<PracticeFlashCard />}
           />
           <Route path="DetailExam/:id" element={<DetailExam />}>

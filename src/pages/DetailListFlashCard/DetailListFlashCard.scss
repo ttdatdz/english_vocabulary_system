@@ -1,48 +1,64 @@
 .DetailListFlashCard {
-    &__header {
-        margin: 20px 0px;
+  &__header {
+    margin: 20px 0px;
+  }
+
+  &__start-header {
+    display: flex;
+    gap: 20px;
+  }
+
+  &__btnAdd {
+    background-color: #f97316 !important;
+    border: none !important;
+    font-weight: 500;
+    width: 150px;
+    color: #fff !important;
+
+    &:hover {
+      background-color: #ea580c !important;
+      color: #fff !important;
     }
+  }
 
-    &__start-header {
-        display: flex;
-        gap: 20px;
+  &__description {
+    margin-top: 20px;
+    font-size: 18px;
+  }
+
+  &__title {
+    font-size: 22px;
+  }
+
+  &__btnPractice {
+    width: 100%;
+    margin-bottom: 20px;
+    height: 35px;
+    font-size: 16px;
+    font-size: 600;
+    border-color: #ff8159;
+    background-color: #faece8;
+
+    &:hover {
+      border-color: #ff8159 !important;
+      background-color: #faece8 !important;
+      color: black !important;
     }
+  }
+}
+.OptionForm {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
 
-    &__btnAdd {
-        background-color: #f97316 !important;
-        border: none !important;
-        font-weight: 500;
-        width: 150px;
-        color: #fff !important;
-
-        &:hover {
-            background-color: #ea580c !important;
-            color: #fff !important;
-        }
+  &__button {
+    background-color: #f97316;
+    color: white;
+    border: none;
+    width: 100%;
+    &:hover {
+      background-color: #ea580c !important;
+      color: white !important;
     }
-
-    &__description {
-        margin-top: 20px;
-        font-size: 18px;
-    }
-
-    &__title {
-        font-size: 22px;
-    }
-
-    &__btnPractice {
-        width: 100%;
-        margin-bottom: 20px;
-        height: 35px;
-        font-size: 16px;
-        font-size: 600;
-        border-color: #FF8159;
-        background-color: #FAECE8;
-
-        &:hover {
-            border-color: #FF8159 !important;
-            background-color: #FAECE8 !important;
-            color: black !important;
-        }
-    }
+  }
 }

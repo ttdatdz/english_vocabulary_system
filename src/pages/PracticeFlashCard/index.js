@@ -24,7 +24,8 @@ export default function PracticeFlashCard() {
 
   const loadDataList = async () => {
     const data = await get(`api/card/getByFlashCard/${flashcardId}`);
-    if (data) {
+    console.log("data nè ", data);
+    if (data.listCardResponse.length > 0) {
       setPracticeList(data.filter((card) => !card.isRemember)); // các từ chưa thuộc
       setRememberList(data.filter((card) => card.isRemember));
     }
@@ -158,84 +159,100 @@ export default function PracticeFlashCard() {
               <h2 className="PracticeFlashCard__title">
                 {flashcard.title ? flashcard.title : "Không có tiêu đề"}
               </h2>
-              <div className="PracticeFlashCard__actions">
-                <Button
-                  onClick={() => handleBackToList()}
-                  className="PracticeFlashCard__btn PracticeFlashCard__btnViewAll"
-                >
-                  Xem tất cả
-                </Button>
-                <Button
-                  className="PracticeFlashCard__btn PracticeFlashCard__btnViewMemory"
-                  onClick={showModal}
-                >
-                  Các từ đã nhớ
-                </Button>
-                <Button
-                  className="PracticeFlashCard__btn finish_btn"
-                  onClick={() => handleFinishRehearse()}
-                >
-                  Hoàn thành ôn tập
-                </Button>
-                <Button
-                  onClick={() => handleResetAllCards()}
-                  className="PracticeFlashCard__btn PracticeFlashCard__btn--Stop"
-                >
-                  Dừng học list này
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="PracticeFlashCard__Content">
-            <p className="PracticeFlashCard__note">
-              Lưu ý: Bạn nên học tối đa 15 từ mới một ngày. Đây là lượng từ phù
-              hợp giúp bạn có thể ghi nhớ tốt
-            </p>
-            <div className="PracticeFlashCard__listFlashCard">
-              {currentCard ? (
-                <CardPractice data={currentCard} />
-              ) : (
-                <p>Không có từ nào!</p>
+
+              {currentCard && (
+                <div className="PracticeFlashCard__actions">
+                  <Button
+                    onClick={handleBackToList}
+                    className="PracticeFlashCard__btn PracticeFlashCard__btnViewAll"
+                  >
+                    Xem tất cả
+                  </Button>
+                  <Button
+                    className="PracticeFlashCard__btn PracticeFlashCard__btnViewMemory"
+                    onClick={showModal}
+                  >
+                    Các từ đã nhớ
+                  </Button>
+                  <Button
+                    className="PracticeFlashCard__btn finish_btn"
+                    onClick={handleFinishRehearse}
+                  >
+                    Hoàn thành ôn tập
+                  </Button>
+                  <Button
+                    onClick={handleResetAllCards}
+                    className="PracticeFlashCard__btn PracticeFlashCard__btn--Stop"
+                  >
+                    Dừng học list này
+                  </Button>
+                </div>
               )}
             </div>
-            <div style={{ textAlign: "center", marginTop: 24 }}>
-              <Button type="primary" onClick={nextCard}>
-                Từ tiếp theo
-              </Button>
-            </div>
           </div>
-          <div className="PracticeFlashCard__Footer">
-            <div
-              onClick={() => handleUpdateLevel(1)}
-              className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Easy"
-            >
-              <FaRegFaceGrinBeam style={{ marginTop: "2px" }} />
-              <span>Dễ</span>
-            </div>
-            <div
-              onClick={() => handleUpdateLevel(2)}
-              className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Medium"
-            >
-              <FaRegFaceFrownOpen style={{ marginTop: "2px" }} />
-              <span>Trung bình</span>
-            </div>
-            <div
-              onClick={() => handleUpdateLevel(3)}
-              className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Difficult"
-            >
-              <FaRegFaceAngry style={{ marginTop: "2px" }} />
-              <span>Khó</span>
-            </div>
-            <div
-              onClick={() => {
-                handleIsRememberCheck(currentCard.id);
+
+          {currentCard && (
+            <>
+              <div className="PracticeFlashCard__Content">
+                <p className="PracticeFlashCard__note">
+                  Lưu ý: Bạn nên học tối đa 15 từ mới một ngày. Đây là lượng từ
+                  phù hợp giúp bạn có thể ghi nhớ tốt
+                </p>
+                <div className="PracticeFlashCard__listFlashCard">
+                  <CardPractice data={currentCard} />
+                </div>
+                <div style={{ textAlign: "center", marginTop: 24 }}>
+                  <Button type="primary" onClick={nextCard}>
+                    Từ tiếp theo
+                  </Button>
+                </div>
+              </div>
+
+              <div className="PracticeFlashCard__Footer">
+                <div
+                  onClick={() => handleUpdateLevel(1)}
+                  className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Easy"
+                >
+                  <FaRegFaceGrinBeam style={{ marginTop: "2px" }} />
+                  <span>Dễ</span>
+                </div>
+                <div
+                  onClick={() => handleUpdateLevel(2)}
+                  className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Medium"
+                >
+                  <FaRegFaceFrownOpen style={{ marginTop: "2px" }} />
+                  <span>Trung bình</span>
+                </div>
+                <div
+                  onClick={() => handleUpdateLevel(3)}
+                  className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Difficult"
+                >
+                  <FaRegFaceAngry style={{ marginTop: "2px" }} />
+                  <span>Khó</span>
+                </div>
+                <div
+                  onClick={() => handleIsRememberCheck(currentCard.id)}
+                  className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Discard"
+                >
+                  <IoPlayForwardSharp style={{ marginTop: "2px" }} />
+                  <span>Đã nhớ, loại bỏ khỏi danh sách ôn tập</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {!currentCard && (
+            <p
+              style={{
+                textAlign: "center",
+                marginTop: 200,
+                marginBottom: 200,
+                fontSize: 18,
               }}
-              className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Discard"
             >
-              <IoPlayForwardSharp style={{ marginTop: "2px" }} />{" "}
-              <span>Đã nhớ, loại bỏ khỏi danh sách ôn tập</span>
-            </div>
-          </div>
+              Không có từ nào để luyện tập. Vui lòng thêm từ mới
+            </p>
+          )}
         </div>
       </div>
 

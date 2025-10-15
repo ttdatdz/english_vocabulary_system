@@ -6,7 +6,7 @@ import AddAndEditVocabForm from "../../components/AddAndEditVocabForm";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { get } from "../../utils/request";
-import { showErrorMessage } from "../../utils/alertHelper";
+import { showErrorMessage, showWaringMessage } from "../../utils/alertHelper";
 import CardVocabulary from "../../components/CardVocabulary";
 
 export default function DetailListFalshCard() {
@@ -21,9 +21,12 @@ export default function DetailListFalshCard() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10; // Cập nhật pageSize thành 10
   const total = cards.length;
+  const [openPracticeOptionModal, setOpenPracticeOptionModal] = useState(false);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const cardsToShow = cards.slice(startIndex, endIndex); // Lấy danh sách 10 từ cho mỗi trang
+  const cardsToShow = Array.isArray(cards)
+    ? cards.slice(startIndex, endIndex)
+    : []; // Lấy danh sách 10 từ cho mỗi trang
   const { flashcardId } = useParams();
   const [flashcard, setFlashCard] = useState(null);
   const [formKey, setFormKey] = useState(Date.now());
@@ -70,12 +73,6 @@ export default function DetailListFalshCard() {
     setFormKey(Date.now());
   };
 
-  const handleClick = () => {
-    navigate(
-      `/VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/${flashcardId}`
-    );
-  };
-
   const handleOk = () => {
     // setConfirmLoading(true);
     setJustAdded(true);
@@ -89,7 +86,33 @@ export default function DetailListFalshCard() {
   const handleClose = () => {
     setOpen(false);
   };
+  const handleClickPractice = () => {
+    if (!cards.length > 0) {
+      showWaringMessage(
+        "Danh sách từ trống. Vui lòng thêm từ mới để luyện tập."
+      );
+      return;
+    } else {
+      setOpenPracticeOptionModal(true);
+    }
+  };
 
+  const handleSelectMode = (mode) => {
+    setOpenPracticeOptionModal(false);
+    if (mode === "flashcard") {
+      navigate(
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/${flashcardId}`
+      );
+    } else if (mode === "minigame") {
+      navigate(
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/MiniGame/${flashcardId}`
+      );
+    } else if (mode === "quiz") {
+      navigate(
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/${flashcardId}`
+      );
+    }
+  };
   return (
     <>
       <div className="MainContainer">
@@ -119,7 +142,7 @@ export default function DetailListFalshCard() {
             <div>
               <Button
                 className="DetailListFlashCard__btnPractice"
-                onClick={handleClick}
+                onClick={handleClickPractice}
               >
                 Luyện tập flashcards
               </Button>
@@ -135,21 +158,32 @@ export default function DetailListFalshCard() {
                   />
                 ))
               ) : (
-                <div>Không có từ nào trong danh sách này.</div>
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginTop: "100px",
+                    marginBottom: "150px",
+                    fontSize: "17px",
+                  }}
+                >
+                  Không có từ nào trong danh sách này.
+                </div>
               )}
             </div>
-            <Pagination
-              align="center"
-              current={currentPage}
-              total={total}
-              pageSize={pageSize}
-              onChange={(page) => setCurrentPage(page)}
-              style={{ marginTop: 20, textAlign: "center" }}
-            />
+            {cardsToShow.length > 0 && (
+              <Pagination
+                align="center"
+                current={currentPage}
+                total={total}
+                pageSize={pageSize}
+                onChange={(page) => setCurrentPage(page)}
+                style={{ marginTop: 20, textAlign: "center" }}
+              />
+            )}
           </div>
         </div>
       </div>
-
+      {/* Modal thêm/ sửa từ mới */}
       <BaseModal
         open={open}
         onCancel={handleClose}
@@ -168,6 +202,38 @@ export default function DetailListFalshCard() {
           setConfirmLoading={setConfirmLoading}
           key={formKey}
         />
+      </BaseModal>
+      {/* Modal chọn chế độ luyện tập */}
+      <BaseModal
+        open={openPracticeOptionModal}
+        onCancel={() => setOpenPracticeOptionModal(false)}
+        title={
+          <div style={{ fontSize: 22, fontWeight: "bold" }}>
+            Chọn chế độ luyện tập
+          </div>
+        }
+      >
+        <div className="OptionForm">
+          <Button
+            className="OptionForm__button"
+            type="primary"
+            onClick={() => handleSelectMode("flashcard")}
+          >
+            Flashcard
+          </Button>
+          <Button
+            className="OptionForm__button"
+            onClick={() => handleSelectMode("minigame")}
+          >
+            Minigame
+          </Button>
+          <Button
+            className="OptionForm__button"
+            onClick={() => handleSelectMode("quiz")}
+          >
+            Trắc nghiệm
+          </Button>
+        </div>
       </BaseModal>
     </>
   );
