@@ -30,6 +30,7 @@ import ReviewDetailListCard from "../pages/ReviewDetailListCard";
 import ReviewExam from "../pages/ReviewExam";
 import ScrollToTop from "../components/ScrollToTop";
 import { useEffect } from "react";
+import Quiz from "../pages/Quiz";
 function MainRoutes() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
@@ -83,7 +84,7 @@ function MainRoutes() {
           />
           <Route
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/:flashcardId"
-            element={<PracticeFlashCard />}
+            element={<Quiz />}
           />
           <Route path="DetailExam/:id" element={<DetailExam />}>
             <Route path="ResultExam/:resultId" element={<ResultExam />} />

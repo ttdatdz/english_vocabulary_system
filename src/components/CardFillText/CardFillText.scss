@@ -1,0 +1,65 @@
+.CardFillText {
+  background: #fff;
+  border-radius: 16px 0px;
+  //   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  padding: 32px 24px;
+  text-align: center;
+  margin-bottom: 24px;
+  //   height: 100%;
+
+  &__definition {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f97316;
+    margin-bottom: 12px;
+  }
+
+  &__icon--pronounce {
+    font-size: 28px;
+    color: #007bff;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: color 0.2s, transform 0.2s;
+
+    &:hover {
+      color: #0056b3;
+      transform: scale(1.2);
+    }
+  }
+
+  &__hint {
+    font-size: 16px;
+    color: #6c757d;
+    margin-bottom: 18px;
+  }
+
+  &__input {
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    font-size: 16px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .CardFillText {
+    padding: 18px 8px;
+
+    &__definition {
+      font-size: 20px;
+    }
+    &__input {
+      font-size: 15px;
+      max-width: 100%;
+    }
+  }
+}

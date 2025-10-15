@@ -1,0 +1,79 @@
+$primary-color: #f97316;
+$primary-hover: #ea580c;
+$text-color: #333;
+$border-color: #e0e0e0;
+$bg-light: #f8f9fa;
+.CardQuiz {
+  background: #fff;
+  border-radius: 0px 16px 16px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  margin-bottom: 24px;
+  // height: 100%;
+  // ====== Nội dung chính ======
+  &__content {
+    padding: 30px 25px;
+  }
+
+  &__question {
+    text-align: center;
+    margin-bottom: 24px;
+
+    &-text {
+      margin-top: 8px;
+      font-size: 16px;
+      color: #6c757d;
+    }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__terminology {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e1e1e;
+    margin: 0;
+  }
+  &__icon {
+    font-size: 18px;
+    color: $text-color;
+
+    &--pronounce {
+      font-size: 24px;
+      color: #007bff;
+      cursor: pointer;
+      transition: transform 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        color: #0056b3;
+        transform: scale(1.2);
+      }
+    }
+  }
+  // ====== Đáp án ======
+  &__answers {
+    display: grid;
+    gap: 12px;
+  }
+
+  &__answer {
+    padding: 12px;
+    border: 1px solid $border-color;
+    border-radius: 10px;
+    background-color: #fff;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: $primary-color;
+      color: #fff;
+      border-color: $primary-color;
+    }
+  }
+}
