@@ -24,8 +24,8 @@ export default function DetailListFalshCard() {
   const [openPracticeOptionModal, setOpenPracticeOptionModal] = useState(false);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const cardsToShow = Array.isArray(cards)
-    ? cards.slice(startIndex, endIndex)
+  const cardsToShow = Array.isArray(cards.listCardResponse)
+    ? cards.listCardResponse.slice(startIndex, endIndex)
     : []; // Lấy danh sách 10 từ cho mỗi trang
   const { flashcardId } = useParams();
   const [flashcard, setFlashCard] = useState(null);
@@ -87,7 +87,7 @@ export default function DetailListFalshCard() {
     setOpen(false);
   };
   const handleClickPractice = () => {
-    if (!cards.length > 0) {
+    if (!cards.listCardResponse.length > 0) {
       showWaringMessage(
         "Danh sách từ trống. Vui lòng thêm từ mới để luyện tập."
       );
@@ -96,7 +96,7 @@ export default function DetailListFalshCard() {
       setOpenPracticeOptionModal(true);
     }
   };
-
+  // console.log("cards", cards);
   const handleSelectMode = (mode) => {
     setOpenPracticeOptionModal(false);
     if (mode === "flashcard") {
@@ -113,6 +113,7 @@ export default function DetailListFalshCard() {
       );
     }
   };
+  console.log("cardsToShow", cardsToShow);
   return (
     <>
       <div className="MainContainer">

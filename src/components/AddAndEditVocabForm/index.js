@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import "./AddAndEditVocabForm.scss";
 import { Select, Button, Form, Input, Upload } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { useParams } from "react-router-dom";
 import { postFormData, put, putFormData } from "../../utils/request";
 import { showSuccess } from "../../utils/alertHelper";
+import { BsStars } from "react-icons/bs";
+import { fillVocab } from "../../services/Vocab/vocabService";
 export default function AddAndEditVocabForm(props) {
   const { Option } = Select;
   const {
@@ -19,8 +21,8 @@ export default function AddAndEditVocabForm(props) {
   const { flashcardId } = useParams();
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileList, setFileList] = useState([]);
-
   const [uploadKey, setUploadKey] = useState(Date.now());
+  const [generating, setGenerating] = useState(false); // <-- thêm state
 
   useEffect(() => {
     // Tạo fileList chuẩn cho antd Upload từ image link hoặc để rỗng
@@ -43,18 +45,24 @@ export default function AddAndEditVocabForm(props) {
     setFileList(imageFileList);
     setUploadKey(Date.now());
   }, [initialValues, form]);
-
+  console.log("initialValues", initialValues);
   const onFinish = async (values) => {
     console.log("onFinish values.image:", values.image);
+
+    // lấy audio từ values (nếu không có, dùng form.getFieldValue)
+    const audioValue = values.audio ?? form.getFieldValue("audio") ?? "";
+
     if (initialValues && initialValues.id) {
       setConfirmLoading(true);
       const detailBody = {
         terminology: values.terminology,
         definition: values.definition,
         partOfSpeech: values.partOfSpeech,
-        pronounce: values.pronounce,
-        example: values.example,
+        pronounce: normalizeString(values.pronounce),
+        audio: normalizeString(audioValue),
+        example: formatList(values.example),
         level: values.level,
+        hint: formatList(values.hint),
         flashCardID: flashcardId,
       };
 
@@ -87,7 +95,10 @@ export default function AddAndEditVocabForm(props) {
           terminology: values.terminology,
           definition: values.definition,
           partOfSpeech: values.partOfSpeech,
-          example: values.example,
+          pronounce: normalizeString(values.pronounce),
+          audio: normalizeString(values.audio ?? form.getFieldValue("audio")),
+          example: formatList(values.example),
+          hint: formatList(values.hint),
           level: values.level || 1,
           flashCardID: flashcardId,
         })
@@ -110,6 +121,24 @@ export default function AddAndEditVocabForm(props) {
       if (onFetchingData) onFetchingData();
     }
   };
+  const formatList = (value) => {
+    if (!value || typeof value !== "string") return [];
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "Không có data") return [];
+    return trimmed
+      .split("\n")
+      .map((v) => v.trim())
+      .filter(Boolean);
+  };
+
+  // normalize chuỗi: "Không có data" => "" để gửi lên backend
+  const normalizeString = (v) => {
+    if (v === null || v === undefined) return "";
+    if (typeof v !== "string") return String(v);
+    const t = v.trim();
+    return t === "Không có data" ? "" : t;
+  };
+
   const handleImageChange = ({ fileList }) => {
     setFileList([...fileList]);
     form.setFieldsValue({ image: fileList });
@@ -127,11 +156,40 @@ export default function AddAndEditVocabForm(props) {
     }
     setPreviewUrl(newPreview);
   };
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
     }
     return e && e.fileList ? e.fileList : [];
+  };
+  const handleGenerateClick = async () => {
+    try {
+      setGenerating(true); // bật loading
+      const result = await fillVocab(form.getFieldValue("terminology"));
+
+      const formatForForm = (v) => {
+        if (v === null || v === undefined) return "Không có data";
+        if (Array.isArray(v)) {
+          return v.length === 0 ? "Không có data" : v.join("\n");
+        }
+        if (typeof v === "string") {
+          return v.trim() === "" ? "Không có data" : v;
+        }
+        return String(v);
+      };
+
+      // nếu có data thì set lên form (mảng -> xuống dòng; rỗng -> "Không có data")
+      form.setFieldsValue({
+        partOfSpeech: formatForForm(result.partOfSpeech),
+        pronounce: formatForForm(result.pronounce),
+        example: formatForForm(result.example),
+        hint: formatForForm(result.hint),
+        audio: formatForForm(result.audio),
+      });
+    } finally {
+      setGenerating(false); // tắt loading (dù thành công hay lỗi)
+    }
   };
   return (
     <>
@@ -148,11 +206,25 @@ export default function AddAndEditVocabForm(props) {
       >
         <Form.Item
           label="Từ mới"
-          name="terminology"
           wrapperCol={{ span: 18 }}
           rules={[{ required: true, message: "Vui lòng nhập từ mới!" }]}
         >
-          <Input />
+          <div className="UserForm__input-with-btn">
+            {/* Form.Item noStyle để Input vẫn được form quản lý */}
+            <Form.Item name="terminology" noStyle>
+              <Input allowClear />
+            </Form.Item>
+
+            <Button
+              className="UserForm__generate-btn"
+              onClick={handleGenerateClick}
+              disabled={generating}
+              type="default"
+            >
+              {generating ? <LoadingOutlined spin /> : <BsStars />}
+              Generate with AI
+            </Button>
+          </div>
         </Form.Item>
 
         <Form.Item
@@ -161,7 +233,14 @@ export default function AddAndEditVocabForm(props) {
           wrapperCol={{ span: 18 }}
           rules={[{ required: true, message: "Vui lòng nhập định nghĩa!" }]}
         >
-          <Input />
+          <Input allowClear />
+        </Form.Item>
+        <Form.Item
+          label="Nghĩa tiếng Anh"
+          name="hint"
+          wrapperCol={{ span: 18 }}
+        >
+          <TextArea allowClear />
         </Form.Item>
 
         <Form.Item
@@ -170,20 +249,14 @@ export default function AddAndEditVocabForm(props) {
           wrapperCol={{ span: 18 }}
           rules={[{ required: true, message: "Vui lòng chọn loại từ!" }]}
         >
-          <Select>
-            <Option value="Noun">Noun</Option>
-            <Option value="Pronoun">Pronoun</Option>
-            <Option value="Verb">Verb</Option>
-            <Option value="Adjective">Adjective</Option>
-            <Option value="Adverb">Adverb</Option>
-            <Option value="Preposition">Preposition</Option>
-            <Option value="Conjunction">Conjunction</Option>
-            <Option value="Interjection">Interjection</Option>
-          </Select>
+          <Input allowClear />
         </Form.Item>
 
         <Form.Item label="Phiên âm" name="pronounce" wrapperCol={{ span: 18 }}>
-          <Input placeholder="Bỏ trống nếu bạn muốn tự động lấy phiên dịch." />
+          <Input
+            placeholder="Bỏ trống nếu bạn muốn tự động lấy phiên dịch."
+            allowClear
+          />
         </Form.Item>
 
         <Form.Item
@@ -192,7 +265,7 @@ export default function AddAndEditVocabForm(props) {
           wrapperCol={{ span: 18 }}
           //rules={[{ required: true, message: 'Vui lòng nhập ví dụ!' }]}
         >
-          <TextArea />
+          <TextArea allowClear />
         </Form.Item>
 
         <Form.Item
