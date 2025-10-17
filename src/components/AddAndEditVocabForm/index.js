@@ -37,9 +37,15 @@ export default function AddAndEditVocabForm(props) {
         },
       ];
     }
+    // Chuyển mảng thành chuỗi có xuống dòng
+    const convertArrayToText = (v) =>
+      Array.isArray(v) ? v.join("\n") : v || "";
+
     form.setFieldsValue({
       ...initialValues,
-      image: imageFileList, // <-- luôn là array!
+      example: convertArrayToText(initialValues?.example),
+      hint: convertArrayToText(initialValues?.hint),
+      image: imageFileList,
     });
     setPreviewUrl(initialValues?.image || null);
     setFileList(imageFileList);
@@ -51,7 +57,12 @@ export default function AddAndEditVocabForm(props) {
 
     // lấy audio từ values (nếu không có, dùng form.getFieldValue)
     const audioValue = values.audio ?? form.getFieldValue("audio") ?? "";
-
+    // convert xuống dòng → mảng
+    const exampleArray = formatList(values.example);
+    const hintArray = formatList(values.hint);
+    // 👉 convert mảng thành string để gửi BE
+    const exampleString = exampleArray.join("\n");
+    const hintString = hintArray.join("\n");
     if (initialValues && initialValues.id) {
       setConfirmLoading(true);
       const detailBody = {
@@ -60,9 +71,9 @@ export default function AddAndEditVocabForm(props) {
         partOfSpeech: values.partOfSpeech,
         pronounce: normalizeString(values.pronounce),
         audio: normalizeString(audioValue),
-        example: formatList(values.example),
+        example: exampleString, // 👈 gửi string
+        hint: hintString, // 👈 gửi string
         level: values.level,
-        hint: formatList(values.hint),
         flashCardID: flashcardId,
       };
 
@@ -96,9 +107,9 @@ export default function AddAndEditVocabForm(props) {
           definition: values.definition,
           partOfSpeech: values.partOfSpeech,
           pronounce: normalizeString(values.pronounce),
-          audio: normalizeString(values.audio ?? form.getFieldValue("audio")),
-          example: formatList(values.example),
-          hint: formatList(values.hint),
+          audio: normalizeString(audioValue),
+          example: exampleString, // 👈 gửi string
+          hint: hintString, // 👈 gửi string
           level: values.level || 1,
           flashCardID: flashcardId,
         })

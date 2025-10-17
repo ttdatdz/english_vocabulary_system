@@ -39,7 +39,7 @@ export default function CardVocabulary(props) {
       speechSynthesis.speak(utterance);
     }
   };
-
+  console.log("data in card vocab", data);
   if (!data) return null;
   //   console.log("data in card vocab", data);
   return (
@@ -79,16 +79,30 @@ export default function CardVocabulary(props) {
                 <strong>Định nghĩa:</strong>
                 <p>{data.definition}</p>
               </div>
-              <div className="vocab-card__example">
-                <strong>Ví dụ:</strong>
-                {data.example ? (
+              {data.hint.length > 0 && (
+                <div className="vocab-card__example">
+                  <strong>Nghĩa tiếng anh:</strong>
                   <ul className="vocab-card__listExample">
-                    <li className="vocab-card__example-item">{data.example}</li>
+                    {data.hint.map((item, index) => (
+                      <li key={index} className="vocab-card__example-item">
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                ) : (
-                  <p>Không có ví dụ</p>
-                )}
-              </div>
+                </div>
+              )}
+              {data.example.length > 0 && (
+                <div className="vocab-card__example">
+                  <strong>Ví dụ:</strong>
+                  <ul className="vocab-card__listExample">
+                    {data.example.map((item, index) => (
+                      <li key={index} className="vocab-card__example-item">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="vocab-card__note">
                 <strong>Mức độ:</strong>
