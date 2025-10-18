@@ -13,10 +13,20 @@ $bg-light: #f8f9fa;
   &__content {
     padding: 30px 25px;
   }
-
+  &__hint-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
   &__question {
     text-align: center;
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
 
     &-text {
       margin-top: 8px;
@@ -57,15 +67,15 @@ $bg-light: #f8f9fa;
   // ====== Đáp án ======
   &__answers {
     display: grid;
-    gap: 12px;
+    gap: 6px;
   }
 
   &__answer {
-    padding: 12px;
+    padding: 8px;
     border: 1px solid $border-color;
     border-radius: 10px;
     background-color: #fff;
-    font-size: 16px;
+    font-size: 14px;
     text-align: left;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -75,5 +85,16 @@ $bg-light: #f8f9fa;
       color: #fff;
       border-color: $primary-color;
     }
+  }
+  &__answer--success {
+    background-color: #4caf50 !important; // xanh
+    color: white;
+    border: none;
+  }
+
+  &__answer--error {
+    background-color: #f44336 !important; // đỏ
+    color: white;
+    border: none;
   }
 }

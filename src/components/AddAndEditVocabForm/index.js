@@ -108,8 +108,8 @@ export default function AddAndEditVocabForm(props) {
           partOfSpeech: values.partOfSpeech,
           pronounce: normalizeString(values.pronounce),
           audio: normalizeString(audioValue),
-          example: exampleString, // 👈 gửi string
-          hint: hintString, // 👈 gửi string
+          example: exampleArray, // ✅ gửi mảng JSON
+          hint: hintArray, //
           level: values.level || 1,
           flashCardID: flashcardId,
         })

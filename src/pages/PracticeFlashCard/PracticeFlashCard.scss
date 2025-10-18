@@ -1,120 +1,118 @@
 .PracticeFlashCard {
-    &__header {
-        margin: 20px 0px;
+  &__header {
+    margin: 20px 0;
+  }
+
+  &__start-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 20px;
+  }
+
+  &__title {
+    font-size: 24px;
+  }
+
+  &__btn {
+    padding: 18px 28px;
+    width: 200px;
+    font-size: 15px;
+    color: #fff;
+    background-color: #ff8159;
+    font-weight: 500;
+    border-color: #ff8159;
+
+    &:hover {
+      background-color: #ff8159 !important;
+      border-color: #ff8159 !important;
+      color: #fff !important;
     }
 
-    &__start-header {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+    &--Stop {
+      background-color: #ff0000;
+      border-color: #ff0000;
+
+      &:hover {
+        background-color: #ff0000 !important;
+        border-color: #ff0000 !important;
+      }
     }
+  }
 
-    &__actions {
-        display: flex;
-        gap: 20px;
-    }
+  &__Content {
+    margin-bottom: 20px;
+  }
 
-    &__title {
-        font-size: 24px;
-    }
+  &__note {
+    margin-bottom: 20px;
+    font-size: 16px;
+    padding: 10px 20px;
+    background-color: #f9e8e3;
+    border-radius: 7px;
+  }
 
-    &__btn {
-        padding: 18px 28px;
-        width: 200px;
-        font-size: 15px;
-        color: #fff;
-        background-color: #FF8159;
-        font-weight: 500;
-        border-color: #FF8159;
-
-        &:hover {
-            background-color: #FF8159 !important;
-            border-color: #FF8159 !important;
-            color: #fff !important;
-        }
-
-        &--Stop {
-            background-color: #FF0000;
-            border-color: #FF0000;
-
-
-            &:hover {
-                background-color: #FF0000 !important;
-                border-color: #FF0000 !important;
-            }
-        }
-    }
-
-    &__Content {
-        margin-bottom: 20px;
-    }
-
-    &__note {
-        margin-bottom: 20px;
-        font-size: 16px;
-        padding: 10px 20px;
-        background-color: #F9E8E3;
-        border-radius: 7px;
-    }
-
-    &__Footer {
-        padding: 20px;
-        background-color: #fff;
-        height: 100px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-    }
-
-    &__btnGeneral {
-        display: flex;
-        gap: 15px;
-        align-items: center;
-        font-size: 16px;
-        cursor: pointer;
-
-        &--Easy {
-            color: #34A853;
-        }
-
-        &--Medium {
-            color: #FFBB25;
-        }
-
-        &--Difficult {
-            color: #FF0000;
-        }
-
-        &--Discard {
-            color: #35509A;
-        }
-    }
-}
-
-.Card-remember {
+  &__Footer {
+    padding: 20px;
     background-color: #fff;
-    padding: 15px 20px;
+    height: 100px;
     border-radius: 10px;
     border: 1px solid #ddd;
     display: flex;
     align-items: center;
-    font-size: 16px;
     justify-content: space-between;
+  }
 
-    &__delete {
-        font-size: 18px;
-        color: #FF0000;
-        cursor: pointer;
+  &__btnGeneral {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 16px;
+    cursor: pointer;
+
+    &--Easy {
+      color: #34a853;
     }
+
+    &--Medium {
+      color: #ffbb25;
+    }
+
+    &--Difficult {
+      color: #ff0000;
+    }
+
+    &--Discard {
+      color: #35509a;
+    }
+  }
+}
+
+.Card-remember {
+  background-color: #fff;
+  padding: 15px 20px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  justify-content: space-between;
+
+  &__delete {
+    font-size: 18px;
+    color: #ff0000;
+    cursor: pointer;
+  }
 }
 
 .note {
-    margin-bottom: 20px;
-    font-size: 16px;
-    padding: 10px 20px;
-    background-color: #F9E8E3;
-    border-radius: 7px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  padding: 10px 20px;
+  background-color: #f9e8e3;
+  border-radius: 7px;
 }

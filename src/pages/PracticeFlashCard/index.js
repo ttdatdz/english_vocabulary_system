@@ -1,9 +1,11 @@
-import { Button, message } from "antd";
+import { Button, message, Modal } from "antd";
 import "./PracticeFlashCard.scss";
 import { IoPlayForwardSharp } from "react-icons/io5";
-import { FaRegFaceGrinBeam } from "react-icons/fa6";
-import { FaRegFaceFrownOpen } from "react-icons/fa6";
-import { FaRegFaceAngry } from "react-icons/fa6";
+import {
+  FaRegFaceGrinBeam,
+  FaRegFaceFrownOpen,
+  FaRegFaceAngry,
+} from "react-icons/fa6";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import BaseModal from "../../components/BaseModal";
 import { useState, useEffect } from "react";
@@ -12,70 +14,101 @@ import { useNavigate, useParams } from "react-router-dom";
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import { get, put } from "../../utils/request";
 import dayjs from "dayjs";
+import { PiConfettiFill } from "react-icons/pi";
 
 export default function PracticeFlashCard() {
   const [open, setOpen] = useState(false);
+  const [finishModal, setFinishModal] = useState(false);
   const navigate = useNavigate();
   const [flashcard, setFlashCard] = useState([]);
   const [practiceList, setPracticeList] = useState([]);
-  const [rememberList, setRememberList] = useState([]);
+  const [rememberedInSession, setRememberedInSession] = useState([]); // từ đã nhớ trong phiên
   const { flashcardId } = useParams();
   const [currentCard, setCurrentCard] = useState(null);
 
+  // Load danh sách card (luôn load ALL cards)
   const loadDataList = async () => {
-    const data = await get(`api/card/getByFlashCard/${flashcardId}`);
-    console.log("data nè ", data);
-    if (data.listCardResponse.length > 0) {
-      setPracticeList(data.filter((card) => !card.isRemember)); // các từ chưa thuộc
-      setRememberList(data.filter((card) => card.isRemember));
+    try {
+      const data = await get(`api/card/getByFlashCard/${flashcardId}`);
+      const allCards = Array.isArray(data.listCardResponse)
+        ? data.listCardResponse
+        : [];
+      setPracticeList(allCards);
+      // don't touch rememberedInSession here (it's per-session)
+    } catch (err) {
+      showErrorMessage("Không tải được danh sách thẻ");
     }
   };
 
+  // Fetch flashcard info + card list
   useEffect(() => {
     const fetchData = async () => {
       const dataFlashCard = await get(`api/flashcard/id/${flashcardId}`);
       if (dataFlashCard) setFlashCard(dataFlashCard);
-
       await loadDataList();
     };
-
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flashcardId]);
 
+  // Khi practiceList thay đổi, chọn currentCard an toàn
   useEffect(() => {
-    if (practiceList.length > 0) {
-      const arr = makeWeightedArray(practiceList);
-      setCurrentCard(arr[Math.floor(Math.random() * arr.length)]);
-    } else {
+    if (!practiceList || practiceList.length === 0) {
       setCurrentCard(null);
+      return;
     }
+
+    // nếu currentCard đã tồn tại trong practiceList thì giữ nguyên (tránh nhảy đột ngột)
+    if (currentCard && practiceList.some((c) => c.id === currentCard.id)) {
+      return;
+    }
+
+    // chọn random mới
+    const arr = makeWeightedArray(practiceList);
+    const random = arr[Math.floor(Math.random() * arr.length)];
+    setCurrentCard(random);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [practiceList]);
 
+  // Next card: nếu chỉ 1 item thì không next
   const nextCard = () => {
-    const arr = makeWeightedArray(practiceList);
-    if (arr.length === 0) return;
-    let next = currentCard;
-    while (arr.length > 1 && next === currentCard) {
-      next = arr[Math.floor(Math.random() * arr.length)];
+    if (!practiceList || practiceList.length === 0) {
+      setCurrentCard(null);
+      return;
     }
+
+    const arr = makeWeightedArray(practiceList);
+    if (arr.length <= 1) {
+      // còn 1 từ -> không cho next
+      message.info("Đây là từ cuối cùng trong danh sách.");
+      return;
+    }
+
+    // cố gắng chọn khác currentCard
+    let next = currentCard;
+    let tries = 0;
+    while ((next == null || next.id === currentCard?.id) && tries < 10) {
+      next = arr[Math.floor(Math.random() * arr.length)];
+      tries++;
+    }
+    // nếu vẫn bằng (hiếm) thì vẫn set để đảm bảo UI update
     setCurrentCard(next);
   };
 
-  const showModal = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const showModal = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   const handleBackToList = () => {
     navigate(
       `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
     );
   };
+
+  // Cập nhật level (gọi API)
+  // ✅ Cập nhật level (chỉ cập nhật currentCard, không nhảy sang từ khác)
   const handleUpdateLevel = async (newLevel) => {
-    if (!currentCard && currentCard != null) return;
+    if (!currentCard) return;
+
     try {
       await put(
         {
@@ -84,62 +117,117 @@ export default function PracticeFlashCard() {
         },
         `api/card/update/detail/${currentCard.id}`
       );
-      showSuccess("Cập nhật thành công!");
-      // Update UI nếu muốn
-      await loadDataList();
+
+      showSuccess("Cập nhật mức độ thành công!");
+
+      // ✅ Cập nhật lại level của currentCard tại chỗ
+      setCurrentCard((prev) => (prev ? { ...prev, level: newLevel } : prev));
+
+      // ✅ Đồng bộ lại trong danh sách practiceList
+      setPracticeList((prev) =>
+        prev.map((c) =>
+          c.id === currentCard.id ? { ...c, level: newLevel } : c
+        )
+      );
     } catch (e) {
       showErrorMessage("Lỗi khi cập nhật mức độ!");
     }
   };
 
-  const handleIsRememberCheck = async (cardId) => {
-    if (!currentCard && currentCard != null) return;
-    try {
-      await put(
-        { isRemember: 1, flashCardID: flashcardId },
-        `api/card/update/detail/${cardId}`
-      );
-      message.success("Thêm từ vào Danh sách đã thuộc");
-      await loadDataList();
-    } catch (err) {
-      showErrorMessage(err);
-    }
-  };
-  const handleIsRememberRestore = async (cardId) => {
-    if (!currentCard && currentCard != null) return;
-    try {
-      await put(
-        { isRemember: 0, flashCardID: flashcardId },
-        `api/card/update/detail/${cardId}`
-      );
-      message.success("Cập nhật lại danh sách ôn tập.");
-      await loadDataList();
-    } catch (err) {
-      showErrorMessage(err);
-    }
+  // "Đã nhớ" — loại khỏi list luyện hiện tại (CHI PHIÊN) — không gọi API
+  const handleIsRememberCheck = (cardId) => {
+    if (!practiceList || practiceList.length === 0) return;
+
+    const rememberedCard = practiceList.find((c) => c.id === cardId);
+    if (!rememberedCard) return;
+
+    // cập nhật practiceList dựa trên prev state để tránh race
+    setPracticeList((prev) => {
+      const newList = prev.filter((card) => card.id !== cardId);
+
+      // lưu remembered trong phiên
+      setRememberedInSession((prevRem) => {
+        // tránh duplicate
+        if (prevRem.some((c) => c.id === cardId)) return prevRem;
+        return [...prevRem, rememberedCard];
+      });
+
+      // nếu sau khi xóa không còn phần tử -> show finish modal
+      if (newList.length === 0) {
+        // set currentCard null rồi mở modal hoàn thành (an toàn)
+        setCurrentCard(null);
+        setFinishModal(true);
+        return [];
+      }
+
+      // nếu còn phần tử: nếu currentCard chính là card bị xóa thì chọn 1 card mới ngay
+      if (currentCard?.id === cardId) {
+        const arr = makeWeightedArray(newList);
+        const next = arr[Math.floor(Math.random() * arr.length)];
+        setCurrentCard(next);
+      }
+
+      message.success("Đã loại từ này khỏi danh sách ôn tập hiện tại");
+      return newList;
+    });
   };
 
+  // Khôi phục từ từ modal vào practiceList (thêm vào cuối list)
+  const handleIsRememberRestore = (cardId) => {
+    const cardToRestore = rememberedInSession.find((c) => c.id === cardId);
+    if (!cardToRestore) return;
+
+    setRememberedInSession((prev) => prev.filter((c) => c.id !== cardId));
+    setPracticeList((prev) => {
+      // tránh duplicate
+      if (prev.some((c) => c.id === cardId)) return prev;
+      const next = [...prev, cardToRestore];
+      // nếu currentCard đang null (không còn card) -> set currentCard mới
+      if (!currentCard) {
+        const arr = makeWeightedArray(next);
+        const random = arr[Math.floor(Math.random() * arr.length)];
+        setCurrentCard(random);
+      }
+      return next;
+    });
+
+    message.success("Đã thêm lại từ vào danh sách ôn tập hiện tại");
+  };
+
+  // Reset toàn bộ thẻ (gọi API)
   const handleResetAllCards = async () => {
-    await put({}, `api/card/resetAll/${flashcardId}`);
-    message.success("Reset Danh sách " + flashcard.title);
-    await loadDataList();
-    navigate(
-      `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
-    );
+    try {
+      await put({}, `api/card/resetAll/${flashcardId}`);
+      message.success("Reset danh sách " + flashcard.title);
+      await loadDataList();
+      navigate(
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
+      );
+    } catch (err) {
+      showErrorMessage("Lỗi khi reset danh sách");
+    }
   };
 
+  // Hoàn thành ôn tập (gọi API)
   const handleFinishRehearse = async () => {
-    const nexReview = dayjs().add(flashcard.cycle, "day").format("YYYY-MM-DD");
-    await put(
-      { reviewDate: nexReview, id: flashcardId },
-      "api/flashcard/updateFlashCard"
-    );
-    showSuccess("Rất tốt. Thời gian ôn lại được cập nhật.");
-    navigate(
-      `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
-    );
+    try {
+      const nexReview = dayjs()
+        .add(flashcard.cycle, "day")
+        .format("YYYY-MM-DD");
+      await put(
+        { reviewDate: nexReview, id: flashcardId },
+        "api/flashcard/updateFlashCard"
+      );
+      showSuccess("Rất tốt. Thời gian ôn lại được cập nhật.");
+      navigate(
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
+      );
+    } catch (err) {
+      showErrorMessage("Lỗi khi hoàn thành ôn tập");
+    }
   };
 
+  // Tạo mảng có trọng số
   function makeWeightedArray(cards) {
     let arr = [];
     cards.forEach((card) => {
@@ -150,6 +238,7 @@ export default function PracticeFlashCard() {
     });
     return arr;
   }
+
   return (
     <>
       <div className="MainContainer">
@@ -157,7 +246,7 @@ export default function PracticeFlashCard() {
           <div className="PracticeFlashCard__header">
             <div className="PracticeFlashCard__start-header">
               <h2 className="PracticeFlashCard__title">
-                {flashcard.title ? flashcard.title : "Không có tiêu đề"}
+                {flashcard.title || "Không có tiêu đề"}
               </h2>
 
               {currentCard && (
@@ -191,21 +280,36 @@ export default function PracticeFlashCard() {
             </div>
           </div>
 
-          {currentCard && (
+          {currentCard ? (
             <>
               <div className="PracticeFlashCard__Content">
                 <p className="PracticeFlashCard__note">
-                  Lưu ý: Bạn nên học tối đa 15 từ mới một ngày. Đây là lượng từ
-                  phù hợp giúp bạn có thể ghi nhớ tốt
+                  Lưu ý: Bạn nên học tối đa 15 từ mới một ngày để ghi nhớ tốt
+                  hơn.
                 </p>
                 <div className="PracticeFlashCard__listFlashCard">
                   <CardPractice data={currentCard} />
                 </div>
-                <div style={{ textAlign: "center", marginTop: 24 }}>
-                  <Button type="primary" onClick={nextCard}>
-                    Từ tiếp theo
-                  </Button>
-                </div>
+
+                {/* Ẩn nút “Từ tiếp theo” khi chỉ còn 1 từ */}
+                {practiceList.length > 1 && (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      marginTop: 24,
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Button
+                      className="OptionForm__button"
+                      style={{ width: "100px" }}
+                      onClick={nextCard}
+                    >
+                      Từ tiếp theo
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="PracticeFlashCard__Footer">
@@ -213,35 +317,33 @@ export default function PracticeFlashCard() {
                   onClick={() => handleUpdateLevel(1)}
                   className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Easy"
                 >
-                  <FaRegFaceGrinBeam style={{ marginTop: "2px" }} />
+                  <FaRegFaceGrinBeam />
                   <span>Dễ</span>
                 </div>
                 <div
                   onClick={() => handleUpdateLevel(2)}
                   className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Medium"
                 >
-                  <FaRegFaceFrownOpen style={{ marginTop: "2px" }} />
+                  <FaRegFaceFrownOpen />
                   <span>Trung bình</span>
                 </div>
                 <div
                   onClick={() => handleUpdateLevel(3)}
                   className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Difficult"
                 >
-                  <FaRegFaceAngry style={{ marginTop: "2px" }} />
+                  <FaRegFaceAngry />
                   <span>Khó</span>
                 </div>
                 <div
                   onClick={() => handleIsRememberCheck(currentCard.id)}
                   className="PracticeFlashCard__btnGeneral PracticeFlashCard__btnGeneral--Discard"
                 >
-                  <IoPlayForwardSharp style={{ marginTop: "2px" }} />
-                  <span>Đã nhớ, loại bỏ khỏi danh sách ôn tập</span>
+                  <IoPlayForwardSharp />
+                  <span>Đã nhớ, loại khỏi danh sách ôn tập</span>
                 </div>
               </div>
             </>
-          )}
-
-          {!currentCard && (
+          ) : (
             <p
               style={{
                 textAlign: "center",
@@ -250,39 +352,62 @@ export default function PracticeFlashCard() {
                 fontSize: 18,
               }}
             >
-              Không có từ nào để luyện tập. Vui lòng thêm từ mới
+              Không có từ nào để luyện tập. Vui lòng thêm từ mới.
             </p>
           )}
         </div>
       </div>
 
+      {/* Modal danh sách từ đã nhớ */}
       <BaseModal
         open={open}
         onCancel={handleClose}
         title={
-          <div style={{ fontSize: 24, fontWeight: "bold" }}>
-            Danh sách từ đã ghi nhớ
-          </div>
+          <div style={{ fontSize: 24, fontWeight: "bold" }}>Các từ đã nhớ</div>
         }
       >
-        <p className="note">
-          Click icon "Delete" để thêm từ vào lại danh sách ôn tập
-        </p>
-        {rememberList.length === 0 ? (
-          <p>Chưa có từ nào thuộc!</p>
+        {rememberedInSession.length === 0 ? (
+          <p>Chưa có từ nào được đánh dấu là đã nhớ trong phiên này!</p>
         ) : (
-          rememberList.map((card) => (
+          rememberedInSession.map((card) => (
             <div className="Card-remember" key={card.id}>
               <p className="Card-remember__word">{card.terminology}</p>
               <RiDeleteBin6Line
                 className="Card-remember__delete"
-                title="Thêm lại vào ôn tập"
+                title="Thêm lại vào danh sách ôn tập"
                 onClick={() => handleIsRememberRestore(card.id)}
               />
             </div>
           ))
         )}
       </BaseModal>
+
+      {/* Modal hoàn thành */}
+      <Modal
+        open={finishModal}
+        footer={null}
+        onCancel={() => setFinishModal(false)}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 22,
+            marginBottom: 12,
+            marginTop: 12,
+          }}
+        >
+          <PiConfettiFill style={{ color: "red", marginTop: 15 }} /> Bạn đã hoàn
+          thành tất cả các từ trong danh sách này!
+        </div>
+        <p style={{ textAlign: "center", marginBottom: 20 }}>
+          Hãy quay lại sau vài ngày để ôn tập lại nhé.
+        </p>
+        <div style={{ textAlign: "center" }}>
+          <Button className="OptionForm__button" onClick={handleFinishRehearse}>
+            Hoàn thành ôn tập
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

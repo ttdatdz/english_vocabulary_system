@@ -39,7 +39,7 @@ export const get = async (path) => {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    
+
     const result = await response.json();
     if (!response.ok) {
       // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
@@ -56,7 +56,7 @@ export const getNoAuth = async (path) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json"
+        Accept: "application/json",
       },
     });
 
@@ -86,10 +86,10 @@ export const post = async (values, path, auth = false) => {
       body: JSON.stringify(values), //nơi chứa data để gửi lên server. Trước khi gửi phải chuyển nó qua dạng json
     });
 
-    const result =await response.json();
+    const result = await response.json();
 
     if (response.ok) {
-        return result.data;
+      return result.data;
     } else {
       throw new Error(`${result.message}: ${result.data.detail}`);
     }
@@ -166,7 +166,7 @@ export const put = async (values, path, auth = true) => {
       headers,
       body: JSON.stringify(values),
     });
-    
+
     const result = await response.json();
 
     if (response.ok) {
@@ -184,6 +184,7 @@ export const put = async (values, path, auth = true) => {
 // =============================những api có gửi file (multipart/form-data)===========================
 
 export const postFormData = async (path, formData) => {
+  console.log("chạy vào postFormData với formData:", formData);
   try {
     const token = localStorage.getItem("accessToken");
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
@@ -195,13 +196,13 @@ export const postFormData = async (path, formData) => {
     });
 
     const result = await response.json();
+    console.log("postFormData result:", result);
 
     if (!response.ok) {
-      throw new Error(result.message + ": " + result.data.detail);
+      throw new Error(result.message);
     }
 
-    return result.data ?? true; 
-    
+    return result.data ?? true;
   } catch (error) {
     showErrorMessage(error.message);
   }

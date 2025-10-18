@@ -52,13 +52,15 @@
   margin: 20px 0;
 
   &__button {
-    background-color: #f97316;
-    color: white;
+    background-color: #faece8;
+    border: 1px solid #ff8159 !important;
+    color: black;
     border: none;
     width: 100%;
     &:hover {
-      background-color: #ea580c !important;
-      color: white !important;
+      background-color: #faece8 !important;
+      color: black !important;
+      border: 1px solid #ff8159 !important;
     }
   }
 }

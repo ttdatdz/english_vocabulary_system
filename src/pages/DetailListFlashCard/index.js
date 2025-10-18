@@ -109,7 +109,8 @@ export default function DetailListFalshCard() {
       );
     } else if (mode === "quiz") {
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/${flashcardId}`,
+        { state: { cards } }
       );
     }
   };
@@ -209,7 +210,7 @@ export default function DetailListFalshCard() {
         open={openPracticeOptionModal}
         onCancel={() => setOpenPracticeOptionModal(false)}
         title={
-          <div style={{ fontSize: 22, fontWeight: "bold" }}>
+          <div style={{ fontSize: 22, color: "#ff8159", fontWeight: "400" }}>
             Chọn chế độ luyện tập
           </div>
         }
