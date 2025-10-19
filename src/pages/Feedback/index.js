@@ -1,5 +1,6 @@
 import "./Feedback.scss";
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../utils/AuthContext";
 import defaultImage from "../../../src/assets/images/user.png";
 import {
     Button,
@@ -41,6 +42,9 @@ export default function Feedback() {
 
     const [starFilter, setStarFilter] = useState("");
     const [sortOption, setSortOption] = useState("starDesc");
+    const [isLogin, setIsLogin] = useState(false);
+
+    const {ensureAuthenticated} = useAuth();
 
     const filteredEvaluates = evaluates.filter((e) => {
         return starFilter ? e.star === starFilter : true;
@@ -66,8 +70,11 @@ export default function Feedback() {
     );
     const { Option } = Select;
     const loadUserFeedback = async () => {
-        console.log("Check token ", localStorage.getItem("accessToken"));
-        console.log("Check renewalToken:", localStorage.getItem("renewalToken"));
+        const isLogin = await ensureAuthenticated();
+        if (!isLogin) {
+            setIsLogin(isLogin);
+            return;
+        }
         try {
             const data = await get("api/evaluate/loadByUser");
             if (data != null) {
@@ -292,7 +299,11 @@ export default function Feedback() {
                         <h2 className="feedback__title">
                             {showForm ? "Chia sẻ đánh giá của bạn" : "Đánh giá của bạn"}
                         </h2>
-                        {showForm ? (
+                        {isLogin ? (
+                            <div className="feedback_title">
+                                <p>Vui lòng Đăng nhập để gửi đánh giá</p>
+                            </div>
+                        ) : showForm ? (
                             <Form
                                 name="feedback-form"
                                 labelCol={{ span: 8 }}

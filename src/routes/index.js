@@ -31,6 +31,7 @@ import ReviewExam from "../pages/ReviewExam";
 import ScrollToTop from "../components/ScrollToTop";
 import { useEffect } from "react";
 import Quiz from "../pages/Quiz";
+import PikachuPractice from "../pages/PikachuPractice";
 function MainRoutes() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
@@ -86,6 +87,7 @@ function MainRoutes() {
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/:flashcardId"
             element={<Quiz />}
           />
+          <Route path="VocabularyTopics/DetailTopic/DetailListFlashCard/PikachuPractice/:flashcardId" element={<PikachuPractice />} />
           <Route path="DetailExam/:id" element={<DetailExam />}>
             <Route path="ResultExam/:resultId" element={<ResultExam />} />
           </Route>

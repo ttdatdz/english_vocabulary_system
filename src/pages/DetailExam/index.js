@@ -85,7 +85,6 @@ export default function DetailExam() {
     },
   ];
 
-
   const loadExamResults = async () => {
     if (localStorage.getItem("accessToken") == null) {
       return;
@@ -94,7 +93,6 @@ export default function DetailExam() {
     if (results)
       setData(results);
     console.log(results);
-
   }
 
   useEffect(() => {

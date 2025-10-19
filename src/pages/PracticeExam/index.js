@@ -68,7 +68,7 @@ export default function PracticeExam() {
       answer: answers[q.id] ?? null
     }));
 
-    const parts = selectedParts.join(", ");
+    const parts = selectedParts.join(",");
 
     console.log(selectedParts);
     console.log(parts);

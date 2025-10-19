@@ -105,7 +105,7 @@ export default function DetailListFalshCard() {
       );
     } else if (mode === "minigame") {
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/MiniGame/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/PikachuPractice/${flashcardId}`
       );
     } else if (mode === "quiz") {
       navigate(

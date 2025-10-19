@@ -1,0 +1,26 @@
+:root { --tile-radius: 14px; }
+
+.vocab-memory-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 16px 24px;
+}
+
+.page-header { display: flex; align-items: center; justify-content: space-between; }
+.stats-bar { margin-top: -8px; }
+
+.board { display: grid; gap: 12px; }
+
+.tile.ant-card { border-radius: var(--tile-radius); }
+.tile.ant-card .ant-card-body { padding: 10px 12px; }
+
+.tile--selected { box-shadow: 0 0 0 2px #1677ff inset; }
+.tile--en { border: 1px solid rgba(22, 119, 255, 0.35); }
+.tile--vi { border: 1px solid rgba(82, 196, 26, 0.35); }
+.tile--empty { border-style: dashed; opacity: 0.6; }
+
+.tile-label { font-size: 10px; letter-spacing: .08em; color: #999; text-transform: uppercase; }
+.tile-text { font-weight: 600; font-size: 16px; line-height: 1.2; }
+
+.tile-empty { height: 28px; opacity: .5; }

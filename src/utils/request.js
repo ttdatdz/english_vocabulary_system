@@ -1,233 +1,181 @@
 import { showErrorMessage } from "./alertHelper";
+import { RenewalTokenAPI } from "../services/User/userService";
 
 const API_DOMAIN = "http://localhost:8080/";
 
-const getAuthHeaders = () => {
+const ACCEPT_ONLY = { Accept: "application/json" };
+
+function buildHeaders(method, requireAuth, body) {
+  const headers = { ...ACCEPT_ONLY };
+
   const token = localStorage.getItem("accessToken");
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+  if (requireAuth && token) headers.Authorization = `Bearer ${token}`;
 
-export const getWithParams = async (path, params = {}) => {
-  const query = new URLSearchParams(params).toString();
-  const url = API_DOMAIN + path + (query ? `?${query}` : "");
+  // Chỉ set Content-Type khi thực sự có JSON body và không phải GET/HEAD
+  const hasJsonBody = body && !(body instanceof FormData);
+  if (hasJsonBody && method !== "GET" && method !== "HEAD") {
+    headers["Content-Type"] = "application/json";
+  }
+  return headers;
+}
 
+async function silentRenew() {
+  const rt = localStorage.getItem("renewalToken");
+  if (!rt) return false;
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+    const res = await RenewalTokenAPI(rt);
+    if (!res?.token) return false;
+    localStorage.setItem("accessToken", res.token);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(`${result.message}: ${result.data.detail}`);
+/** fetch wrapper:
+ *  - requireAuth: nếu 401 thì thử silent refresh 1 lần rồi retry
+ */
+async function apiFetch(path, options = {}, requireAuth = false) {
+  const method = (options.method || "GET").toUpperCase();
+  const url = API_DOMAIN + path;
+
+  const headers = options.headers || buildHeaders(method, requireAuth, options.body);
+
+  // Nếu dùng cookie phiên, bật credentials: 'include'
+  const fetchOpts = { ...options, method, headers };
+
+  let res = await fetch(url, fetchOpts);
+
+  // 401 → thử renew 1 lần rồi retry
+  if (requireAuth && res.status === 401) {
+    const ok = await silentRenew();
+    if (ok) {
+      const retryHeaders = options.headers || buildHeaders(method, requireAuth, options.body);
+      if (retryHeaders.Authorization) {
+        retryHeaders.Authorization = `Bearer ${localStorage.getItem("accessToken")}`;
+      }
+      res = await fetch(url, { ...fetchOpts, headers: retryHeaders });
     }
-    return result.data;
+  }
+
+  // Đọc body an toàn: thử JSON, fallback text
+  let bodyText = "";
+  let json = null;
+  try {
+    bodyText = await res.text();
+    json = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    // body không phải JSON
+  }
+
+  if (!res.ok) {
+    const msg =
+      (json?.message && json?.data?.detail && `${json.message}: ${json.data.detail}`) ||
+      json?.message ||
+      bodyText ||
+      `HTTP ${res.status}`;
+    const err = new Error(msg);
+    err.status = res.status;
+    err.url = url;
+    err.body = bodyText;
+    throw err;
+  }
+
+  // ✅ Backend luôn trả object có field data
+  if (!json) return null;   // nếu 204 No Content thì trả null (tuỳ bạn muốn true hay null)
+  return json.data;
+}
+
+// ============================Những api lấy giá trị thông thường===========================
+
+export const getWithParams = async (path, params = {}, requireAuth = false) => {
+  const query = new URLSearchParams(params).toString();
+  const fullPath = path + (query ? `?${query}` : "");
+  try {
+    return await apiFetch(fullPath, { method: "GET" }, requireAuth);
   } catch (error) {
     showErrorMessage(error.message);
   }
 };
 
-// ============================Những api lấy giá trị thông thường===========================
-
-export const get = async (path) => {
+export const get = async (path, requireAuth = true) => {
   try {
-    const response = await fetch(API_DOMAIN + path, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`Lỗi: ${result.message}: ${result.data.detail}`);
-    }
-    return result.data;
+    return await apiFetch(path, { method: "GET" }, requireAuth);
   } catch (error) {
     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
 };
+
 export const getNoAuth = async (path) => {
   try {
-    const response = await fetch(API_DOMAIN + path, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      // throw có tác dụng ném lỗi ra cho catch, và dừng thực thi trong try
-      throw new Error(`Lỗi: ${result.message}: ${result.data.detail}`);
-    }
-    return result.data;
+    return await apiFetch(path, { method: "GET" }, false);
   } catch (error) {
     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
 };
+
 export const post = async (values, path, auth = false) => {
   try {
-    const headers = {
-      "Content-type": "application/json",
-      Accept: "application/json",
-    };
-    if (auth) {
-      const token = localStorage.getItem("accessToken");
-      if (token) headers.Authorization = `Bearer ${token}`;
-    }
-    const response = await fetch(API_DOMAIN + path, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(values), //nơi chứa data để gửi lên server. Trước khi gửi phải chuyển nó qua dạng json
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      return result.data;
-    } else {
-      throw new Error(`${result.message}: ${result.data.detail}`);
-    }
+    // headers sẽ do apiFetch tự build
+    const data = await apiFetch(
+      path,
+      { method: "POST", body: JSON.stringify(values) },
+      auth
+    );
+    return data;
   } catch (error) {
-    setTimeout(() => {
-      showErrorMessage(error.message);
-    }, 1000);
+    setTimeout(() => showErrorMessage(error.message), 1000);
   }
 };
 
 export const del = async (path, auth = true) => {
   try {
-    const headers = {
-      "Content-type": "application/json",
-      Accept: "application/json",
-    };
-    if (auth) {
-      const token = localStorage.getItem("accessToken");
-      if (token) headers.Authorization = `Bearer ${token}`;
-    }
-    console.log("API_DOMAIN + path:", API_DOMAIN + path);
-    const response = await fetch(API_DOMAIN + path, {
-      method: "DELETE",
-      headers,
-    });
-    const result = await response.json();
-    if (response.ok) {
-      return true;
-    } else {
-      throw new Error(result.message + ": " + result.data.detail);
-    }
+    await apiFetch(path, { method: "DELETE" }, auth);
+    return true;
   } catch (error) {
-    showErrorMessage(error.message); // 🐞 Hiển thị lỗi
+    showErrorMessage(error.message);
   }
 };
+
 export const patch = async (value, path, auth = true) => {
   try {
-    const headers = {
-      "Content-type": "application/json",
-      Accept: "application/json",
-    };
-    if (auth) {
-      const token = localStorage.getItem("accessToken");
-      if (token) headers.Authorization = `Bearer ${token}`;
-    }
-    const response = await fetch(API_DOMAIN + path, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(value),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`${result.message}: ${result.data.detail}`);
-    }
-    return result.data;
+    return await apiFetch(
+      path,
+      { method: "PATCH", body: JSON.stringify(value) },
+      auth
+    );
   } catch (error) {
-    alert(`Lỗi khi gọi API: ${error.message}`);
+    showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
 };
+
 export const put = async (values, path, auth = true) => {
   try {
-    const headers = {
-      "Content-type": "application/json",
-      Accept: "application/json",
-    };
-    if (auth) {
-      const token = localStorage.getItem("accessToken");
-      if (token) headers.Authorization = `Bearer ${token}`;
-    }
-    const response = await fetch(API_DOMAIN + path, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(values),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      return true;
-    } else {
-      throw new Error(result.message + ": " + result.data.detail);
-    }
+    await apiFetch(
+      path,
+      { method: "PUT", body: JSON.stringify(values) },
+      auth
+    );
+    return true;
   } catch (error) {
-    setTimeout(() => {
-      showErrorMessage(error.message);
-    }, 2000);
+    setTimeout(() => showErrorMessage(error.message), 2000);
   }
 };
 
 // =============================những api có gửi file (multipart/form-data)===========================
 
-export const postFormData = async (path, formData) => {
-  console.log("chạy vào postFormData với formData:", formData);
+export const postFormData = async (path, formData, auth = true) => {
   try {
-    const token = localStorage.getItem("accessToken");
-    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-
-    const response = await fetch(API_DOMAIN + path, {
-      method: "POST",
-      headers, // KHÔNG set Content-Type — để fetch tự set multipart boundary
-      body: formData,
-    });
-
-    const result = await response.json();
-    console.log("postFormData result:", result);
-
-    if (!response.ok) {
-      throw new Error(result.message);
-    }
-
-    return result.data ?? true;
+    // KHÔNG set Content-Type để fetch tự gắn boundary
+    return await apiFetch(path, { method: "POST", body: formData }, auth);
   } catch (error) {
     showErrorMessage(error.message);
   }
 };
-export const putFormData = async (path, formData) => {
+
+export const putFormData = async (path, formData, auth = true) => {
   try {
-    const token = localStorage.getItem("accessToken");
-    const headers = token
-      ? {
-          Authorization: `Bearer ${token}`,
-        }
-      : undefined;
-
-    const response = await fetch(API_DOMAIN + path, {
-      method: "PUT",
-      headers,
-      body: formData,
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message + ": " + result.data.detail);
-    }
-    return result.data ?? true;
+    return await apiFetch(path, { method: "PUT", body: formData }, auth);
   } catch (error) {
     showErrorMessage(error.message);
   }
