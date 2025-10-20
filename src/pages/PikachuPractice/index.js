@@ -1,18 +1,5 @@
-// =========================================================
-// File: src/pages/VocabMemory/index.js
-// Description: Pikachu-style vocabulary matching (EN ↔ VI) using Ant Design
-// Requirements satisfied:
-// - Board shows few true pairs at any time; rest are distractors
-// - User selects 1 English + 1 Vietnamese; if correct, both disappear
-// - Immediately replace with a new pair from the remaining pool
-// - When board has empty cells, new tiles are inserted at random positions
-// - Data is loaded when entering the page (API call placeholder marked TODO)
-// - Uses react-router-dom navigation
-// - Fits folder structure: pages/VocabMemory/{index.js, style.scss}
-// =========================================================
-
-import React, { useEffect, useMemo, useState } from "react";
-import { Row, Col, Card, Typography, Space, Button, Tag, message, Segmented, Skeleton } from "antd";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Row, Col, Card, Typography, Space, Button, Tag, message, Skeleton, Modal } from "antd";
 import { ReloadOutlined, SoundOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import "./PikachuPractice.scss";
@@ -63,11 +50,15 @@ function emptyIndices(board) { return board.map((v, i) => (v ? null : i)).filter
 
 // ============================== Component ==============================
 export default function PikachuPractice() {
+    const [matchedIndices, setMatchedIndices] = useState([]); // các ô đang được tô xanh trước khi biến mất
+    const [initialized, setInitialized] = useState(false);
+    const endTimerRef = useRef(null);
     const navigate = useNavigate();
-
-    // ------- Config -------
-    const [grid, setGrid] = useState({ rows: 4, cols: 4 }); // 16 cells
-    const [targetPairs, setTargetPairs] = useState(3); // concurrently visible correct pairs
+    const { flashcardId } = useParams();
+    console.log("PikachuPractice flashCardId =", flashcardId);
+    // ------- Fixed config -------
+    const grid = { rows: 4, cols: 3 }; // 12 cells fixed
+    const targetPairs = 3;
 
     // ------- Data states -------
     const [allCards, setAllCards] = useState([]); // BackendCard[]
@@ -76,16 +67,16 @@ export default function PikachuPractice() {
     // Board is a flat array of length rows*cols containing tile or null
     const [board, setBoard] = useState([]);
     const [activePairIds, setActivePairIds] = useState(new Set()); // ids whose both sides are currently on board
-    const [usedPairIds, setUsedPairIds] = useState(new Set());
+    const [remainingIds, setRemainingIds] = useState([]); // ids not yet introduced as full pairs
 
     // Selection
     const [selectedIndex, setSelectedIndex] = useState(null);
+    const [shakeIndices, setShakeIndices] = useState([]); // for wrong-pair animation
 
-    // Stats
+    // Stats & end state
     const [score, setScore] = useState(0);
     const [moves, setMoves] = useState(0);
-
-    const {flashcardId} = useParams();
+    const [endOpen, setEndOpen] = useState(false);
 
     const totalCells = grid.rows * grid.cols;
 
@@ -95,8 +86,8 @@ export default function PikachuPractice() {
         (async () => {
             try {
                 setLoading(true);
-                const data = await get(`api/card/getByFlashCard/${flashcardId}`);
-                const list = data.listCardResponse;
+                const res = await get(`api/card/getByFlashCard/${flashcardId}`);
+                const list = res.listCardResponse;
                 if (!canceled) setAllCards(list);
             } catch (e) {
                 console.error(e);
@@ -114,25 +105,23 @@ export default function PikachuPractice() {
         if (!allCards.length) return;
 
         const initial = Array(totalCells).fill(null);
-        const activePairs = new Set();
+        const idsShuffled = shuffle(allCards.map(c => c.id));
+        const seedPairIds = idsShuffled.slice(0, Math.min(targetPairs, idsShuffled.length));
+        const remain = idsShuffled.slice(seedPairIds.length); // pool to use later
 
-        // choose distinct ids for visible pairs
-        const ids = shuffle(allCards.map(c => c.id)).slice(0, Math.min(targetPairs, allCards.length));
+        const active = new Set();
 
-        // place each pair on random empty positions
-        ids.forEach((id) => {
+        // place seed pairs
+        seedPairIds.forEach((id) => {
             const card = allCards.find(c => c.id === id);
             const idxs = emptyIndices(initial);
             if (idxs.length < 2) return;
-            const pickA = randomChoice(idxs);
-            initial[pickA] = makeTile(card, LANG_EN);
-            const idxs2 = emptyIndices(initial);
-            const pickB = randomChoice(idxs2);
-            initial[pickB] = makeTile(card, LANG_VI);
-            activePairs.add(id);
+            const pickA = randomChoice(idxs); initial[pickA] = makeTile(card, LANG_EN);
+            const idxs2 = emptyIndices(initial); const pickB = randomChoice(idxs2); initial[pickB] = makeTile(card, LANG_VI);
+            active.add(id);
         });
 
-        // fill remaining with distractors (single-side only), trying to not complete extra pairs
+        // fill remaining with distractors (avoid completing more pairs accidentally)
         const fillAsDistractor = () => {
             let empties = emptyIndices(initial);
             let guard = 0;
@@ -141,12 +130,8 @@ export default function PikachuPractice() {
                 const i = empties.pop();
                 const card = randomChoice(allCards);
                 const side = Math.random() < 0.5 ? LANG_EN : LANG_VI;
-                const wouldCompletePair = activePairs.has(card.id) && initial.some(t => t && t.pairId === card.id && t.lang !== side);
-                if (wouldCompletePair) {
-                    // put index back and try another pick
-                    empties.unshift(i);
-                    continue;
-                }
+                const wouldCompletePair = active.has(card.id) && initial.some(t => t && t.pairId === card.id && t.lang !== side);
+                if (wouldCompletePair) { empties.unshift(i); continue; }
                 initial[i] = makeTile(card, side);
             }
         };
@@ -154,34 +139,57 @@ export default function PikachuPractice() {
         fillAsDistractor();
 
         setBoard(initial);
-        setActivePairIds(activePairs);
-        setUsedPairIds(new Set());
+        setActivePairIds(active);
+        setRemainingIds(remain);
         setSelectedIndex(null);
+        setShakeIndices([]);
         setScore(0);
         setMoves(0);
+        setEndOpen(false);
+        setInitialized(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, allCards, grid.rows, grid.cols, targetPairs]);
+    }, [loading, allCards]);
 
-    // -------------------- Refill helpers --------------------
-    function placeNewPairAt(indicesPrefer, currentBoard, currentActive) {
-        const activeIds = new Set(currentActive);
-        const candidates = allCards.filter(c => !activeIds.has(c.id));
-        const pick = candidates.length ? randomChoice(candidates) : randomChoice(allCards);
-        if (!pick) return { board: currentBoard, active: currentActive };
+    // -------------------- End detection --------------------
+    useEffect(() => {
+        if (loading || !initialized) return;
 
+        const finished = remainingIds.length === 0 && activePairIds.size === 0;
+        if (finished) {
+            if (endTimerRef.current) clearTimeout(endTimerRef.current);
+            endTimerRef.current = setTimeout(() => setEndOpen(true), 1000); // delay 1s
+        } else {
+            if (endTimerRef.current) { clearTimeout(endTimerRef.current); endTimerRef.current = null; }
+        }
+
+        return () => {
+            if (endTimerRef.current) { clearTimeout(endTimerRef.current); endTimerRef.current = null; }
+        };
+    }, [remainingIds, activePairIds, loading, initialized]);
+
+
+    // -------------------- Refill helpers (finite) --------------------
+    function placeNewPairPrefer(indicesPrefer, currentBoard, currentActive) {
+        // Only place if we still have remaining ids
+        if (!remainingIds.length) return { board: currentBoard, active: currentActive };
+
+        const pickId = remainingIds[0];
+        const card = allCards.find(c => c.id === pickId);
         const empties = emptyIndices(currentBoard);
         if (empties.length < 2 && indicesPrefer.length < 2) return { board: currentBoard, active: currentActive };
 
         const [first, second] = (indicesPrefer.length >= 2 ? indicesPrefer.slice(0, 2) : shuffle(empties)).slice(0, 2);
         const b2 = currentBoard.slice();
-        b2[first] = makeTile(pick, LANG_EN);
-        b2[second] = makeTile(pick, LANG_VI);
-        const a2 = new Set(currentActive);
-        a2.add(pick.id);
+        b2[first] = makeTile(card, LANG_EN);
+        b2[second] = makeTile(card, LANG_VI);
+
+        const a2 = new Set(currentActive); a2.add(pickId);
+        setRemainingIds(prev => prev.slice(1)); // consume one id from pool
         return { board: b2, active: a2 };
     }
 
-    function fillDistractors(currentBoard, currentActive) {
+    function fillDistractorsFinite(currentBoard, currentActive) {
+        // Fill remaining empties with single sides but NEVER create a new full pair beyond active pairs.
         const b2 = currentBoard.slice();
         const aIds = new Set(currentActive);
         let empties = emptyIndices(b2);
@@ -215,33 +223,52 @@ export default function PikachuPractice() {
         setMoves(m => m + 1);
 
         if (first.pairId === second.pairId) {
-            // Match! remove both and refill
-            const b2 = board.slice();
-            const removedPositions = [selectedIndex, index];
-            b2[selectedIndex] = null;
-            b2[index] = null;
-
-            const a2 = new Set(activePairIds); a2.delete(first.pairId);
-            const u2 = new Set(usedPairIds); u2.add(first.pairId);
-
-            let result = { board: b2, active: a2 };
-            if (a2.size < targetPairs) {
-                result = placeNewPairAt(removedPositions, b2, a2); // prefer placing in just-emptied spots
-            }
-            const filled = fillDistractors(result.board, result.active);
-
-            setBoard(filled);
-            setActivePairIds(result.active);
-            setUsedPairIds(u2);
+            // đánh dấu hai ô "đúng" để tô xanh
+            const a = selectedIndex;
+            const b = index;
+            setMatchedIndices([a, b]);
             setSelectedIndex(null);
-            setScore(s => s + 1);
+
+            // đợi 450ms cho hiệu ứng xanh, rồi mới xóa và (nếu còn) chèn cặp mới
+            setTimeout(() => {
+                const b2 = board.slice();
+                const removedPositions = [a, b];
+                b2[a] = null;
+                b2[b] = null;
+
+                const a2 = new Set(activePairIds);
+                a2.delete(first.pairId);
+
+                let nextBoard = b2;
+                let nextActive = a2;
+                if (a2.size < targetPairs && remainingIds.length > 0) {
+                    const placed = placeNewPairPrefer(removedPositions, b2, a2);
+                    nextBoard = placed.board;
+                    nextActive = placed.active;
+                }
+                // KHÔNG lấp distractor sau match → bảng trống dần
+                setBoard(nextBoard);
+                setActivePairIds(nextActive);
+                setScore(s => s + 1);
+                setMatchedIndices([]); // clear class xanh
+            }, 450);
+
         } else {
-            // Not a match
+            // sai → rung + viền đỏ
+            const a = selectedIndex;
+            const b = index;
+            setShakeIndices([a, b]);
+            setTimeout(() => setShakeIndices([]), 420);
             setSelectedIndex(null);
         }
+
     }
 
-    function resetBoard() { setAllCards(shuffle(allCards)); }
+    function resetGame() {
+        // re-init by shuffling allCards order (will trigger init effect)
+        setInitialized(false);
+        setAllCards(shuffle(allCards));
+    }
 
     // -------------------- Derived --------------------
     const gridTemplate = useMemo(() => ({ gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))` }), [grid.cols]);
@@ -256,20 +283,7 @@ export default function PikachuPractice() {
                     <Tag color="blue">EN ↔ VI</Tag>
                 </Space>
                 <Space size={16} wrap>
-                    <Segmented
-                        value={`${grid.rows}x${grid.cols}`}
-                        onChange={(val) => {
-                            const [r, c] = String(val).split("x").map(Number);
-                            setGrid({ rows: r, cols: c });
-                        }}
-                        options={["4x4", "4x5", "5x6"].map(s => ({ label: s, value: s }))}
-                    />
-                    <Segmented
-                        value={String(targetPairs)}
-                        onChange={(v) => setTargetPairs(Number(v))}
-                        options={[{ label: "2 pairs", value: "2" }, { label: "3 pairs", value: "3" }, { label: "4 pairs", value: "4" }]}
-                    />
-                    <Button icon={<ReloadOutlined />} onClick={resetBoard}>Reset</Button>
+                    <Button icon={<ReloadOutlined />} onClick={resetGame}>Reset</Button>
                 </Space>
             </div>
 
@@ -282,55 +296,95 @@ export default function PikachuPractice() {
             </div>
 
             {loading ? (
-                <Row gutter={[16, 16]}>
-                    {Array.from({ length: totalCells }).map((_, i) => (
-                        <Col span={24 / Math.min(4, grid.cols)} key={i}>
-                            <Skeleton.Button active block style={{ height: 72 }} />
-                        </Col>
-                    ))}
+                <Row gutter={16}>
+                    <Col xs={24} lg={16}>
+                        <Row gutter={[16, 16]}>
+                            {Array.from({ length: totalCells }).map((_, i) => (
+                                <Col span={8} key={i}>
+                                    <Skeleton.Button active block style={{ height: 110 }} />
+                                </Col>
+                            ))}
+                        </Row>
+                    </Col>
+                    <Col xs={24} lg={8}>
+                        <div className="sidebar">
+                            <Title level={5} style={{ marginTop: 0 }}>Hướng dẫn ôn tập</Title>
+                            <ul className="guide">
+                                
+                            </ul>
+                        </div>
+                    </Col>
                 </Row>
             ) : (
-                <div className="board" style={gridTemplate}>
-                    {board.map((tile, idx) => (
-                        <Card
-                            key={idx + (tile?.key || "empty")}
-                            className={[
-                                "tile",
-                                selectedIndex === idx ? "tile--selected" : "",
-                                tile ? `tile--${tile.lang}` : "tile--empty",
-                            ].join(" ")}
-                            onClick={() => onTileClick(idx)}
-                            hoverable={!!tile}
-                        >
-                            {tile ? (
-                                <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                                    <Text className="tile-label">{tile.lang === LANG_EN ? "EN" : "VI"}</Text>
-                                    <Text className="tile-text">{tile.text}</Text>
-                                    <Space>
-                                        {tile.pronounce && tile.lang === LANG_EN && (
-                                            <Tag color="default">{tile.pronounce}</Tag>
-                                        )}
-                                        {tile.audio && tile.lang === LANG_EN && (
-                                            <Button
-                                                type="text"
-                                                size="small"
-                                                icon={<SoundOutlined />}
-                                                onClick={(e) => { e.stopPropagation(); new Audio(tile.audio).play().catch(() => { }); }}
-                                            />
-                                        )}
-                                    </Space>
-                                </Space>
-                            ) : (
-                                <div className="tile-empty" />)
-                            }
-                        </Card>
-                    ))}
-                </div>
+                <Row gutter={16}>
+                    <Col xs={24} lg={16}>
+                        <div className="board">
+                            {board.map((tile, idx) => (
+                                <Card
+                                    key={idx + (tile?.key || "empty")}
+                                    className={[
+                                        "tile",
+                                        selectedIndex === idx ? "tile--selected" : "",
+                                        tile ? `tile--${tile.lang}` : "tile--empty",
+                                        shakeIndices.includes(idx) ? "tile--shake" : "",
+                                        matchedIndices.includes(idx) ? "tile--matched" : "", // ✅ nhớ class matched
+                                    ].join(" ")}
+                                    onClick={() => onTileClick(idx)}
+                                    hoverable={!!tile}
+                                >
+                                    {tile ? (
+                                        <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                                            <Text className="tile-label">{tile.lang === LANG_EN ? "EN" : "VI"}</Text>
+                                            <Text className="tile-text">{tile.text}</Text>
+                                            <Space>
+                                                {tile.pronounce && tile.lang === LANG_EN && <Tag color="default">{tile.pronounce}</Tag>}
+                                                {tile.audio && tile.lang === LANG_EN && (
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={<SoundOutlined />}
+                                                        onClick={(e) => { e.stopPropagation(); new Audio(tile.audio).play().catch(() => { }); }}
+                                                    />
+                                                )}
+                                            </Space>
+                                        </Space>
+                                    ) : <div className="tile-empty" />}
+                                </Card>
+                            ))}
+                        </div>
+                    </Col>
+
+                    <Col xs={24} lg={8}>
+                        <div className="sidebar">
+                            <Title level={5} style={{ marginTop: 0 }}>Hướng dẫn ôn tập</Title>
+                            <ul className="guide">
+                                
+                            </ul>
+                        </div>
+                    </Col>
+                </Row>
             )}
 
+
             <div className="page-footer">
-                <Text type="secondary">Mẹo: Chọn 1 ô English và 1 ô Vietnamese tạo thành cặp đúng để ghi điểm. Hệ thống sẽ thêm cặp mới ngay sau khi bạn bắt cặp thành công.</Text>
+                <Text type="secondary">Mẹo: Chọn 1 ô English và 1 ô Vietnamese tạo thành cặp đúng để ghi điểm. Khi hết từ mới, trò chơi sẽ kết thúc và hiển thị kết quả.</Text>
             </div>
+
+            <Modal
+                open={endOpen}
+                title="Hoàn thành bài luyện"
+                footer={[
+                    <Button key="back" onClick={() => navigate(-1)}>Quay lại</Button>,
+                    <Button key="retry" type="primary" onClick={() => { setInitialized(false); setAllCards(shuffle(allCards)); setEndOpen(false); }}>Làm lại</Button>,
+                ]}
+                onCancel={() => setEndOpen(false)}
+            >
+                <Space direction="vertical" size={6}>
+                    <Text>✅ Số cặp đúng: <b>{score}</b></Text>
+                    <Text>🔁 Số lượt chọn: <b>{moves}</b></Text>
+                </Space>
+            </Modal>
+
         </div>
     );
 }
