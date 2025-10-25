@@ -19,51 +19,85 @@
 .board {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 4x3 => 3 cột */
-  grid-auto-rows: 110px;                 /* tất cả ô cao bằng nhau */
+  grid-auto-rows: 110px; /* tất cả ô cao bằng nhau */
   gap: 12px;
 }
 
 /* Card base */
-.tile.ant-card { 
+.tile.ant-card {
   height: 100%;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 14px; 
-  transition: background-color .25s ease, transform .15s ease, opacity .25s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  transition: background-color 0.25s ease, transform 0.15s ease,
+    opacity 0.25s ease;
 }
-.tile.ant-card .ant-card-body { 
-  height: 100%; 
-  display: flex; 
-  align-items: center; 
+.tile.ant-card .ant-card-body {
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 /* Viền khi chọn */
-.tile--selected { box-shadow: 0 0 0 3px #1677ff inset !important; }
+.tile--selected {
+  box-shadow: 0 0 0 3px #1677ff inset !important;
+}
 
 /* EN/VI màu viền mặc định */
-.tile--en { border-color: rgba(22,119,255,.35) !important; }
-.tile--vi { border-color: rgba(82,196,26,.35) !important; }
-.tile--empty { border-style: dashed; opacity: .6; }
+// .tile--en {
+//   border-color: rgba(22, 119, 255, 0.35) !important;
+// }
+// .tile--vi {
+//   border-color: rgba(82, 196, 26, 0.35) !important;
+// }
+.tile--empty {
+  border-style: dashed;
+  opacity: 0.6;
+}
 
 /* Đúng cặp: fill xanh + viền xanh (Ant green-2/3) */
 .tile--matched {
-  background-color: #f6ffed !important;     /* green-1 */
-  border-color: #b7eb8f !important;         /* green-3 */
+  background-color: #f6ffed !important; /* green-1 */
+  border-color: #b7eb8f !important; /* green-3 */
   box-shadow: 0 0 0 2px #52c41a33 inset !important;
 }
 
 /* Sai cặp: rung + đỏ */
 @keyframes shakeX {
-  0%,100% { transform: translateX(0); }
-  20% { transform: translateX(-3px); }
-  40% { transform: translateX(3px); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
 }
 .tile--shake {
-  animation: shakeX .42s ease-in-out;
+  animation: shakeX 0.42s ease-in-out;
   box-shadow: 0 0 0 2px #ff4d4f inset !important;
   border-color: #ff4d4f !important;
 }
 
-.tile-label { font-size: 10px; letter-spacing: .08em; color: #999; text-transform: uppercase; }
-.tile-text { font-weight: 600; font-size: 16px; line-height: 1.2; }
+.tile-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #999;
+  text-transform: uppercase;
+}
+.tile-text {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+}
+.title-EN-text {
+  font-size: 20px;
+  color: #ea580c !important;
+}
