@@ -32,6 +32,7 @@ import ScrollToTop from "../components/ScrollToTop";
 import { useEffect } from "react";
 import Quiz from "../pages/Quiz";
 import PikachuPractice from "../pages/PikachuPractice";
+import VnpayResult from "../pages/VnpayResult";
 function MainRoutes() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
@@ -55,6 +56,7 @@ function MainRoutes() {
           <Route path="Feedback" element={<Feedback />} />
           <Route path="VocabularyTopics" element={<VocabularyTopic />} />
           <Route path="ToiecTests" element={<ToeicTests />} />
+          <Route path="VnpayResult" element={<VnpayResult />} />
           <Route path="Blogs" element={<Blogs />} />
           <Route path="Blogs/BlogDetail/:blogId" element={<BlogDetail />} />
           <Route path="PersonalInformation" element={<PersonalInformation />} />
@@ -87,7 +89,10 @@ function MainRoutes() {
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/:flashcardId"
             element={<Quiz />}
           />
-          <Route path="VocabularyTopics/DetailTopic/DetailListFlashCard/PikachuPractice/:flashcardId" element={<PikachuPractice />} />
+          <Route
+            path="VocabularyTopics/DetailTopic/DetailListFlashCard/PikachuPractice/:flashcardId"
+            element={<PikachuPractice />}
+          />
           <Route path="DetailExam/:id" element={<DetailExam />}>
             <Route path="ResultExam/:resultId" element={<ResultExam />} />
           </Route>

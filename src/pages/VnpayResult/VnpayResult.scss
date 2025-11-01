@@ -1,0 +1,205 @@
+$bg: #f6f8fb;
+$card-bg: #ffffff;
+$text: #1f2937;
+$muted: #6b7280;
+$accent: #f97316;
+$success: #16a34a;
+$danger: #ef4444;
+$border: #e6eaf0;
+
+.VnpayResult {
+  min-height: 100vh;
+  padding: 48px;
+  background: linear-gradient(180deg, $bg 0%, lighten($bg, 4%) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  &__card {
+    width: 100%;
+    max-width: 980px;
+    background: $card-bg;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(31, 41, 55, 0.06);
+    padding: 28px;
+    box-sizing: border-box;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  &__title {
+    font-size: 20px;
+    color: $text;
+    margin: 0;
+    font-weight: 700;
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    &.success {
+      background: rgba($success, 0.08);
+      color: $success;
+      .VnpayResult__status-dot {
+        background: $success;
+      }
+    }
+    &.failure {
+      background: rgba($danger, 0.06);
+      color: $danger;
+      .VnpayResult__status-dot {
+        background: $danger;
+      }
+    }
+
+    &-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    &-text {
+      font-weight: 600;
+      color: inherit;
+    }
+  }
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px 16px;
+    margin: 8px 0 20px;
+    border-bottom: 1px dashed $border;
+    padding-bottom: 16px;
+
+    &-item {
+      .label {
+        color: $muted;
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+      .value {
+        color: $text;
+        font-size: 16px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__detail {
+    margin-top: 18px;
+  }
+
+  &__detail-title {
+    margin: 0 0 12px 0;
+    color: $text;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  &__table {
+    border-radius: 8px;
+    border: 1px solid $border;
+    overflow: hidden;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 36% 18% 12% 34%;
+    gap: 0;
+    padding: 12px 14px;
+    align-items: center;
+    border-bottom: 1px solid $border;
+    background: $card-bg;
+
+    &--head {
+      background: rgba(#111827, 0.02);
+      font-weight: 600;
+      color: $muted;
+    }
+
+    .col {
+      &--param {
+        .param-name {
+          color: $text;
+          font-weight: 600;
+        }
+        .param-desc {
+          color: $muted;
+          font-size: 12px;
+          margin-top: 6px;
+        }
+      }
+
+      &--type {
+        color: $muted;
+        font-size: 13px;
+      }
+
+      &--req {
+        font-weight: 700;
+        color: $muted;
+        font-size: 13px;
+      }
+
+      &--value {
+        color: $text;
+        font-size: 14px;
+        word-break: break-all;
+      }
+    }
+  }
+
+  &__actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .VnpayResult {
+    padding: 20px;
+    &__card {
+      padding: 18px;
+    }
+    .VnpayResult__summary {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .VnpayResult__row {
+      grid-template-columns: 40% 20% 15% 25%;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .VnpayResult {
+    &__card {
+      padding: 14px;
+    }
+    .VnpayResult__summary {
+      grid-template-columns: 1fr;
+    }
+    .VnpayResult__row {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      gap: 6px;
+      .col {
+        &--param {
+          order: 0;
+        }
+      }
+    }
+  }
+}
