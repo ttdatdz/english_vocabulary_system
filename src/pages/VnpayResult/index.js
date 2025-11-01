@@ -1,7 +1,16 @@
+"use client";
+
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./VnpayResult.scss";
-import { Button } from "antd";
+import { Button, message } from "antd";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CopyOutlined,
+  PrinterOutlined,
+  HomeOutlined,
+} from "@ant-design/icons";
 
 const PARAMS_META = [
   {
@@ -71,7 +80,7 @@ const parseSearch = (search) => {
 
 const fmtAmount = (v) => {
   if (!v) return "-";
-  const n = parseInt(v, 10);
+  const n = Number.parseInt(v, 10);
   if (Number.isNaN(n)) return v;
   return (n / 100).toLocaleString("vi-VN", {
     style: "currency",
@@ -101,6 +110,7 @@ const mapResponseText = (code) => {
 export default function VnpayResult() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [messageApi, contextHolder] = message.useMessage();
   const data = React.useMemo(
     () => parseSearch(location.search),
     [location.search]
@@ -110,64 +120,158 @@ export default function VnpayResult() {
     (data.vnp_ResponseCode === "00" || data.vnp_ResponseCode === "0") &&
     (data.vnp_TransactionStatus === "00" || data.vnp_TransactionStatus === "0");
 
+  const handleCopy = (text, label) => {
+    navigator.clipboard.writeText(text);
+    messageApi.success(`Copied ${label} to clipboard`);
+  };
+
   return (
-    <div className="VnpayResult">
-      <div className="VnpayResult__card">
-        <header className="VnpayResult__header">
-          <div>
-            <h1 className="VnpayResult__title">Kết quả thanh toán</h1>
-            <div className="VnpayResult__subtitle">Kênh: VNPAY</div>
-          </div>
-
-          <div
-            className={`VnpayResult__status ${
-              isSuccess ? "success" : "failure"
-            }`}
-          >
-            <div className="VnpayResult__status-dot" />
-            <div className="VnpayResult__status-text">
-              {isSuccess
-                ? "Thanh toán thành công"
-                : "Thanh toán không thành công"}
+    <>
+      {contextHolder}
+      <div className="VnpayResult">
+        <div className="VnpayResult__card">
+          <header className="VnpayResult__header">
+            <div>
+              <h1 className="VnpayResult__title">🛍️ Kết quả thanh toán</h1>
+              <div className="VnpayResult__subtitle">Cổng: VNPAY</div>
             </div>
-          </div>
-        </header>
 
-        <section className="VnpayResult__summary">
-          <div className="VnpayResult__summary-item">
-            <div className="label">Tổng tiền</div>
-            <div className="value">{fmtAmount(data.vnp_Amount)}</div>
-          </div>
-          <div className="VnpayResult__summary-item">
-            <div className="label">Mã giao dịch VNPAY</div>
-            <div className="value">{data.vnp_TransactionNo || "-"}</div>
-          </div>
-          <div className="VnpayResult__summary-item">
-            <div className="label">Mã tham chiếu</div>
-            <div className="value">{data.vnp_TxnRef || "-"}</div>
-          </div>
-          <div className="VnpayResult__summary-item">
-            <div className="label">Thời gian</div>
-            <div className="value">{fmtPayDate(data.vnp_PayDate)}</div>
-          </div>
-          <div className="VnpayResult__summary-item">
-            <div className="label">Ngân hàng</div>
-            <div className="value">{data.vnp_BankCode || "-"}</div>
-          </div>
-          <div className="VnpayResult__summary-item">
-            <div className="label">Phương thức</div>
-            <div className="value">{data.vnp_CardType || "-"}</div>
-          </div>
-        </section>
-        <footer className="VnpayResult__actions">
-          <Button type="default" onClick={() => navigate(-1)}>
-            Quay lại
-          </Button>
-          <Button type="primary" onClick={() => window.location.reload()}>
-            Làm mới
-          </Button>
-        </footer>
+            <div
+              className={`VnpayResult__status ${
+                isSuccess ? "success" : "failure"
+              }`}
+            >
+              {isSuccess ? (
+                <CheckCircleOutlined className="VnpayResult__status-icon" />
+              ) : (
+                <CloseCircleOutlined className="VnpayResult__status-icon" />
+              )}
+              <div className="VnpayResult__status-text">
+                {isSuccess
+                  ? "Thanh toán thành công"
+                  : "Thanh toán không thành công"}
+              </div>
+            </div>
+          </header>
+
+          <section className="VnpayResult__summary">
+            <div className="VnpayResult__summary-item">
+              <div className="label">Tổng tiền</div>
+              <div className="value highlight">
+                {fmtAmount(data.vnp_Amount)}
+              </div>
+            </div>
+            <div className="VnpayResult__summary-item">
+              <div className="label">Mã giao dịch VNPAY</div>
+              <div
+                className="value copy-item"
+                onClick={() =>
+                  handleCopy(data.vnp_TransactionNo || "-", "Mã giao dịch")
+                }
+              >
+                {data.vnp_TransactionNo || "-"}
+                <CopyOutlined className="copy-icon" />
+              </div>
+            </div>
+            <div className="VnpayResult__summary-item">
+              <div className="label">Mã tham chiếu</div>
+              <div
+                className="value copy-item"
+                onClick={() =>
+                  handleCopy(data.vnp_TxnRef || "-", "Mã tham chiếu")
+                }
+              >
+                {data.vnp_TxnRef || "-"}
+                <CopyOutlined className="copy-icon" />
+              </div>
+            </div>
+            <div className="VnpayResult__summary-item">
+              <div className="label">Thời gian</div>
+              <div className="value">{fmtPayDate(data.vnp_PayDate)}</div>
+            </div>
+            <div className="VnpayResult__summary-item">
+              <div className="label">Ngân hàng</div>
+              <div className="value">{data.vnp_BankCode || "-"}</div>
+            </div>
+            <div className="VnpayResult__summary-item">
+              <div className="label">Phương thức</div>
+              <div className="value">{data.vnp_CardType || "-"}</div>
+            </div>
+          </section>
+
+          <section className="VnpayResult__detail">
+            <h3 className="VnpayResult__detail-title">📋 Chi tiết giao dịch</h3>
+            <div className="VnpayResult__table">
+              <div className="VnpayResult__row VnpayResult__row--head">
+                <div className="col col--param">Tham số</div>
+                <div className="col col--req">Bắt buộc</div>
+                <div className="col col--type">Kiểu</div>
+                <div className="col col--value">Giá trị</div>
+              </div>
+              {PARAMS_META.map((param, idx) => {
+                const value = data[param.key];
+                let displayValue = value || "-";
+                if (param.key === "vnp_Amount") {
+                  displayValue = fmtAmount(value);
+                } else if (param.key === "vnp_PayDate") {
+                  displayValue = fmtPayDate(value);
+                } else if (
+                  param.key === "vnp_ResponseCode" ||
+                  param.key === "vnp_TransactionStatus"
+                ) {
+                  displayValue = mapResponseText(value);
+                }
+
+                return (
+                  <div key={idx} className="VnpayResult__row">
+                    <div className="col col--param">
+                      <div className="param-name">{param.label}</div>
+                      <div className="param-desc">{param.desc}</div>
+                    </div>
+                    <div className="col col--req">
+                      {param.key.startsWith("vnp_") ? "✓" : "-"}
+                    </div>
+                    <div className="col col--type">String</div>
+                    <div className="col col--value">
+                      <div className="value-wrapper">
+                        <span>{displayValue}</span>
+                        {displayValue !== "-" && (
+                          <CopyOutlined
+                            className="copy-icon-small"
+                            onClick={() =>
+                              handleCopy(displayValue, param.label)
+                            }
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <footer className="VnpayResult__actions">
+            <Button
+              type="default"
+              icon={<HomeOutlined />}
+              onClick={() => navigate("/")}
+            >
+              Trang chủ
+            </Button>
+            <Button
+              type="default"
+              icon={<PrinterOutlined />}
+              onClick={() => window.print()}
+            >
+              In hoá đơn
+            </Button>
+            <Button type="primary" onClick={() => window.location.reload()}>
+              Làm mới
+            </Button>
+          </footer>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
