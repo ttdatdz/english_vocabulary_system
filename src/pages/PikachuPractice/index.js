@@ -528,7 +528,6 @@ export default function PikachuPractice() {
                 </div>
             </header>
 
-
             {loading ? (
                 <Row gutter={16}>
                     <Col xs={24} lg={16}>
@@ -606,13 +605,6 @@ export default function PikachuPractice() {
                                     <Text type="secondary">Nghĩa tiếng Việt</Text>
                                 </div>
                             </div>
-
-                            {/* <div className="side-card side-stats">
-                                <Title level={5} className="side-title">Board status</Title>
-                                <div className="kpi-row"><Text type="secondary">Active pairs:</Text><b>{pairsOnBoard}</b></div>
-                                <div className="kpi-row"><Text type="secondary">Singles:</Text><b>{singlesOnBoard}</b></div>
-                                <div className="kpi-row"><Text type="secondary">Pool:</Text><b>{remainingIds.length}</b></div>
-                            </div> */}
                         </aside>
                     </Col>
 
