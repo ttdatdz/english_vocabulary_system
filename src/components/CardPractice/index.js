@@ -22,15 +22,6 @@ export default function CardPractice({ data }) {
     e.stopPropagation();
   };
 
-  // Xử lý khi click vào loa (ví dụ phát âm)
-  //   const handlePronounceClick = (e) => {
-  //     e.stopPropagation(); // Ngăn lật thẻ
-  //     if (data.audio) {
-  //       const audio = new Audio(data.audio);
-  //       audio.play();
-  //     }
-  //   };
-
   const handlePronounceClick = (e) => {
     e.stopPropagation();
     if (data?.audio) {
@@ -105,11 +96,15 @@ export default function CardPractice({ data }) {
                   justifyContent: "center",
                 }}
               >
-                <img
-                  src={data.image}
-                  alt="minh họa"
-                  className="CardPractice__img"
-                />
+                {data.image && (
+                  <div className="CardPractice__image-wrapper">
+                    <img
+                      src={data.image}
+                      alt="minh họa"
+                      className="CardPractice__img"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

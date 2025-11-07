@@ -36,8 +36,9 @@ export default function Login() {
         },
         "api/user/login"
       );
-
+      console.log("-------------DAta   ", data);
       if (data?.accessToken) {
+
         login(data); // cập nhật context
         message.success("Đăng nhập thành công!");
         if (data.role != "ADMIN") navigate("/");

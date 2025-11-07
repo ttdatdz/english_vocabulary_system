@@ -9,7 +9,7 @@ export const DeleteEvaluate = async (id) => {
   return result;
 };
 export const UpdateEvaluate = async (value, id) => {
-  const result = await put(value, `api/evaluate/update/${id}`);
+  const result = await put(value, `api/evaluate/admin/update/${id}`);
   return result;
 };
 export const CreateEvaluate = async (value) => {

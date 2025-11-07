@@ -4,9 +4,11 @@ import { BrowserRouter } from "react-router-dom";
 import './styles/styles.scss';
 function App() {
   return (
-    <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
         <MainRoutes />
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 export default App;

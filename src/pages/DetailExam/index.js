@@ -162,6 +162,7 @@ export default function DetailExam() {
       if (!result) {
         return;
       } else {
+        console.log(result);
         setComments(result);
       }
     };
@@ -187,6 +188,7 @@ export default function DetailExam() {
     if (!result) {
       return;
     } else {
+      console.log(result);
       setComments(result);
     }
   };

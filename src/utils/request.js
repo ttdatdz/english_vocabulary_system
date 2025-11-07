@@ -1,7 +1,7 @@
 import { showErrorMessage } from "./alertHelper";
 import { RenewalTokenAPI } from "../services/User/userService";
 
-const API_DOMAIN = "http://localhost:8080/";
+const API_DOMAIN = "http://localhost:8080";
 
 const ACCEPT_ONLY = { Accept: "application/json" };
 
@@ -17,6 +17,11 @@ function buildHeaders(method, requireAuth, body) {
     headers["Content-Type"] = "application/json";
   }
   return headers;
+}
+
+function joinUrl(base, path) {
+  const p = path.startsWith('/') ? path : '/' + path; // thêm leading slash
+  return `${base}${p}`;
 }
 
 async function silentRenew() {
@@ -37,16 +42,13 @@ async function silentRenew() {
  */
 async function apiFetch(path, options = {}, requireAuth = false) {
   const method = (options.method || "GET").toUpperCase();
-  const url = API_DOMAIN + path;
+  const url = joinUrl(API_DOMAIN, path);
 
   const headers = options.headers || buildHeaders(method, requireAuth, options.body);
-
-  // Nếu dùng cookie phiên, bật credentials: 'include'
   const fetchOpts = { ...options, method, headers };
 
   let res = await fetch(url, fetchOpts);
 
-  // 401 → thử renew 1 lần rồi retry
   if (requireAuth && res.status === 401) {
     const ok = await silentRenew();
     if (ok) {
@@ -58,41 +60,43 @@ async function apiFetch(path, options = {}, requireAuth = false) {
     }
   }
 
-  // Đọc body an toàn: thử JSON, fallback text
   let bodyText = "";
   let json = null;
   try {
     bodyText = await res.text();
     json = bodyText ? JSON.parse(bodyText) : null;
-  } catch {
-    // body không phải JSON
-  }
+  } catch { }
 
+  // 🔴 ƯU TIÊN data.detail
   if (!res.ok) {
-    const msg =
-      (json?.message && json?.data?.detail && `${json.message}: ${json.data.detail}`) ||
-      json?.message ||
-      bodyText ||
-      `HTTP ${res.status}`;
+    let msg =
+      (json && (json.data?.detail || json.error?.detail || json.error_description || json.message || json.error)) ||
+      (bodyText && (res.headers.get("content-type") || "").includes("text/") ? bodyText : "") ||
+      `HTTP ${res.status} ${res.statusText}`;
+
     const err = new Error(msg);
     err.status = res.status;
     err.url = url;
     err.body = bodyText;
+    err.raw = json;
     throw err;
   }
 
-  // ✅ Backend luôn trả object có field data
-  if (!json) return null;   // nếu 204 No Content thì trả null (tuỳ bạn muốn true hay null)
-  return json.data;
+  return json ? json.data : null;
 }
+
 
 // ============================Những api lấy giá trị thông thường===========================
 
 export const getWithParams = async (path, params = {}, requireAuth = false) => {
   const query = new URLSearchParams(params).toString();
   const fullPath = path + (query ? `?${query}` : "");
+  console.log("Check resulccccc");
+  console.log("Check fullPath", fullPath);
   try {
-    return await apiFetch(fullPath, { method: "GET" }, requireAuth);
+    const result = await apiFetch(fullPath, { method: "GET" }, requireAuth);
+
+    return result;
   } catch (error) {
     showErrorMessage(error.message);
   }
@@ -172,11 +176,12 @@ export const postFormData = async (path, formData, auth = true) => {
     showErrorMessage(error.message);
   }
 };
-
 export const putFormData = async (path, formData, auth = true) => {
   try {
-    return await apiFetch(path, { method: "PUT", body: formData }, auth);
+    const result = await apiFetch(path, { method: "PUT", body: formData }, auth);
+    return result;
   } catch (error) {
     showErrorMessage(error.message);
+    throw error;                 // 🔥 QUAN TRỌNG: ném lỗi ra để onFinish catch
   }
 };

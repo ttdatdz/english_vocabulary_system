@@ -5,20 +5,20 @@ export const GetAllExams = async () => {
   return result;
 };
 export const DeleteExam = async (id) => {
-  const result = await del(`api/exam/delete/${id}`);
+  const result = await del(`api/exam/admin/delete/${id}`);
   return result;
 };
 export const CreateExam = async (value) => {
-  const result = await post(value, "api/exam/create", true);
+  const result = await post(value, "api/exam/admin/create", true);
   return result;
 };
 
 export const importFileQuestion = async (formData) => {
-  const result = await postFormData("api/exam/importQuestions", formData);
+  const result = await postFormData("api/exam/admin/importQuestions", formData);
   return result;
 };
 export const UpdateExam = async (value, id) => {
-  const result = await put(value, `api/exam/update/${id}`);
+  const result = await put(value, `api/exam/admin/update/${id}`);
   return result;
 };
 export const getDetailExam = async (id) => {

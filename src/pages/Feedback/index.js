@@ -44,7 +44,7 @@ export default function Feedback() {
     const [sortOption, setSortOption] = useState("starDesc");
     const [isLogin, setIsLogin] = useState(false);
 
-    const {ensureAuthenticated} = useAuth();
+    const { ensureAuthenticated } = useAuth();
 
     const filteredEvaluates = evaluates.filter((e) => {
         return starFilter ? e.star === starFilter : true;
@@ -123,13 +123,13 @@ export default function Feedback() {
             }
 
             const result = await postFormData("api/evaluate/create", formData);
-            if (result === true) {
-                showSuccess("Gửi đánh giá thành công!");
-                setShowForm(false); // Ẩn form sau khi gửi
-                await loadEvaluates();
-                await loadUserFeedback();
-                renderUserFeedback();
-            }
+
+            showSuccess("Gửi đánh giá thành công!");
+            setShowForm(false); // Ẩn form sau khi gửi
+            await loadEvaluates();
+            await loadUserFeedback();
+            renderUserFeedback();
+
         } catch (err) {
             console.error("Lỗi gửi đánh giá:", err);
         }
@@ -348,14 +348,14 @@ export default function Feedback() {
                                             valuePropName="fileList"
                                             getValueFromEvent={normFile}
                                         >
-                                            <Upload listType="picture-card">
+                                            <Upload
+                                                listType="picture-card"
+                                                beforeUpload={() => false}      // ⬅️ NGĂN auto upload
+                                                maxCount={1}
+                                                accept="image/*"
+                                            >
                                                 <button
-                                                    style={{
-                                                        color: "inherit",
-                                                        cursor: "inherit",
-                                                        border: 0,
-                                                        background: "none",
-                                                    }}
+                                                    style={{ color: "inherit", cursor: "inherit", border: 0, background: "none" }}
                                                     type="button"
                                                 >
                                                     <PlusOutlined />
@@ -363,6 +363,7 @@ export default function Feedback() {
                                                 </button>
                                             </Upload>
                                         </Form.Item>
+
                                     </Col>
                                 </Row>
 

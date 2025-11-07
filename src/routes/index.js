@@ -44,7 +44,7 @@ function MainRoutes() {
     }
   }, []);
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Routes>
         {/* Layout khách hàng */}
@@ -119,7 +119,7 @@ function MainRoutes() {
         {/* Trang không tìm thấy */}
         {/* <Route path="*" element={<PageNotFound />} /> */}
       </Routes>
-    </BrowserRouter>
+      </>
   );
 }
 export default MainRoutes;

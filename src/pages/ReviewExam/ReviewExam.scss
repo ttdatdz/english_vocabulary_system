@@ -1,50 +1,198 @@
-@import "../PracticeExam/PracticeExam.scss"; // nếu bạn dùng chung cấu trúc
+@import "../PracticeExam/PracticeExam.scss";
 
-.ReviewExam {
-    @extend .PracticeExam;
+/* ===== THEME ===== */
+$brand: #ED5F31;
+$brand-700: #e25528;
+$ink: #111827;
+$muted: #6b7280;
+$bg-soft: #f9fafb;
 
-    &__header-title {
-        font-size: 24px;
-        font-weight: bold;
-        color: #000;
-        margin-top: 20px;
+/* ===== HERO HEADER ===== */
+.ReviewExam__hero {
+    background: linear-gradient(90deg, #ED5F31 0%, #ff5a24 60%, #ff7a4e 100%);
+    color: #fff;
+    padding: 20px 0;
+
+    .ReviewExam__hero-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
     }
 
-    // Ghi đè hoặc bổ sung nếu cần
-    &__btnSubmit {
-        display: none; // ẩn nút "Nộp bài" nếu không cần
-    }
+    .ReviewExam__titleBlock {
+        .ReviewExam__title {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
 
-    &__questionCard {
-        margin-bottom: 16px;
-        background-color: #fafafa;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 16px;
-    }
-
-    &__option {
-        padding: 8px;
-        border-radius: 5px;
-        margin-bottom: 8px;
-        border: 1px solid #ccc;
-
-        &.correct {
-            background-color: #d4edda;
-            border-color: #28a745;
+            span {
+                font-weight: 600;
+                opacity: .95;
+            }
         }
 
-        &.incorrect {
-            background-color: #f8d7da;
-            border-color: #dc3545;
+        .ReviewExam__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            .chip {
+                background: rgba(255, 255, 255, .15);
+                border: 1px solid rgba(255, 255, 255, .35);
+                color: #fff;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-size: 12px;
+
+                &.score {
+                    background: rgba(255, 255, 255, .25);
+                    border-color: rgba(255, 255, 255, .5);
+                    font-weight: 700;
+                }
+            }
+        }
+    }
+
+    .ReviewExam__progress {
+        min-width: 220px;
+        text-align: right;
+
+        .ReviewExam__progress-bar {
+            width: 220px;
+            height: 10px;
+            background: rgba(255, 255, 255, .25);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-left: auto;
+        }
+
+        .ReviewExam__progress-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 999px;
+            transform-origin: left center;
+            transition: width .3s ease;
+        }
+
+        .ReviewExam__progress-text {
+            margin-top: 8px;
+            font-weight: 700;
+            letter-spacing: .2px;
         }
     }
 }
 
-/* ✅ Ảnh Part 1–6: phóng vừa đủ, không scroll */
+/* ===== LAYOUT ===== */
+.ReviewExam .PracticeExam__content {
+    margin-top: 16px;
+    align-items: flex-start;
+}
+
+/* ===== TABS ===== */
+.ReviewExam__tabs .ant-tabs-tab {
+    font-weight: 700;
+}
+
+.ReviewExam__tabs .ant-tabs-ink-bar {
+    background: $brand;
+}
+
+.ReviewExam__tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: $brand !important;
+}
+
+/* ===== GROUP & QUESTION CARDS ===== */
+.ReviewExam__questionGroup {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .05);
+    padding-bottom: 8px;
+}
+
+.ReviewExam__questionCard {
+    border: 1px solid #eef2f7 !important;
+    border-radius: 10px !important;
+    background: #fff;
+    overflow: hidden;
+
+    .ant-card-head {
+        background: linear-gradient(90deg, rgba(237, 95, 49, .08), rgba(237, 95, 49, 0));
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .ant-card-head-title {
+        color: $brand;
+        font-weight: 800;
+    }
+
+    .q-detail {
+        color: $ink;
+        margin-bottom: 10px;
+    }
+}
+
+/* ===== OPTION LINES ===== */
+.ReviewExam__options {
+    display: grid;
+    gap: 8px;
+}
+
+.ReviewExam__option {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease;
+
+    .opt-mark {
+        font-weight: 800;
+        color: $brand;
+    }
+
+    .opt-text {
+        color: $ink;
+    }
+
+
+    &.correct {
+        background-image: linear-gradient(135deg, #34d399 0%, #10b981 45%, #059669 100%);
+    }
+
+    &.incorrect {
+        background-image: linear-gradient(135deg, #fb7185 0%, #f43f5e 45%, #e11d48 100%);
+    }
+
+    &.correct:hover{
+        border-color: #34d399;
+        box-shadow: 0 6px 16px rgba(0, 58, 46, 0.12);
+        transform: translateY(-1px);
+    }
+    &.incorrect:hover{
+        border-color: #f43f5e;
+        box-shadow: 0 6px 16px rgba(193, 0, 39, 0.12);
+        transform: translateY(-1px);
+    }
+
+    &.neutral:hover {
+        border-color: rgba(237, 95, 49, .45);
+        box-shadow: 0 6px 16px rgba(237, 95, 49, .12);
+        transform: translateY(-1px);
+    }
+}
+
+/* ===== IMAGES ===== */
 .ReviewExam__imageWrapper {
     margin-bottom: 12px;
     overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
 }
 
 .ReviewExam__image {
@@ -52,30 +200,117 @@
     max-width: 100%;
     max-height: 350px;
     height: auto;
-    width: auto;
     object-fit: contain;
-    margin: 0;
+    margin: 0 auto;
 }
 
-/* ✅ Ảnh Part 7: khung cuộn nếu ảnh lớn */
 .ReviewExam__imageWrapper--scrollable {
     overflow: auto;
     max-height: 500px;
     max-width: 100%;
-    border: 1px solid #ccc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
     padding: 8px;
+    background: #fff;
 }
 
 .ReviewExam__image.scrollable {
     max-width: none;
     max-height: none;
-    width: auto;
-    height: auto;
 }
 
-.ReviewExam .PracticeExam__content {
-    margin-top: 0;
-    align-items: flex-start;
+/* ===== SIDE PANEL ===== */
+.ReviewExam__side {
+    width: 220px;
+    position: sticky;
+    top: 100px;
+    align-self: flex-start;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    background: #fff;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .06);
+}
+
+.StatCard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+
+    &__item {
+        text-align: center;
+        border-radius: 10px;
+        padding: 10px 8px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+
+        .num {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .label {
+            color: $muted;
+            font-weight: 600;
+        }
+
+        &.ok {
+            border-color: #1e7e34;
+            color: #1e7e34;
+        }
+
+        &.wrong {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        &.skip {
+            border-color: #000000;
+            background: #ffffff;
+        }
+    }
+}
+
+/* Nút số câu ở panel phải */
+.NumBtn {
+    width: 40px;
+    height: 40px;
+    margin: 4px;
+    padding: 0;
+    border-radius: 10px;
+    font-weight: 800;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: $ink;
+    transition: all .15s ease;
+
+    &.answered {
+        border-color: rgba(237, 95, 49, .55);
+        color: $brand;
+    }
+
+    &.active {
+        background: $brand;
+        color: #fff;
+        border-color: $brand;
+        box-shadow: 0 8px 16px rgba(237, 95, 49, .22);
+    }
+
+    &:hover {
+        border-color: rgba(237, 95, 49, .55);
+        transform: translateY(-1px);
+    }
+}
+
+/* ===== MISC ===== */
+.ReviewExam__header-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000;
+    margin-top: 20px;
 }
 
 .ReviewExam__header {
@@ -83,19 +318,7 @@
     padding: 0;
 }
 
-.ReviewExam__header-title {
-    margin-top: 0;
-}
-
+/* Giữ các style cũ tương thích */
 .PracticeExam__content-right {
-    position: sticky;
-    top: 100px;
-    align-self: flex-start;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-    background: #fff;
-    padding: 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    /* đã thay bằng .ReviewExam__side ở trên */
 }
