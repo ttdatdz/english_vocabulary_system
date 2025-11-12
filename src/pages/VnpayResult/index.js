@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./VnpayResult.scss";
 import { Button, message, Spin } from "antd";
 import {
@@ -11,42 +11,26 @@ import {
   PrinterOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
+import { getPaymentByTxnRef } from "../../services/Payment/paymentService";
+import { fmtPayDate } from "../../utils/formatData";
 
 const fmtAmount = (v) => {
   if (!v) return "-";
   const n = Number.parseInt(v, 10);
   if (Number.isNaN(n)) return v;
-  return (n / 100).toLocaleString("vi-VN", {
+  return n.toLocaleString("vi-VN", {
     style: "currency",
     currency: "VND",
   });
 };
 
-const fmtPayDate = (v) => {
-  if (!v) return "-";
-  const s = String(v);
-  if (s.length < 14) return s;
-  const yyyy = s.slice(0, 4);
-  const MM = s.slice(4, 6);
-  const dd = s.slice(6, 8);
-  const hh = s.slice(8, 10);
-  const mm = s.slice(10, 12);
-  const ss = s.slice(12, 14);
-  return `${dd}/${MM}/${yyyy} ${hh}:${mm}:${ss}`;
-};
-
 export default function VnpayResult() {
+  const { txnRef } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Lấy txnRef từ query string
-  const txnRef = React.useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    return params.get("txnRef");
-  }, [location.search]);
 
   const isSuccess =
     data?.transactionStatus === "SUCCESS" ||
@@ -60,27 +44,29 @@ export default function VnpayResult() {
   };
 
   useEffect(() => {
-    if (!txnRef) {
-      messageApi.error("Không tìm thấy mã giao dịch (txnRef)");
-      setLoading(false);
-      return;
-    }
+    const fetchPayment = async () => {
+      if (!txnRef) {
+        messageApi.error("Không tìm thấy mã giao dịch (txnRef)");
+        setLoading(false);
+        return;
+      }
 
-    // Gọi API chi tiết giao dịch
-    fetch(`/api/payment/${txnRef}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Lỗi khi gọi API");
-        return res.json();
-      })
-      .then((json) => {
-        if (json.status !== 200) throw new Error(json.message);
-        setData(json.data);
-      })
-      .catch((err) => {
-        messageApi.error(err.message);
-      })
-      .finally(() => setLoading(false));
+      try {
+        const res = await getPaymentByTxnRef(txnRef);
+        console.log("res", res);
+        if (res) {
+          setData(res);
+        }
+      } catch (err) {
+        messageApi.error(err.message || "Lỗi khi gọi API");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayment();
   }, [txnRef, messageApi]);
+  console.log("data", data);
 
   if (loading) return <Spin tip="Đang tải..." style={{ marginTop: 50 }} />;
 
@@ -147,6 +133,19 @@ export default function VnpayResult() {
                 <CopyOutlined className="copy-icon" />
               </div>
             </div>
+
+            {/* Thêm nội dung thanh toán */}
+            <div className="VnpayResult__summary-item">
+              <div className="label">Nội dung thanh toán</div>
+              <div className="value">{data.description || "-"}</div>
+            </div>
+
+            {/* Thêm người thanh toán */}
+            <div className="VnpayResult__summary-item">
+              <div className="label">Người thanh toán</div>
+              <div className="value">{data.userName || "-"}</div>
+            </div>
+
             <div className="VnpayResult__summary-item">
               <div className="label">Thời gian</div>
               <div className="value">{fmtPayDate(data.transactionDate)}</div>

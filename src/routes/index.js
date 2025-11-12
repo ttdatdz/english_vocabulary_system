@@ -57,7 +57,7 @@ function MainRoutes() {
           <Route path="Feedback" element={<Feedback />} />
           <Route path="VocabularyTopics" element={<VocabularyTopic />} />
           <Route path="ToiecTests" element={<ToeicTests />} />
-          <Route path="VnpayResult" element={<VnpayResult />} />
+          <Route path="VnpayResult/:txnRef" element={<VnpayResult />} />
           <Route path="Blogs" element={<Blogs />} />
           <Route path="Blogs/BlogDetail/:blogId" element={<BlogDetail />} />
           <Route path="PersonalInformation" element={<PersonalInformation />} />
