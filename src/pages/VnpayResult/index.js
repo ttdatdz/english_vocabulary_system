@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./VnpayResult.scss";
-import { Button, message } from "antd";
+import { Button, message, Spin } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -11,13 +11,6 @@ import {
   PrinterOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
-
-const parseSearch = (search) => {
-  const params = new URLSearchParams(search);
-  const out = {};
-  for (const p of params.keys()) out[p] = params.get(p);
-  return out;
-};
 
 const fmtAmount = (v) => {
   if (!v) return "-";
@@ -42,30 +35,61 @@ const fmtPayDate = (v) => {
   return `${dd}/${MM}/${yyyy} ${hh}:${mm}:${ss}`;
 };
 
-const mapResponseText = (code) => {
-  if (code == null) return "-";
-  if (String(code).padStart(2, "0") === "00") return "Thành công";
-  return `Không thành công (Mã ${code})`;
-};
-
 export default function VnpayResult() {
   const location = useLocation();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
-  const data = React.useMemo(
-    () => parseSearch(location.search),
-    [location.search]
-  );
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Lấy txnRef từ query string
+  const txnRef = React.useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("txnRef");
+  }, [location.search]);
 
   const isSuccess =
-    data.status === "success" ||
-    data.vnp_ResponseCode === "00" ||
-    data.vnp_ResponseCode === "0";
+    data?.transactionStatus === "SUCCESS" ||
+    data?.responseCode === "00" ||
+    data?.responseCode === "0";
 
   const handleCopy = (text, label) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     messageApi.success(`Copied ${label} to clipboard`);
   };
+
+  useEffect(() => {
+    if (!txnRef) {
+      messageApi.error("Không tìm thấy mã giao dịch (txnRef)");
+      setLoading(false);
+      return;
+    }
+
+    // Gọi API chi tiết giao dịch
+    fetch(`/api/payment/${txnRef}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Lỗi khi gọi API");
+        return res.json();
+      })
+      .then((json) => {
+        if (json.status !== 200) throw new Error(json.message);
+        setData(json.data);
+      })
+      .catch((err) => {
+        messageApi.error(err.message);
+      })
+      .finally(() => setLoading(false));
+  }, [txnRef, messageApi]);
+
+  if (loading) return <Spin tip="Đang tải..." style={{ marginTop: 50 }} />;
+
+  if (!data)
+    return (
+      <div style={{ textAlign: "center", marginTop: 50 }}>
+        Không tìm thấy dữ liệu giao dịch
+      </div>
+    );
 
   return (
     <>
@@ -99,19 +123,17 @@ export default function VnpayResult() {
           <section className="VnpayResult__summary">
             <div className="VnpayResult__summary-item">
               <div className="label">Tổng tiền</div>
-              <div className="value highlight">
-                {fmtAmount(data.vnp_Amount)}
-              </div>
+              <div className="value highlight">{fmtAmount(data.amount)}</div>
             </div>
             <div className="VnpayResult__summary-item">
               <div className="label">Mã giao dịch VNPAY</div>
               <div
                 className="value copy-item"
                 onClick={() =>
-                  handleCopy(data.vnp_TransactionNo || "-", "Mã giao dịch")
+                  handleCopy(data.transactionCode || "-", "Mã giao dịch")
                 }
               >
-                {data.vnp_TransactionNo || "-"}
+                {data.transactionCode || "-"}
                 <CopyOutlined className="copy-icon" />
               </div>
             </div>
@@ -119,27 +141,26 @@ export default function VnpayResult() {
               <div className="label">Mã tham chiếu</div>
               <div
                 className="value copy-item"
-                onClick={() =>
-                  handleCopy(data.vnp_TxnRef || "-", "Mã tham chiếu")
-                }
+                onClick={() => handleCopy(data.orderId || "-", "Mã tham chiếu")}
               >
-                {data.vnp_TxnRef || "-"}
+                {data.orderId || "-"}
                 <CopyOutlined className="copy-icon" />
               </div>
             </div>
             <div className="VnpayResult__summary-item">
               <div className="label">Thời gian</div>
-              <div className="value">{fmtPayDate(data.vnp_PayDate)}</div>
+              <div className="value">{fmtPayDate(data.transactionDate)}</div>
             </div>
             <div className="VnpayResult__summary-item">
               <div className="label">Ngân hàng</div>
-              <div className="value">{data.vnp_BankCode || "-"}</div>
+              <div className="value">{data.bankCode || "-"}</div>
             </div>
             <div className="VnpayResult__summary-item">
               <div className="label">Phương thức</div>
-              <div className="value">{data.vnp_CardType || "-"}</div>
+              <div className="value">{data.paymentMethod || "-"}</div>
             </div>
           </section>
+
           <footer className="VnpayResult__actions">
             <Button
               type="default"
