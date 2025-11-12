@@ -12,65 +12,6 @@ import {
   HomeOutlined,
 } from "@ant-design/icons";
 
-const PARAMS_META = [
-  {
-    key: "vnp_TmnCode",
-    label: "Mã merchant",
-    desc: "Mã website của merchant trên hệ thống VNPAY",
-  },
-  {
-    key: "vnp_Amount",
-    label: "Tổng tiền",
-    desc: "Số tiền thanh toán (VNPAY trả về nhân 100 lần)",
-  },
-  { key: "vnp_BankCode", label: "Ngân hàng", desc: "Mã ngân hàng thanh toán" },
-  {
-    key: "vnp_BankTranNo",
-    label: "Mã giao dịch ngân hàng",
-    desc: "Mã giao dịch tại ngân hàng (nếu có)",
-  },
-  {
-    key: "vnp_CardType",
-    label: "Phương thức",
-    desc: "Loại thẻ/tài khoản (ATM, QRCODE...)",
-  },
-  {
-    key: "vnp_PayDate",
-    label: "Thời gian thanh toán",
-    desc: "Định dạng yyyyMMddHHmmss",
-  },
-  {
-    key: "vnp_OrderInfo",
-    label: "Nội dung thanh toán",
-    desc: "Mô tả nội dung thanh toán (không dấu)",
-  },
-  {
-    key: "vnp_TransactionNo",
-    label: "Mã giao dịch VNPAY",
-    desc: "Mã giao dịch ghi nhận tại hệ thống VNPAY",
-  },
-  {
-    key: "vnp_ResponseCode",
-    label: "Mã phản hồi",
-    desc: "00 = Thành công",
-  },
-  {
-    key: "vnp_TransactionStatus",
-    label: "Trạng thái giao dịch",
-    desc: "00 = Giao dịch được thực hiện thành công tại VNPAY",
-  },
-  {
-    key: "vnp_TxnRef",
-    label: "Mã tham chiếu",
-    desc: "Mã tham chiếu gửi khi tạo yêu cầu",
-  },
-  {
-    key: "vnp_SecureHash",
-    label: "Mã kiểm tra (checksum)",
-    desc: "Mã kiểm tra dữ liệu (cần validate trước xử lý)",
-  },
-];
-
 const parseSearch = (search) => {
   const params = new URLSearchParams(search);
   const out = {};
@@ -117,8 +58,9 @@ export default function VnpayResult() {
   );
 
   const isSuccess =
-    (data.vnp_ResponseCode === "00" || data.vnp_ResponseCode === "0") &&
-    (data.vnp_TransactionStatus === "00" || data.vnp_TransactionStatus === "0");
+    data.status === "success" ||
+    data.vnp_ResponseCode === "00" ||
+    data.vnp_ResponseCode === "0";
 
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text);
@@ -198,59 +140,6 @@ export default function VnpayResult() {
               <div className="value">{data.vnp_CardType || "-"}</div>
             </div>
           </section>
-
-          <section className="VnpayResult__detail">
-            <h3 className="VnpayResult__detail-title">📋 Chi tiết giao dịch</h3>
-            <div className="VnpayResult__table">
-              <div className="VnpayResult__row VnpayResult__row--head">
-                <div className="col col--param">Tham số</div>
-                <div className="col col--req">Bắt buộc</div>
-                <div className="col col--type">Kiểu</div>
-                <div className="col col--value">Giá trị</div>
-              </div>
-              {PARAMS_META.map((param, idx) => {
-                const value = data[param.key];
-                let displayValue = value || "-";
-                if (param.key === "vnp_Amount") {
-                  displayValue = fmtAmount(value);
-                } else if (param.key === "vnp_PayDate") {
-                  displayValue = fmtPayDate(value);
-                } else if (
-                  param.key === "vnp_ResponseCode" ||
-                  param.key === "vnp_TransactionStatus"
-                ) {
-                  displayValue = mapResponseText(value);
-                }
-
-                return (
-                  <div key={idx} className="VnpayResult__row">
-                    <div className="col col--param">
-                      <div className="param-name">{param.label}</div>
-                      <div className="param-desc">{param.desc}</div>
-                    </div>
-                    <div className="col col--req">
-                      {param.key.startsWith("vnp_") ? "✓" : "-"}
-                    </div>
-                    <div className="col col--type">String</div>
-                    <div className="col col--value">
-                      <div className="value-wrapper">
-                        <span>{displayValue}</span>
-                        {displayValue !== "-" && (
-                          <CopyOutlined
-                            className="copy-icon-small"
-                            onClick={() =>
-                              handleCopy(displayValue, param.label)
-                            }
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
           <footer className="VnpayResult__actions">
             <Button
               type="default"

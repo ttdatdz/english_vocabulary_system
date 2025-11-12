@@ -33,6 +33,7 @@ import { useEffect } from "react";
 import Quiz from "../pages/Quiz";
 import PikachuPractice from "../pages/PikachuPractice";
 import VnpayResult from "../pages/VnpayResult";
+import PricingPage from "../pages/PricingPage";
 function MainRoutes() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
@@ -73,6 +74,7 @@ function MainRoutes() {
             path="VocabularyTopics/DetailTopic/:topicId"
             element={<DetailTopic />}
           />
+          <Route path="PricingPage/:Id" element={<PricingPage />} />
           <Route
             path="VocabularyTopics/DetailTopic/DetailListFlashCard/:flashcardId"
             element={<DetailListFalshCard />}
@@ -119,7 +121,7 @@ function MainRoutes() {
         {/* Trang không tìm thấy */}
         {/* <Route path="*" element={<PageNotFound />} /> */}
       </Routes>
-      </>
+    </>
   );
 }
 export default MainRoutes;

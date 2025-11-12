@@ -1,4 +1,4 @@
-import { Input, Pagination } from "antd";
+import { Button, Input, Pagination } from "antd";
 import "./ToeicTest.scss";
 import { SearchOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import SelectField from "../../components/SelectField";
@@ -8,6 +8,9 @@ import { GetAllExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
 import { showErrorMessage } from "../../utils/alertHelper";
 import { removeVietnameseTones } from "../../utils/formatData";
+import { FaLock } from "react-icons/fa";
+import { CiLock } from "react-icons/ci";
+import { MdLockOutline } from "react-icons/md";
 
 export default function ToiecTests() {
   const [allExams, setAllExams] = useState([]);
@@ -151,7 +154,13 @@ export default function ToiecTests() {
       <div className="ToeicTests-page">
         <div className="ToeicTests-page__header">
           <div className="MainContainer">
-            <h2 className="ToeicTests-page__header-title">Đề thi</h2>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <h2 className="ToeicTests-page__header-title">Đề thi</h2>
+              <Button className="ToeicTests-page__header-createExam">
+                Tạo đề thi
+                <MdLockOutline style={{ fontSize: "16px" }} />
+              </Button>
+            </div>
           </div>
         </div>
 
