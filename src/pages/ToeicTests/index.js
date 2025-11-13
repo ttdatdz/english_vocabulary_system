@@ -8,13 +8,13 @@ import { GetAllExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
 import { showErrorMessage } from "../../utils/alertHelper";
 import { removeVietnameseTones } from "../../utils/formatData";
-<<<<<<< Updated upstream
+
 import { FaLock } from "react-icons/fa";
 import { CiLock } from "react-icons/ci";
 import { MdLockOutline } from "react-icons/md";
-=======
+
 import BaseModal from "../../components/BaseModal";
->>>>>>> Stashed changes
+
 
 export default function ToiecTests() {
   const [allExams, setAllExams] = useState([]);

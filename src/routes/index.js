@@ -33,12 +33,12 @@ import { useEffect } from "react";
 import Quiz from "../pages/Quiz";
 import PikachuPractice from "../pages/PikachuPractice";
 import VnpayResult from "../pages/VnpayResult";
-<<<<<<< Updated upstream
+
 import PricingPage from "../pages/PricingPage";
-=======
+
 import CreateToeicExam from "../pages/CreateToeicExam";
 import PartDetailPage from "../pages/PartDetailPage";
->>>>>>> Stashed changes
+
 function MainRoutes() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
