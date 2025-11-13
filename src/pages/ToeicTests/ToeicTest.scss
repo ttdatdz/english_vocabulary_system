@@ -90,3 +90,15 @@
     }
   }
 }
+
+.create-toeic-test-btn {
+  background-color: #f97316;
+  border: none;
+  float: right;
+  width: fit-content;
+  justify-content: end;
+
+  &:hover {
+    background-color: #c94c09 !important;
+  }
+}

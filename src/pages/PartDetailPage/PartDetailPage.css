@@ -1,0 +1,336 @@
+.part-detail {
+    max-width: 100%;
+    margin: 0px auto;
+    background-color: #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+}
+
+/* HEADER */
+.part-detail__hero {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1.5fr;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(90deg, #ffb36b, #ff7a88);
+    color: #ffffff;
+}
+
+.part-detail__hero-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.part-detail__hero-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.part-detail__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.part-detail__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+}
+
+.part-detail__hero-center {
+    text-align: center;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.part-detail__part-name {
+    padding: 6px 18px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.part-detail__hero-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.part-detail__btn {
+    border-radius: 999px;
+    font-size: 13px;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease,
+        box-shadow 0.15s ease, transform 0.1s ease;
+    white-space: nowrap;
+}
+
+.part-detail__btn--solid {
+    background-color: #f97316;
+    color: #fff;
+    border-color: #f97316;
+}
+
+.part-detail__btn--solid:hover {
+    background-color: #ea580c;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+    transform: translateY(-1px);
+}
+
+.part-detail__btn--outlined {
+    background-color: #fff;
+    color: #f97316;
+    border-color: #fff;
+}
+
+.part-detail__btn--outlined:hover {
+    background-color: #fff7ed;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18);
+}
+
+.part-detail__btn--ghost {
+    background: transparent;
+    color: #f97316;
+    border-color: rgba(249, 115, 22, 0.2);
+}
+
+.part-detail__btn--ghost:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* CONTENT */
+.part-detail__content {
+    gap: 20px;
+    padding: 10px 200px;
+    background-color: #f9fafb;
+}
+
+/* EMPTY STATE */
+.part-detail__empty {
+    padding: 32px 24px;
+    background-color: #fff;
+    border-radius: 10px;
+    border: 1px dashed #f97316;
+    text-align: center;
+    color: #4b5563;
+}
+
+/* QUESTION LIST */
+.part-detail__question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* QUESTION CARD */
+.question-card {
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.18s ease, transform 0.12s ease,
+        background-color 0.15s ease, max-height 0.2s ease;
+    max-height: 72px;
+}
+
+.question-card--expanded {
+    max-height: 420px;
+}
+
+.question-card--dragging {
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+    background-color: #fff7ed;
+}
+
+.question-card__header {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 12px;
+}
+
+.question-card__drag-handle {
+    font-size: 16px;
+    color: #9ca3af;
+    cursor: grab;
+}
+
+.question-card__title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.question-card__part-name {
+    color: #f97316;
+}
+
+.question-card__actions {
+    display: flex;
+    gap: 6px;
+}
+
+.question-card__btn {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background-color: #fff;
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.question-card__btn--ghost {
+    color: #4b5563;
+}
+
+.question-card__btn--danger {
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.question-card__btn:hover {
+    background-color: #f9fafb;
+}
+
+.question-card__body {
+    padding: 10px 16px 14px;
+    border-top: 1px solid #f3f4f6;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.question-card__text {
+    margin: 0 0 8px;
+}
+
+.question-card__audio {
+    margin-bottom: 8px;
+}
+
+.question-card__audio span {
+    margin-right: 8px;
+}
+
+.question-card__options-label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.question-card__options ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+/* ADD BUTTON UNDER LIST */
+.part-detail__add-bottom {
+    margin-top: 12px;
+}
+
+/* QUESTION FORM (RIGHT SIDE) */
+.question-form {
+    background-color: #fff;
+    border-radius: 10px;
+    border: 1px solid #fecaca;
+    box-shadow: 0 8px 18px rgba(248, 113, 113, 0.15);
+    padding: 16px 18px 18px;
+}
+
+.question-form__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.question-form__title {
+    font-weight: 600;
+    color: #f97316;
+}
+
+.question-form__close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #9ca3af;
+}
+
+.question-form__group {
+    margin-bottom: 12px;
+}
+
+.question-form__group label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #4b5563;
+}
+
+.question-form__group textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #f97316;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+}
+
+.question-form__audio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.question-form__hint {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.question-form__options input {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.question-form__footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .part-detail__hero {
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+    }
+
+    .part-detail__hero-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .part-detail__content {
+        flex-direction: column;
+    }
+}

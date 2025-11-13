@@ -1,0 +1,313 @@
+/* src/components/CreateToeicTestPage.css */
+
+.create-test {
+    max-width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+}
+
+/* Header gradient */
+.create-test__hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 80px;
+    background: linear-gradient(90deg, #f97316, #ffb36b);
+    color: #ffffff;
+}
+
+.create-test__hero-icon {
+    margin: 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.create-test__hero-icon::after{
+    content: attr(data-tip);
+    position: absolute;
+    left: 200%;
+    bottom: -140%;   /* vị trí phía trên icon */
+    transform: translateX(-80%);
+    white-space: nowrap;
+
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform-origin: bottom center;
+
+    z-index: 20;
+}
+
+.create-test__hero-icon::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -60%;
+    transform: translateX(-50%);
+
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Khi hover thì hiện tooltip */
+.create-test__hero-icon:hover::after,
+.create-test__hero-icon:hover::before {
+    opacity: 1;
+}
+
+.create-test__hero-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Khối chứa title + các field */
+.create-test__hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.create-test__title {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Hàng meta: tên đề + thời gian nằm cùng hàng */
+.create-test__meta-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* Input: mặc định không border, chỉ hiện khi hover/focus */
+.create-test__title-input,
+.create-test__duration-input {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* override rule cũ (nếu còn) */
+.create-test__title-input {
+    min-width: 220px;
+}
+
+/* Nhóm thời gian */
+.create-test__duration-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.create-test__duration-label,
+.create-test__duration-unit {
+    font-size: 13px;
+    opacity: 0.9;
+    color: #ffffff;
+}
+.save-status {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.save-status.fade-out {
+    opacity: 0;
+}
+
+
+/* Hiện border khi hover / focus */
+.create-test__title-input:hover,
+.create-test__duration-input:hover,
+.create-test__title-input:focus,
+.create-test__duration-input:focus {
+    border-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.15);
+    outline: none;
+}
+
+.create-test__subtitle {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.create-test__info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background-color: #0ea5e9;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Content */
+.create-test__content {
+    padding: 10px 74px;
+    gap: 48px;
+    background-color: #f9fafb;
+    display: flex;
+}
+
+.create-test_parts {
+    flex: 2;
+}
+
+.create-test_teaser {
+    flex: 1.1;
+}
+
+/* Part row */
+.create-test__part-row {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #ffffff;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-align: left;
+    transition: box-shadow 0.15s ease, transform 0.1s ease,
+        border-color 0.15s ease;
+}
+
+.create-test__part-row:hover {
+    border-color: #f97316;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+}
+
+.create-test__part-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.create-test__part-index {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background-color: #f97316;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.create-test__part-text {
+    font-size: 14px;
+    color: #111827;
+}
+
+.create-test__part-label {
+    font-weight: 600;
+}
+
+.create-test__part-count {
+    color: #6b7280;
+}
+
+/* Info icon */
+.create-test__part-info {
+    display: flex;
+    align-items: center;
+}
+/* Card teaser */
+.create-test_teaser-card {
+    background-color: #f59e0b;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    padding: 16px 18px 18px;
+    position: sticky;
+    /* để card “dính” khi scroll, có thể bỏ nếu không thích */
+    top: 20px;
+}
+
+/* Vùng video / gif */
+.create-test_teaser-media {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    background-color: #000;
+}
+
+.create-test_teaser-media video,
+.create-test_teaser-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Ghi chú nhỏ */
+.create-test_teaser-note {
+    margin: 0;
+    font-size: 12px;
+    color: #ffff;
+    font-style: italic;
+}
+
+/* Responsive: dưới 768px thì chuyển thành 1 cột (teaser xuống dưới) */
+@media (max-width: 768px) {
+    .create-test__content {
+        flex-direction: column;
+    }
+
+    .create-test_teaser-card {
+        position: static;
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .create-test {
+        margin: 12px;
+    }
+
+    .create-test__hero {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .create-test__back-btn {
+        align-self: flex-start;
+    }
+
+    .create-test__meta-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

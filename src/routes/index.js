@@ -1,7 +1,7 @@
 import React from "react";
 import CustomerLayout from "../layouts/CustomerLayout";
 import AdminLayout from "../layouts/AdminLayout";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import DashBoard from "../pages/DashBoard";
 import UserManagement from "../pages/UserManagement";
 import BlogManagement from "../pages/BlogManagement";
@@ -33,7 +33,12 @@ import { useEffect } from "react";
 import Quiz from "../pages/Quiz";
 import PikachuPractice from "../pages/PikachuPractice";
 import VnpayResult from "../pages/VnpayResult";
+<<<<<<< Updated upstream
 import PricingPage from "../pages/PricingPage";
+=======
+import CreateToeicExam from "../pages/CreateToeicExam";
+import PartDetailPage from "../pages/PartDetailPage";
+>>>>>>> Stashed changes
 function MainRoutes() {
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
@@ -100,6 +105,9 @@ function MainRoutes() {
           </Route>
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="PracticeExam/:examId" element={<PracticeExam />} />
+          
+          <Route path="CreateToeicExam" element={<CreateToeicExam/>}/>
+          <Route path="PartDetail" element={<PartDetailPage/>}/>
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>

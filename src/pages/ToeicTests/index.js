@@ -8,9 +8,13 @@ import { GetAllExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
 import { showErrorMessage } from "../../utils/alertHelper";
 import { removeVietnameseTones } from "../../utils/formatData";
+<<<<<<< Updated upstream
 import { FaLock } from "react-icons/fa";
 import { CiLock } from "react-icons/ci";
 import { MdLockOutline } from "react-icons/md";
+=======
+import BaseModal from "../../components/BaseModal";
+>>>>>>> Stashed changes
 
 export default function ToiecTests() {
   const [allExams, setAllExams] = useState([]);
@@ -23,6 +27,8 @@ export default function ToiecTests() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const navigate = useNavigate();
+
+  const [openExamCreateOption, setOpenExamCreateOption]= useState(false);
 
   // lấy danh sách đề thi
   useEffect(() => {
@@ -149,6 +155,19 @@ export default function ToiecTests() {
   const endIndex = startIndex + itemsPerPage;
   const currentItems = listExams.slice(startIndex, endIndex);
 
+  function handleExamCreateBtn(){
+    //Todo: Kiem tra xem tai khoan co kich hoat tinh nang tao de chua?
+    setOpenExamCreateOption(true);
+  }
+  const handleSelectType= (type)=>{
+    if(type === "toeic"){
+      navigate("/CreateToeicExam");
+    }
+    if(type === "custom"){
+      navigate("/CreateCustomExam");
+    }
+  }
+
   return (
     <>
       <div className="ToeicTests-page">
@@ -188,6 +207,8 @@ export default function ToiecTests() {
               options={yearOptions}
               width={"220px"}
             />
+
+            <Button type="primary" className="btn create-toeic-test-btn" onClick={handleExamCreateBtn}>Tạo đề thi</Button>
           </div>
 
           <Input
@@ -226,6 +247,31 @@ export default function ToiecTests() {
           </div>
         </div>
       </div>
+      <BaseModal
+              open={openExamCreateOption}
+              onCancel={() => setOpenExamCreateOption(false)}
+              title={
+                <div style={{ fontSize: 22, color: "#ff8159", fontWeight: "400" }}>
+                  Bạn muốn tạo loại đề thi nào?
+                </div>
+              }
+            >
+              <div className="OptionForm">
+                <Button
+                  className="OptionForm__button"
+                  type="primary"
+                  onClick={() => handleSelectType("toeic")}
+                >
+                  Toeic Exam
+                </Button>
+                <Button
+                  className="OptionForm__button"
+                  onClick={() => handleSelectType("custom")}
+                >
+                  Custom Exam
+                </Button>
+              </div>
+            </BaseModal>
     </>
   );
 }
