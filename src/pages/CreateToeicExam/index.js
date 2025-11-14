@@ -134,7 +134,7 @@ export default function CreateToeicExam() {
     const handleSelectPart = (part) => {
         // Sau này có thể dùng examId + part.id để điều hướng sang trang chi tiết part
         // ví dụ: navigate(`/admin/toeic/exams/${examId}/parts/${part.id}`);
-        if (part.id == 1 || part.id == 2) {
+        if (part.id == 1 || part.id == 2 || part.id == 4) {
             navigate("/PartDetail");
         }
     };

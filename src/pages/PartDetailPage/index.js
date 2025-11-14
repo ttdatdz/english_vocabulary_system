@@ -1,13 +1,18 @@
 // src/pages/PartDetailPage.jsx
 import React, { useState } from "react";
 import "./PartDetailPage.css";
+import crown from "../../assets/images/crown.png";
 
 const createEmptyQuestion = (index, partName) => ({
     id: Date.now(),
     title: `Câu ${index} - ${partName}`,
     text: "",
     audioUrl: "",
+    imageUrl: "",
+    audioName: "",
+    imageName: "",
     options: ["", ""], // tối thiểu 2 đáp án
+    correctOptionIndex: null,
 });
 
 export default function PartDetailPage({
@@ -22,9 +27,7 @@ export default function PartDetailPage({
     const [editingId, setEditingId] = useState(null);
     const [creatingNew, setCreatingNew] = useState(initialQuestions.length === 0);
     const [draftQuestion, setDraftQuestion] = useState(
-        initialQuestions.length === 0
-            ? createEmptyQuestion(1, partName)
-            : null
+        initialQuestions.length === 0 ? createEmptyQuestion(1, partName) : null
     );
     const [draggingId, setDraggingId] = useState(null);
 
@@ -45,7 +48,12 @@ export default function PartDetailPage({
     };
 
     const handleEditQuestion = (q) => {
-        setDraftQuestion({ ...q });
+        // đảm bảo luôn có correctOptionIndex
+        setDraftQuestion({
+            ...q,
+            correctOptionIndex:
+                typeof q.correctOptionIndex === "number" ? q.correctOptionIndex : null,
+        });
         setEditingId(q.id);
         setCreatingNew(false);
         setExpandedId(q.id);
@@ -77,27 +85,138 @@ export default function PartDetailPage({
         });
     };
 
+    const handleMarkCorrect = (index) => {
+        setDraftQuestion((prev) => ({
+            ...prev,
+            correctOptionIndex: index,
+        }));
+    };
+
+    const handleRemoveOption = (index) => {
+        setDraftQuestion((prev) => {
+            // giữ tối thiểu 2 đáp án
+            if (prev.options.length <= 2) return prev;
+
+            const newOptions = prev.options.filter((_, idx) => idx !== index);
+
+            let newCorrect = prev.correctOptionIndex;
+            if (prev.correctOptionIndex === index) {
+                // xoá đúng đáp án hiện tại => bỏ chọn
+                newCorrect = null;
+            } else if (
+                prev.correctOptionIndex != null &&
+                prev.correctOptionIndex > index
+            ) {
+                // dịch lại index nếu xoá option phía trước
+                newCorrect = prev.correctOptionIndex - 1;
+            }
+
+            return {
+                ...prev,
+                options: newOptions,
+                correctOptionIndex: newCorrect,
+            };
+        });
+    };
+
+    const handleAudioChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        setDraftQuestion((prev) => ({
+            ...prev,
+            audioUrl: url,
+            audioName: file.name,
+        }));
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        setDraftQuestion((prev) => ({
+            ...prev,
+            imageUrl: url,
+            imageName: file.name,
+        }));
+    };
+
+    const handleClearAudio = () => {
+        setDraftQuestion((prev) => ({
+            ...prev,
+            audioUrl: "",
+            audioName: "",
+        }));
+    };
+
+    const handleClearImage = () => {
+        setDraftQuestion((prev) => ({
+            ...prev,
+            imageUrl: "",
+            imageName: "",
+        }));
+    };
+
+
     const handleSaveDraft = () => {
         if (!draftQuestion.text.trim()) {
             alert("Vui lòng nhập nội dung câu hỏi");
             return;
         }
+
+        // ít nhất 2 đáp án có nội dung
+        const trimmedOptions = draftQuestion.options.map((opt) => opt.trim());
+        const filledOptions = trimmedOptions.filter((opt) => opt);
+        if (filledOptions.length < 2) {
+            alert("Vui lòng nhập ít nhất 2 đáp án");
+            return;
+        }
+
+        // bắt buộc chọn đáp án đúng
+        if (
+            draftQuestion.correctOptionIndex == null ||
+            draftQuestion.correctOptionIndex < 0 ||
+            !trimmedOptions[draftQuestion.correctOptionIndex]
+        ) {
+            alert("Vui lòng chọn một đáp án đúng");
+            return;
+        }
+
+        // chuẩn hoá question để lưu vào state
+        const normalizedQuestion = {
+            ...draftQuestion,
+            text: draftQuestion.text.trim(),
+            options: trimmedOptions,
+        };
+
+        // OBJECT chuẩn để gửi lên API / lưu DB (nếu cần)
+        const payload = {
+            id: normalizedQuestion.id,
+            partName,
+            text: normalizedQuestion.text,
+            audioUrl: normalizedQuestion.audioUrl || null,
+            options: normalizedQuestion.options.map((opt, idx) => ({
+                key: String.fromCharCode(65 + idx), // A, B, C, D...
+                text: opt,
+                isCorrect: idx === normalizedQuestion.correctOptionIndex,
+            })),
+        };
+        // TODO: gọi API ở đây nếu cần
+        console.log("Question payload:", payload);
+
         if (editingId) {
-            // update
             setQuestions((prev) =>
-                prev.map((q) => (q.id === editingId ? { ...draftQuestion } : q))
+                prev.map((q) => (q.id === editingId ? normalizedQuestion : q))
             );
         } else {
-            // create
-            setQuestions((prev) => [...prev, draftQuestion]);
+            setQuestions((prev) => [...prev, normalizedQuestion]);
         }
+
         setCreatingNew(false);
         setEditingId(null);
         setDraftQuestion(null);
-    };
-
-    const handlePreviewDraft = () => {
-        alert("Tính năng xem trước sẽ implement sau 😄");
     };
 
     // Drag & drop
@@ -188,12 +307,19 @@ export default function PartDetailPage({
 
                     {q.options && q.options.length > 0 && (
                         <div className="question-card__options">
-                            <div className="question-card__options-label">
-                                Đáp án:
-                            </div>
+                            <div className="question-card__options-label">Đáp án:</div>
                             <ul>
                                 {q.options.map((opt, idx) => (
-                                    <li key={idx}>{String.fromCharCode(65 + idx)}. {opt}</li>
+                                    <li key={idx}>
+                                        {String.fromCharCode(65 + idx)}. {opt}
+                                        {q.correctOptionIndex === idx && (
+                                            <strong
+                                                style={{ color: "#16a34a", marginLeft: 6, fontSize: 12 }}
+                                            >
+                                                ✓
+                                            </strong>
+                                        )}
+                                    </li>
                                 ))}
                             </ul>
                         </div>
@@ -210,21 +336,22 @@ export default function PartDetailPage({
             {/* Header */}
             <div className="part-detail__hero">
                 <div className="part-detail__hero-left">
-                    <div className="part-detail__hero-icon">📘</div>
-                    <div>
-                        <h1 className="part-detail__title">Tạo đề thi</h1>
-                        <p className="part-detail__subtitle">
-                            {testName} | {durationMinutes} phút
-                        </p>
-                    </div>
+                    <button
+                        className="part-detail__btn part-detail__btn--ghost"
+                        onClick={handleBack}
+                    >
+                        ⟵ Quay lại
+                    </button>
                 </div>
 
                 <div className="part-detail__hero-center">
+                    <p>{testName} -</p>
                     <span className="part-detail__part-name">{partName}</span>
                 </div>
 
                 <div className="part-detail__hero-actions">
                     <button className="part-detail__btn part-detail__btn--outlined">
+                        <img src={crown} className="crown-icon" alt="crown-icon" />
                         Dùng thử bộ câu hỏi
                     </button>
                     <button
@@ -232,12 +359,6 @@ export default function PartDetailPage({
                         onClick={handleStartCreate}
                     >
                         + Thêm câu hỏi
-                    </button>
-                    <button
-                        className="part-detail__btn part-detail__btn--ghost"
-                        onClick={handleBack}
-                    >
-                        ⟵ Quay lại
                     </button>
                 </div>
             </div>
@@ -300,52 +421,165 @@ export default function PartDetailPage({
                                 </button>
                             </div>
 
+                            {/* TEXT */}
                             <div className="question-form__group">
                                 <label>Câu hỏi</label>
                                 <textarea
                                     value={draftQuestion.text}
-                                    onChange={(e) =>
-                                        handleChangeDraft("text", e.target.value)
-                                    }
+                                    onChange={(e) => handleChangeDraft("text", e.target.value)}
                                     rows={4}
                                 />
                             </div>
 
+                            {/* TỆP ĐÍNH KÈM */}
                             <div className="question-form__group">
-                                <label>Âm thanh:</label>
-                                <div className="question-form__audio">
-                                    <button className="part-detail__btn part-detail__btn--outlined">
-                                        + Tải âm thanh
-                                    </button>
-                                    <span className="question-form__hint">
-                                        (chưa xử lý upload, chỉ UI)
-                                    </span>
+                                <label>Tệp đính kèm</label>
+
+                                <div className="question-form__attachments">
+                                    {/* AUDIO */}
+                                    <div className="question-form__attachment">
+                                        <div className="question-form__attachment-header">
+                                            <span className="question-form__attachment-label">Âm thanh</span>
+                                            {draftQuestion.audioUrl && (
+                                                <button
+                                                    type="button"
+                                                    className="question-form__attachment-remove"
+                                                    onClick={handleClearAudio}
+                                                >
+                                                    Xoá
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="question-form__attachment-body">
+                                            <label className="part-detail__btn part-detail__btn--dash question-form__upload-btn">
+                                                <span>{draftQuestion.audioUrl ? "Thay audio" : "+ Tải audio"}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="audio/*"
+                                                    onChange={handleAudioChange}
+                                                />
+                                            </label>
+
+                                            {draftQuestion.audioName && (
+                                                <span className="question-form__file-name">
+                                                    {draftQuestion.audioName}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {draftQuestion.audioUrl && (
+                                            <audio
+                                                controls
+                                                src={draftQuestion.audioUrl}
+                                                style={{ marginTop: "8px", width: "100%" }}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* IMAGE */}
+                                    <div className="question-form__attachment">
+                                        <div className="question-form__attachment-header">
+                                            <span className="question-form__attachment-label">Hình ảnh</span>
+                                            {draftQuestion.imageUrl && (
+                                                <button
+                                                    type="button"
+                                                    className="question-form__attachment-remove"
+                                                    onClick={handleClearImage}
+                                                >
+                                                    Xoá
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="question-form__attachment-body">
+                                            <label className="part-detail__btn part-detail__btn--dash question-form__upload-btn">
+                                                <span>{draftQuestion.imageUrl ? "Thay hình" : "+ Tải hình"}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageChange}
+                                                />
+                                            </label>
+
+                                            {draftQuestion.imageName && (
+                                                <span className="question-form__file-name">
+                                                    {draftQuestion.imageName}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {draftQuestion.imageUrl && (
+                                            <img
+                                                src={draftQuestion.imageUrl}
+                                                alt="preview"
+                                                className="question-form__preview-img"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
+                            {/* ĐÁP ÁN */}
                             <div className="question-form__group">
-                                <label>Đáp án (nhiều nhất 4 đáp án)</label>
-                                <button
-                                    className="part-detail__btn part-detail__btn--ghost"
-                                    onClick={handleAddOption}
-                                    disabled={draftQuestion.options.length >= 4}
-                                    type="button"
-                                >
-                                    + Thêm đáp án
-                                </button>
+                                <div className="question-form__group-header">
+                                    <label>Đáp án (nhiều nhất 4 đáp án)</label>
+                                    <button
+                                        className="part-detail__btn part-detail__btn--dash"
+                                        onClick={handleAddOption}
+                                        disabled={draftQuestion.options.length >= 4}
+                                        type="button"
+                                    >
+                                        + Thêm đáp án
+                                    </button>
+                                </div>
 
                                 <div className="question-form__options">
-                                    {draftQuestion.options.map((opt, idx) => (
-                                        <input
-                                            key={idx}
-                                            type="text"
-                                            value={opt}
-                                            placeholder={`${String.fromCharCode(65 + idx)}.`}
-                                            onChange={(e) =>
-                                                handleChangeOption(idx, e.target.value)
-                                            }
-                                        />
-                                    ))}
+                                    {draftQuestion.options.map((opt, idx) => {
+                                        const isCorrect = draftQuestion.correctOptionIndex === idx;
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={
+                                                    "question-form__option-row" +
+                                                    (isCorrect ? " question-form__option-row--correct" : "")
+                                                }
+                                            >
+                                                <span className="question-form__option-label">
+                                                    {String.fromCharCode(65 + idx)}.
+                                                </span>
+
+                                                <input
+                                                    type="text"
+                                                    value={opt}
+                                                    placeholder="Nhập nội dung đáp án"
+                                                    onChange={(e) => handleChangeOption(idx, e.target.value)}
+                                                />
+
+                                                <button
+                                                    type="button"
+                                                    className={
+                                                        "question-form__option-check" +
+                                                        (isCorrect ? " question-form__option-check--active" : "")
+                                                    }
+                                                    onClick={() => handleMarkCorrect(idx)}
+                                                    title="Đánh dấu đúng"
+                                                >
+                                                    ✓
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="question-form__option-remove"
+                                                    onClick={() => handleRemoveOption(idx)}
+                                                    title="Xoá"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -355,12 +589,6 @@ export default function PartDetailPage({
                                     onClick={handleSaveDraft}
                                 >
                                     Lưu
-                                </button>
-                                <button
-                                    className="part-detail__btn part-detail__btn--outlined"
-                                    onClick={handlePreviewDraft}
-                                >
-                                    Xem trước…
                                 </button>
                             </div>
                         </div>
