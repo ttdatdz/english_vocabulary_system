@@ -9,12 +9,9 @@ import { GetAllTestSets } from "../../services/Exam/testSetService";
 import { showErrorMessage } from "../../utils/alertHelper";
 import { removeVietnameseTones } from "../../utils/formatData";
 
-import { FaLock } from "react-icons/fa";
-import { CiLock } from "react-icons/ci";
-import { MdLockOutline } from "react-icons/md";
-
 import BaseModal from "../../components/BaseModal";
-
+import { RiVipCrownFill } from "react-icons/ri";
+import { checkExpiration } from "../../services/Payment/paymentService";
 
 export default function ToiecTests() {
   const [allExams, setAllExams] = useState([]);
@@ -25,10 +22,11 @@ export default function ToiecTests() {
   const [selectedYear, setSelectedYear] = useState("All");
   const [selectedExamType, setSelectedExamType] = useState("TOEIC");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isVip, setIsVip] = useState(false);
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
-  const [openExamCreateOption, setOpenExamCreateOption]= useState(false);
+  const [openExamCreateOption, setOpenExamCreateOption] = useState(false);
 
   // lấy danh sách đề thi
   useEffect(() => {
@@ -46,7 +44,23 @@ export default function ToiecTests() {
     };
     fetchUsers();
   }, []);
-
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const res = await checkExpiration(userId);
+        console.log("res checkExpiration", res);
+        if (res?.hasValidPayment) {
+          setIsVip(true);
+        } else {
+          setIsVip(false);
+        }
+      } catch (error) {
+        showErrorMessage("Lỗi khi check expiration:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
   // lấy danh sách bộ đề
   useEffect(() => {
     const fetchUsers = async () => {
@@ -155,18 +169,24 @@ export default function ToiecTests() {
   const endIndex = startIndex + itemsPerPage;
   const currentItems = listExams.slice(startIndex, endIndex);
 
-  function handleExamCreateBtn(){
-    //Todo: Kiem tra xem tai khoan co kich hoat tinh nang tao de chua?
-    setOpenExamCreateOption(true);
+  function handleExamCreateBtn() {
+    if (!isVip) {
+      // Nếu chưa nâng cấp vip, chuyển đến trang pricing
+      const userId = localStorage.getItem("userId");
+      navigate(`/PricingPage/${userId}`);
+    } else {
+      // Nếu đã nâng cấp, mở modal và bỏ icon VIP
+      setOpenExamCreateOption(true);
+    }
   }
-  const handleSelectType= (type)=>{
-    if(type === "toeic"){
+  const handleSelectType = (type) => {
+    if (type === "toeic") {
       navigate("/CreateToeicExam");
     }
-    if(type === "custom"){
+    if (type === "custom") {
       navigate("/CreateCustomExam");
     }
-  }
+  };
 
   return (
     <>
@@ -175,10 +195,6 @@ export default function ToiecTests() {
           <div className="MainContainer">
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <h2 className="ToeicTests-page__header-title">Đề thi</h2>
-              <Button className="ToeicTests-page__header-createExam">
-                Tạo đề thi
-                <MdLockOutline style={{ fontSize: "16px" }} />
-              </Button>
             </div>
           </div>
         </div>
@@ -208,7 +224,16 @@ export default function ToiecTests() {
               width={"220px"}
             />
 
-            <Button type="primary" className="btn create-toeic-test-btn" onClick={handleExamCreateBtn}>Tạo đề thi</Button>
+            <Button
+              type="primary"
+              className="btn create-toeic-test-btn"
+              onClick={handleExamCreateBtn}
+            >
+              Tạo đề thi
+              {!isVip && (
+                <RiVipCrownFill style={{ fontSize: "16px", color: "yellow" }} />
+              )}
+            </Button>
           </div>
 
           <Input
@@ -248,30 +273,30 @@ export default function ToiecTests() {
         </div>
       </div>
       <BaseModal
-              open={openExamCreateOption}
-              onCancel={() => setOpenExamCreateOption(false)}
-              title={
-                <div style={{ fontSize: 22, color: "#ff8159", fontWeight: "400" }}>
-                  Bạn muốn tạo loại đề thi nào?
-                </div>
-              }
-            >
-              <div className="OptionForm">
-                <Button
-                  className="OptionForm__button"
-                  type="primary"
-                  onClick={() => handleSelectType("toeic")}
-                >
-                  Toeic Exam
-                </Button>
-                <Button
-                  className="OptionForm__button"
-                  onClick={() => handleSelectType("custom")}
-                >
-                  Custom Exam
-                </Button>
-              </div>
-            </BaseModal>
+        open={openExamCreateOption}
+        onCancel={() => setOpenExamCreateOption(false)}
+        title={
+          <div style={{ fontSize: 22, color: "#ff8159", fontWeight: "400" }}>
+            Bạn muốn tạo loại đề thi nào?
+          </div>
+        }
+      >
+        <div className="OptionForm">
+          <Button
+            className="OptionForm__button"
+            type="primary"
+            onClick={() => handleSelectType("toeic")}
+          >
+            Toeic Exam
+          </Button>
+          <Button
+            className="OptionForm__button"
+            onClick={() => handleSelectType("custom")}
+          >
+            Custom Exam
+          </Button>
+        </div>
+      </BaseModal>
     </>
   );
 }
