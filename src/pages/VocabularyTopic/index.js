@@ -31,9 +31,11 @@ export default function VocabularyTopic() {
         setReviewList(
           data.filter((item) => item.learningStatus === "REVIEW_NEEDED")
         );
-        setMasterList(data.filter((item) => item.learningStatus === "MASTERED"));
+        setMasterList(
+          data.filter((item) => item.learningStatus === "MASTERED")
+        );
       }
-    } catch(error) {
+    } catch (error) {
       showErrorMessage(error.message);
     }
   };
@@ -43,11 +45,7 @@ export default function VocabularyTopic() {
       try {
         const data = await get("api/flashcard/getTopicPopular");
         if (data && Array.isArray(data)) {
-          setExploreList(
-            data.filter(
-              (item) => item.userName !== localStorage.getItem("accountName")
-            )
-          );
+          setExploreList(data);
         }
       } catch (error) {
         console.error("Lỗi khi tải chủ đề từ vựng:", error);

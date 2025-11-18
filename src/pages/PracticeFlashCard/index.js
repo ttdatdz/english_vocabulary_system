@@ -23,7 +23,7 @@ export default function PracticeFlashCard() {
   const [flashcard, setFlashCard] = useState([]);
   const [practiceList, setPracticeList] = useState([]);
   const [rememberedInSession, setRememberedInSession] = useState([]); // từ đã nhớ trong phiên
-  const { flashcardId } = useParams();
+  const { flashcardId, topicId } = useParams();
   const [currentCard, setCurrentCard] = useState(null);
 
   // Load danh sách card (luôn load ALL cards)
@@ -100,7 +100,7 @@ export default function PracticeFlashCard() {
 
   const handleBackToList = () => {
     navigate(
-      `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
+      `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`
     );
   };
 
@@ -220,7 +220,7 @@ export default function PracticeFlashCard() {
       );
       showSuccess("Rất tốt. Thời gian ôn lại được cập nhật.");
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`
       );
     } catch (err) {
       showErrorMessage("Lỗi khi hoàn thành ôn tập");

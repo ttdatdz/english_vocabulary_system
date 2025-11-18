@@ -20,7 +20,7 @@ function buildHeaders(method, requireAuth, body) {
 }
 
 function joinUrl(base, path) {
-  const p = path.startsWith('/') ? path : '/' + path; // thêm leading slash
+  const p = path.startsWith("/") ? path : "/" + path; // thêm leading slash
   return `${base}${p}`;
 }
 
@@ -44,7 +44,8 @@ async function apiFetch(path, options = {}, requireAuth = false) {
   const method = (options.method || "GET").toUpperCase();
   const url = joinUrl(API_DOMAIN, path);
 
-  const headers = options.headers || buildHeaders(method, requireAuth, options.body);
+  const headers =
+    options.headers || buildHeaders(method, requireAuth, options.body);
   const fetchOpts = { ...options, method, headers };
 
   let res = await fetch(url, fetchOpts);
@@ -52,9 +53,12 @@ async function apiFetch(path, options = {}, requireAuth = false) {
   if (requireAuth && res.status === 401) {
     const ok = await silentRenew();
     if (ok) {
-      const retryHeaders = options.headers || buildHeaders(method, requireAuth, options.body);
+      const retryHeaders =
+        options.headers || buildHeaders(method, requireAuth, options.body);
       if (retryHeaders.Authorization) {
-        retryHeaders.Authorization = `Bearer ${localStorage.getItem("accessToken")}`;
+        retryHeaders.Authorization = `Bearer ${localStorage.getItem(
+          "accessToken"
+        )}`;
       }
       res = await fetch(url, { ...fetchOpts, headers: retryHeaders });
     }
@@ -65,13 +69,20 @@ async function apiFetch(path, options = {}, requireAuth = false) {
   try {
     bodyText = await res.text();
     json = bodyText ? JSON.parse(bodyText) : null;
-  } catch { }
+  } catch {}
 
   // 🔴 ƯU TIÊN data.detail
   if (!res.ok) {
     let msg =
-      (json && (json.data?.detail || json.error?.detail || json.error_description || json.message || json.error)) ||
-      (bodyText && (res.headers.get("content-type") || "").includes("text/") ? bodyText : "") ||
+      (json &&
+        (json.data?.detail ||
+          json.error?.detail ||
+          json.error_description ||
+          json.message ||
+          json.error)) ||
+      (bodyText && (res.headers.get("content-type") || "").includes("text/")
+        ? bodyText
+        : "") ||
       `HTTP ${res.status} ${res.statusText}`;
 
     const err = new Error(msg);
@@ -84,7 +95,6 @@ async function apiFetch(path, options = {}, requireAuth = false) {
 
   return json ? json.data : null;
 }
-
 
 // ============================Những api lấy giá trị thông thường===========================
 
@@ -141,25 +151,33 @@ export const del = async (path, auth = true) => {
   }
 };
 
+// export const patch = async (value, path, auth = true) => {
+//   try {
+//     return await apiFetch(
+//       path,
+//       { method: "PATCH", body: JSON.stringify(value) },
+//       auth
+//     );
+//   } catch (error) {
+//     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
+//   }
+// };
 export const patch = async (value, path, auth = true) => {
   try {
-    return await apiFetch(
-      path,
-      { method: "PATCH", body: JSON.stringify(value) },
-      auth
-    );
+    const options = { method: "PATCH" };
+
+    if (value !== null && value !== undefined) {
+      options.body = JSON.stringify(value);
+    }
+
+    return await apiFetch(path, options, auth);
   } catch (error) {
     showErrorMessage(`Lỗi khi gọi API: ${error.message}`);
   }
 };
-
 export const put = async (values, path, auth = true) => {
   try {
-    await apiFetch(
-      path,
-      { method: "PUT", body: JSON.stringify(values) },
-      auth
-    );
+    await apiFetch(path, { method: "PUT", body: JSON.stringify(values) }, auth);
     return true;
   } catch (error) {
     setTimeout(() => showErrorMessage(error.message), 2000);
@@ -178,10 +196,14 @@ export const postFormData = async (path, formData, auth = true) => {
 };
 export const putFormData = async (path, formData, auth = true) => {
   try {
-    const result = await apiFetch(path, { method: "PUT", body: formData }, auth);
+    const result = await apiFetch(
+      path,
+      { method: "PUT", body: formData },
+      auth
+    );
     return result;
   } catch (error) {
     showErrorMessage(error.message);
-    throw error;                 // 🔥 QUAN TRỌNG: ném lỗi ra để onFinish catch
+    throw error; // 🔥 QUAN TRỌNG: ném lỗi ra để onFinish catch
   }
 };

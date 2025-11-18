@@ -14,7 +14,7 @@ import { FaCheckCircle } from "react-icons/fa";
 export default function Quiz() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { flashcardId } = useParams();
+  const { flashcardId, topicId } = useParams();
   const [cardsList, setCardsList] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -144,7 +144,7 @@ export default function Quiz() {
   const handleBackToPractice = () => {
     setShowResultModal(false);
     navigate(
-      `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
+      `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`
     );
   };
 

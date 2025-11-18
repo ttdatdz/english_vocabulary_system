@@ -38,6 +38,7 @@ import PricingPage from "../pages/PricingPage";
 
 import CreateToeicExam from "../pages/CreateToeicExam";
 import PartDetailPage from "../pages/PartDetailPage";
+import ReviewListCard from "../components/ReviewListCard";
 
 function MainRoutes() {
   useEffect(() => {
@@ -71,8 +72,8 @@ function MainRoutes() {
             element={<ReviewFlashCard />}
           />
           <Route
-            path="ReviewFlashCard/ReviewDetailListCard/:flashcardId"
-            element={<ReviewDetailListCard />}
+            path="ReviewFlashCard/ReviewDetailListCard/:flashcardId/:topicId"
+            element={<DetailListFalshCard />}
           />
           <Route path="ReviewExam/:examReviewId" element={<ReviewExam />} />
           <Route
@@ -81,23 +82,23 @@ function MainRoutes() {
           />
           <Route path="PricingPage/:Id" element={<PricingPage />} />
           <Route
-            path="VocabularyTopics/DetailTopic/DetailListFlashCard/:flashcardId"
+            path="VocabularyTopics/DetailTopic/:topicId/DetailListFlashCard/:flashcardId"
             element={<DetailListFalshCard />}
           />
           <Route
-            path="VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/:flashcardId"
+            path="VocabularyTopics/DetailTopic/:topicId/DetailListFlashCard/PracticeFlashCard/:flashcardId"
             element={<PracticeFlashCard />}
           />
           <Route
-            path="VocabularyTopics/DetailTopic/DetailListFlashCard/MiniGame/:flashcardId"
+            path="VocabularyTopics/DetailTopic/:topicId/DetailListFlashCard/MiniGame/:flashcardId"
             element={<PracticeFlashCard />}
           />
           <Route
-            path="VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/:flashcardId"
+            path="VocabularyTopics/DetailTopic/:topicId/DetailListFlashCard/Quiz/:flashcardId"
             element={<Quiz />}
           />
           <Route
-            path="VocabularyTopics/DetailTopic/DetailListFlashCard/PikachuPractice/:flashcardId"
+            path="VocabularyTopics/DetailTopic/:topicId/DetailListFlashCard/PikachuPractice/:flashcardId"
             element={<PikachuPractice />}
           />
           <Route path="DetailExam/:id" element={<DetailExam />}>
@@ -105,9 +106,9 @@ function MainRoutes() {
           </Route>
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="PracticeExam/:examId" element={<PracticeExam />} />
-          
-          <Route path="CreateToeicExam" element={<CreateToeicExam/>}/>
-          <Route path="PartDetail" element={<PartDetailPage/>}/>
+
+          <Route path="CreateToeicExam" element={<CreateToeicExam />} />
+          <Route path="PartDetail" element={<PartDetailPage />} />
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>

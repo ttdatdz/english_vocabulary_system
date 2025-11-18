@@ -13,7 +13,20 @@ export const confirmDelete = async (title = "Bạn có chắc muốn xóa?") => 
   });
   return result.isConfirmed;
 };
+export const confirmShare = async (title = "Bạn có chắc muốn share?") => {
+  const result = await Swal.fire({
+    title,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Share",
+    cancelButtonText: "Hủy",
+    cancelButtonColor: "#d33",
+    confirmButtonColor: "#3085d6",
 
+    allowOutsideClick: false,
+  });
+  return result.isConfirmed;
+};
 export const confirmBasic = async (title = "Xác nhận thao tác?") => {
   const result = await Swal.fire({
     title,

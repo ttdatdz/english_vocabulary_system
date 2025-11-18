@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { get } from "../../utils/request";
 import { showErrorMessage } from "../../utils/alertHelper";
-export default function ReviewDetailListCard() {
+export default function ReviewDetailListCard(props) {
+  const { topicId, list } = props;
   const { flashcardId } = useParams();
   const navigate = useNavigate();
 
@@ -16,14 +17,20 @@ export default function ReviewDetailListCard() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 1;
   const total = cards.length;
-  const cardToShow = cards[(currentPage - 1) * pageSize]; // pageSize = 1 nên chỉ cần index này
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const cardsToShow = Array.isArray(cards.listCardResponse)
+    ? cards.listCardResponse.slice(startIndex, endIndex)
+    : []; // pageSize = 1 nên chỉ cần index này
   const [flashcard, setFlashCard] = useState(null);
 
   const fetchListCard = async () => {
     try {
       const data = await get(`api/card/getByFlashCard/${flashcardId}`);
+      console.log("data fetchListCard", data);
       if (data) {
         setCards(data);
+        // console.log("data Cards(", cards);
       }
       const totalPage = Math.max(1, Math.ceil(data.length / pageSize));
       if (currentPage > totalPage) {
@@ -46,7 +53,7 @@ export default function ReviewDetailListCard() {
     loadFlashCardInfor();
     fetchListCard();
   }, [flashcardId, cards.length]);
-
+  console.log("cards", cards);
   return (
     <>
       <div className="MainContainer">
@@ -60,12 +67,12 @@ export default function ReviewDetailListCard() {
           </div>
           <div className="DetailListFlashCard__Content">
             <div className="DetailListFlashCard__listFlashCard">
-              {cardToShow ? (
+              {cardsToShow ? (
                 <CardVocabulary
                   onFetchingData={() => {
                     fetchListCard();
                   }}
-                  data={cardToShow}
+                  data={cardsToShow}
                   onReview={true}
                 />
               ) : (

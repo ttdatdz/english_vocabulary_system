@@ -8,13 +8,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { get } from "../../utils/request";
 import { showErrorMessage, showWaringMessage } from "../../utils/alertHelper";
 import CardVocabulary from "../../components/CardVocabulary";
-
+import { checkTopicOfUser } from "../../services/FlashCard/flashCardService";
 export default function DetailListFalshCard() {
   const navigate = useNavigate();
   const [editingVocab, setEditingVocab] = useState(null);
   const [open, setOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-
   const [form] = Form.useForm();
   const [justAdded, setJustAdded] = useState(false);
   const [cards, setCards] = useState([]);
@@ -27,9 +26,11 @@ export default function DetailListFalshCard() {
   const cardsToShow = Array.isArray(cards.listCardResponse)
     ? cards.listCardResponse.slice(startIndex, endIndex)
     : []; // Lấy danh sách 10 từ cho mỗi trang
-  const { flashcardId } = useParams();
+  const { flashcardId, topicId } = useParams();
   const [flashcard, setFlashCard] = useState(null);
   const [formKey, setFormKey] = useState(Date.now());
+  const [isUserTopic, setIsUserTopic] = useState(false);
+
   const fetchListCard = async () => {
     try {
       const data = await get(`api/card/getByFlashCard/${flashcardId}`);
@@ -44,6 +45,16 @@ export default function DetailListFalshCard() {
       showErrorMessage("Có lỗi khi tải dữ liệu.");
     }
   };
+  const checkTopicWithUser = async (topicId) => {
+    try {
+      const data = await checkTopicOfUser(topicId);
+      if (data === true) {
+        setIsUserTopic(data);
+      }
+    } catch (err) {
+      showErrorMessage("Có lỗi khi kiểm tra dữ liệu.", err.message);
+    }
+  };
 
   const loadFlashCardInfor = async () => {
     try {
@@ -53,7 +64,11 @@ export default function DetailListFalshCard() {
       showErrorMessage(err);
     }
   };
-
+  useEffect(() => {
+    if (topicId) {
+      checkTopicWithUser(topicId);
+    }
+  }, [topicId]);
   useEffect(() => {
     if (justAdded && cards.length > 0) {
       const totalPage = Math.max(1, Math.ceil(cards.length / pageSize));
@@ -101,15 +116,15 @@ export default function DetailListFalshCard() {
     setOpenPracticeOptionModal(false);
     if (mode === "flashcard") {
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/PracticeFlashCard/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/PracticeFlashCard/${flashcardId}`
       );
     } else if (mode === "minigame") {
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/PikachuPractice/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/PikachuPractice/${flashcardId}`
       );
     } else if (mode === "quiz") {
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/Quiz/${flashcardId}`,
+        `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/Quiz/${flashcardId}`,
         { state: { cards } }
       );
     }
@@ -124,21 +139,26 @@ export default function DetailListFalshCard() {
               <h2 className="DetailListFlashCard__title">
                 {flashcard?.title || "Không có tiêu đề"}
               </h2>
-              <Button
-                className="DetailListFlashCard__btnAdd"
-                onClick={() => showModal(null)}
-              >
-                + Thêm từ mới
-              </Button>
+              {isUserTopic && (
+                <Button
+                  className="DetailListFlashCard__btnAdd"
+                  onClick={() => showModal(null)}
+                >
+                  + Thêm từ mới
+                </Button>
+              )}
+
               {/* <Button className="DetailListFlashCard__btnAdd">
                 Thêm hàng loạt
               </Button> */}
             </div>
-            <p className="DetailListFlashCard__description">
-              {flashcard?.reviewDate
-                ? "Ôn lại " + flashcard?.reviewDate
-                : "Chưa có ngày ôn tập"}
-            </p>
+            {isUserTopic && (
+              <p className="DetailListFlashCard__description">
+                {flashcard?.reviewDate
+                  ? "Ôn lại " + flashcard?.reviewDate
+                  : "Chưa có ngày ôn tập"}
+              </p>
+            )}
           </div>
           <div className="DetailListFlashCard__Content">
             <div>
