@@ -1,0 +1,29 @@
+.base-modal {
+    .ant-modal-content {
+        background: #fff;
+        border-radius: 8px;
+    }
+
+    .ant-modal-header {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 24px;
+    }
+
+    .ant-modal-title {
+        font-weight: 700;
+        font-size: 16px;
+        color: #1f2937;
+    }
+
+    .ant-modal-body {
+        padding: 24px;
+    }
+
+    .ant-modal-close {
+        color: #6b7280;
+
+        &:hover {
+            color: #1f2937;
+        }
+    }
+}

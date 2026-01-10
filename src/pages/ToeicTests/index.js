@@ -181,6 +181,10 @@ export default function ToiecTests() {
   }
   const handleSelectType = (type) => {
     if (type === "toeic") {
+      
+
+
+
       navigate("/CreateToeicExam");
     }
     if (type === "custom") {

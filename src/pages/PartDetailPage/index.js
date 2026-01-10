@@ -1,87 +1,278 @@
-// src/pages/PartDetailPage.jsx
-import React, { useState } from "react";
-import "./PartDetailPage.css";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import "./PartDetailPage.scss";
 import crown from "../../assets/images/crown.png";
+import { postFormData, post, put, get, del } from "../../utils/request";
+import CreateToeicQuestion from "../../components/CreateToeicQuestion";
 
-const createEmptyQuestion = (index, partName) => ({
-    id: Date.now(),
-    title: `Câu ${index} - ${partName}`,
-    text: "",
-    audioUrl: "",
-    imageUrl: "",
-    audioName: "",
-    imageName: "",
-    options: ["", ""], // tối thiểu 2 đáp án
+const LETTERS = ["A", "B", "C", "D", "E"];
+
+// Map từ ToeicQuestionResponse backend sang local model
+function mapToeicQuestionResponseToLocal(q) {
+    if (!q) return null;
+
+    const correctIdx = LETTERS.indexOf(q.result);
+
+    // ✅ Backend trả list nhưng single question chỉ lấy phần tử đầu
+    const audioUrls = Array.isArray(q.audios) ? q.audios.filter(Boolean) : [];
+    const audioUrl = audioUrls.length > 0 ? audioUrls[0] : "";
+
+    const imageUrls = Array.isArray(q.images) ? q.images.filter(Boolean) : [];
+
+    return {
+        id: q.id ?? null,
+        indexNumber: q.indexNumber ?? null,
+        part: q.part ?? "",
+        detail: q.detail || "",
+        result: q.result || "",
+
+        // ✅ Single audio (string, not array)
+        audioUrl,
+        audioKey: "",
+        audioFile: null,
+        audioPreview: "",
+
+        // Images vẫn là list
+        imageUrls,
+        imageKeys: [],
+        imageFiles: [],
+        imagePreviews: [],
+
+        options: (q.options || []).map((o) => o.detail || ""),
+        correctOptionIndex: correctIdx >= 0 ? correctIdx : null,
+
+        conversation: q.conversation || null,
+        clarify: q.clarify || "",
+    };
+}
+
+const createEmptyQuestion = (part) => ({
+    id: null,
+    indexNumber: null,
+    part: String(part),
+
+    detail: "",
+    result: "",
+
+    conversation: null,
+    clarify: "",
+
+    options: ["", ""],
     correctOptionIndex: null,
+
+    // ✅ Single audio (not array)
+    audioUrl: "",
+    audioKey: "",
+    audioFile: null,
+    audioPreview: "",
+
+    // Images vẫn là list
+    imageUrls: [],
+    imageKeys: [],
+    imageFiles: [],
+    imagePreviews: [],
 });
 
-export default function PartDetailPage({
-    testName = "Toeic Custom Test 1",
-    durationMinutes = 120,
-    partName = "Part 1",
-    initialQuestions = [],
-    onBack,
-}) {
-    const [questions, setQuestions] = useState(initialQuestions);
-    const [expandedId, setExpandedId] = useState(null);
-    const [editingId, setEditingId] = useState(null);
-    const [creatingNew, setCreatingNew] = useState(initialQuestions.length === 0);
-    const [draftQuestion, setDraftQuestion] = useState(
-        initialQuestions.length === 0 ? createEmptyQuestion(1, partName) : null
-    );
-    const [draggingId, setDraggingId] = useState(null);
+const buildMediaPayload = ({ existingKeys = [], uploadedKeys = [] }) => {
+    const all = [...(existingKeys || []), ...(uploadedKeys || [])].filter(Boolean);
+    const uniq = Array.from(new Set(all));
+    return uniq.map((key) => ({ url: key }));
+};
 
-    const handleBack = () => {
-        if (onBack) onBack();
+const buildReorderPayload = ({ examId, partNumber, questions }) => {
+    return {
+        examId: Number(examId),
+        part: String(partNumber),
+        items: (questions || []).map((q, i) => ({
+            questionId: q.id,
+            indexNumber: i + 1,
+        })),
     };
+};
+
+export default function DetailPart() {
+    const location = useLocation();
+    const routeState = location.state || {};
+    const { examId, partNumber } = useParams();
+
+    const navigate = useNavigate();
+    const [examTitle, setExamTitle] = useState(routeState.examName || "");
+    const [duration, setDuration] = useState(routeState.durationMinutes || 120);
+
+    const [questions, setQuestions] = useState([]);
+
+    const [expandedId, setExpandedId] = useState(null);
+    const [editingQuestionId, setEditingQuestionId] = useState(null);
+    const [draftQuestion, setDraftQuestion] = useState(null);
+    const [creatingNew, setCreatingNew] = useState(false);
+    const [draggingId, setDraggingId] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [showQuestionModal, setShowQuestionModal] = useState(false);
+
+    // ===== Load câu hỏi từ route state =====
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadQuestions = async () => {
+            try {
+                const fromState = routeState.partQuestions;
+                if (Array.isArray(fromState) && fromState.length > 0) {
+                    const mapped = fromState.map(mapToeicQuestionResponseToLocal);
+                    if (!cancelled) setQuestions(mapped);
+                    return;
+                }
+
+                const examData = await get(`/api/exam/detail/${examId}`, true);
+                const list = Array.isArray(examData?.questions) ? examData.questions : [];
+                const partQuestions = list.filter(
+                    (q) => String(q.part) === String(partNumber)
+                );
+
+                const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
+                if (!cancelled) setQuestions(mapped);
+
+                if (!cancelled && mapped.length === 0) {
+                    setCreatingNew(true);
+                    setDraftQuestion(createEmptyQuestion(String(partNumber)));
+                }
+            } catch (err) {
+                console.error("Load part questions error", err);
+            }
+        };
+
+        loadQuestions();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [examId, partNumber, routeState.partQuestions]);
+
+    const handleBack = () => navigate(-1);
 
     const handleClickCard = (id) => {
         setExpandedId((prev) => (prev === id ? null : id));
     };
 
     const handleStartCreate = () => {
-        const idx = questions.length + 1;
-        setDraftQuestion(createEmptyQuestion(idx, partName));
+        setDraftQuestion(createEmptyQuestion(String(partNumber)));
         setCreatingNew(true);
-        setEditingId(null);
+        setEditingQuestionId(null);
         setExpandedId(null);
+        setShowQuestionModal(true);
     };
 
     const handleEditQuestion = (q) => {
-        // đảm bảo luôn có correctOptionIndex
         setDraftQuestion({
             ...q,
-            correctOptionIndex:
-                typeof q.correctOptionIndex === "number" ? q.correctOptionIndex : null,
+            // ✅ Copy keys để giữ khi update
+            audioKey: q.audioKey || "",
+            imageKeys: [...(q.imageKeys || [])],
+            
+            // Reset upload files
+            audioFile: null,
+            audioPreview: "",
+            imageFiles: [],
+            imagePreviews: [],
         });
-        setEditingId(q.id);
+        setEditingQuestionId(q.id);
         setCreatingNew(false);
         setExpandedId(q.id);
+        setShowQuestionModal(true);
     };
 
-    const handleDeleteQuestion = (id) => {
+    const handleCloseQuestionModal = () => {
+        setShowQuestionModal(false);
+        setCreatingNew(false);
+        setEditingQuestionId(null);
+        setDraftQuestion(null);
+    };
+
+    const handleDeleteQuestion = async (id) => {
+        if (id == null) return;
         if (!window.confirm("Xoá câu hỏi này?")) return;
-        setQuestions((prev) => prev.filter((q) => q.id !== id));
-        if (expandedId === id) setExpandedId(null);
-        if (editingId === id) setEditingId(null);
+
+        if (editingQuestionId === id) {
+            setShowQuestionModal(false);
+            setCreatingNew(false);
+            setEditingQuestionId(null);
+            setDraftQuestion(null);
+        }
+
+        setUploading(true);
+        try {
+            const isPersisted = id != null && !Number.isNaN(Number(id));
+            if (isPersisted) {
+                await del(`/api/toeic-question/${id}`, true);
+            }
+
+            const nextQuestions = (questions || [])
+                .filter((q) => q?.id !== id)
+                .map((q, i) => ({ ...q, indexNumber: i + 1 }));
+
+            setQuestions(nextQuestions);
+
+            if (expandedId === id) setExpandedId(null);
+            if (editingQuestionId === id) setEditingQuestionId(null);
+
+            if (window.__toeicExamData?.questions) {
+                window.__toeicExamData = {
+                    ...window.__toeicExamData,
+                    questions: (window.__toeicExamData.questions || []).filter((q) => q?.id !== id),
+                };
+            }
+
+            const hasInvalidId = nextQuestions.some((q) => q?.id == null || Number.isNaN(Number(q.id)));
+            if (!hasInvalidId) {
+                const reorderPayload = buildReorderPayload({
+                    examId,
+                    partNumber,
+                    questions: nextQuestions,
+                });
+
+                await put(reorderPayload, `/api/toeic-question/reorder/${examId}`, true);
+            }
+        } catch (err) {
+            console.error("Delete question error:", err);
+            alert(err?.message || "Xoá câu hỏi thất bại");
+        } finally {
+            setUploading(false);
+        }
     };
 
-    const handleChangeDraft = (field, value) => {
+    const handleChangeDraftField = (field, value) => {
         setDraftQuestion((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleChangeOption = (index, value) => {
         setDraftQuestion((prev) => {
-            const newOpts = [...prev.options];
-            newOpts[index] = value;
-            return { ...prev, options: newOpts };
+            const options = [...prev.options];
+            options[index] = value;
+            return { ...prev, options };
         });
     };
 
     const handleAddOption = () => {
         setDraftQuestion((prev) => {
-            if (prev.options.length >= 4) return prev;
+            if (!prev) return prev;
+            if (prev.options.length >= 5) return prev;
             return { ...prev, options: [...prev.options, ""] };
+        });
+    };
+
+    const handleRemoveOption = (index) => {
+        setDraftQuestion((prev) => {
+            if (!prev) return prev;
+            if (prev.options.length <= 2) return prev;
+
+            const newOptions = prev.options.filter((_, idx) => idx !== index);
+
+            let newCorrect = prev.correctOptionIndex;
+            if (prev.correctOptionIndex === index) newCorrect = null;
+            else if (prev.correctOptionIndex != null && prev.correctOptionIndex > index) {
+                newCorrect = prev.correctOptionIndex - 1;
+            }
+
+            return { ...prev, options: newOptions, correctOptionIndex: newCorrect };
         });
     };
 
@@ -92,184 +283,283 @@ export default function PartDetailPage({
         }));
     };
 
-    const handleRemoveOption = (index) => {
-        setDraftQuestion((prev) => {
-            // giữ tối thiểu 2 đáp án
-            if (prev.options.length <= 2) return prev;
-
-            const newOptions = prev.options.filter((_, idx) => idx !== index);
-
-            let newCorrect = prev.correctOptionIndex;
-            if (prev.correctOptionIndex === index) {
-                // xoá đúng đáp án hiện tại => bỏ chọn
-                newCorrect = null;
-            } else if (
-                prev.correctOptionIndex != null &&
-                prev.correctOptionIndex > index
-            ) {
-                // dịch lại index nếu xoá option phía trước
-                newCorrect = prev.correctOptionIndex - 1;
-            }
-
-            return {
-                ...prev,
-                options: newOptions,
-                correctOptionIndex: newCorrect,
-            };
-        });
-    };
+    // ==== MEDIA HANDLERS ====
 
     const handleAudioChange = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const url = URL.createObjectURL(file);
+        const previewUrl = URL.createObjectURL(file);
+
         setDraftQuestion((prev) => ({
             ...prev,
-            audioUrl: url,
-            audioName: file.name,
+            audioFile: file,
+            audioPreview: previewUrl,
         }));
-    };
 
-    const handleImageChange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const url = URL.createObjectURL(file);
-        setDraftQuestion((prev) => ({
-            ...prev,
-            imageUrl: url,
-            imageName: file.name,
-        }));
+        e.target.value = '';
     };
 
     const handleClearAudio = () => {
         setDraftQuestion((prev) => ({
             ...prev,
+            audioFile: null,
+            audioPreview: "",
             audioUrl: "",
-            audioName: "",
+            audioKey: "",
         }));
     };
 
-    const handleClearImage = () => {
+    const handleAddImage = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const previewUrl = URL.createObjectURL(file);
+
         setDraftQuestion((prev) => ({
             ...prev,
-            imageUrl: "",
-            imageName: "",
+            imageFiles: [...(prev.imageFiles || []), file],
+            imagePreviews: [...(prev.imagePreviews || []), previewUrl],
         }));
+        
+        e.target.value = '';
     };
 
+    const handleRemoveImage = (source, idx) => {
+        if (typeof source === "number") {
+            idx = source;
+            source = "local";
+        }
 
-    const handleSaveDraft = () => {
-        if (!draftQuestion.text.trim()) {
+        setDraftQuestion((prev) => {
+            if (!prev) return prev;
+
+            if (source === "server") {
+                const newUrls = (prev.imageUrls || []).filter((_, i) => i !== idx);
+                const newKeys = (prev.imageKeys || []).filter((_, i) => i !== idx);
+                return { ...prev, imageUrls: newUrls, imageKeys: newKeys };
+            }
+
+            const newFiles = (prev.imageFiles || []).filter((_, i) => i !== idx);
+            const newPreviews = (prev.imagePreviews || []).filter((_, i) => i !== idx);
+
+            return { ...prev, imageFiles: newFiles, imagePreviews: newPreviews };
+        });
+    };
+
+    const handleSaveDraftQuestionToState = async () => {
+        if (!draftQuestion?.detail?.trim()) {
             alert("Vui lòng nhập nội dung câu hỏi");
             return;
         }
 
-        // ít nhất 2 đáp án có nội dung
-        const trimmedOptions = draftQuestion.options.map((opt) => opt.trim());
-        const filledOptions = trimmedOptions.filter((opt) => opt);
-        if (filledOptions.length < 2) {
+        const trimmedOptions = (draftQuestion.options || []).map((o) => (o || "").trim());
+        const filled = trimmedOptions.filter(Boolean);
+        if (filled.length < 2) {
             alert("Vui lòng nhập ít nhất 2 đáp án");
             return;
         }
 
-        // bắt buộc chọn đáp án đúng
-        if (
-            draftQuestion.correctOptionIndex == null ||
-            draftQuestion.correctOptionIndex < 0 ||
-            !trimmedOptions[draftQuestion.correctOptionIndex]
-        ) {
-            alert("Vui lòng chọn một đáp án đúng");
+        const idx = draftQuestion.correctOptionIndex;
+        if (idx == null || idx < 0 || !trimmedOptions[idx]) {
+            alert("Vui lòng chọn đáp án đúng");
             return;
         }
 
-        // chuẩn hoá question để lưu vào state
-        const normalizedQuestion = {
-            ...draftQuestion,
-            text: draftQuestion.text.trim(),
-            options: trimmedOptions,
-        };
+        setUploading(true);
 
-        // OBJECT chuẩn để gửi lên API / lưu DB (nếu cần)
-        const payload = {
-            id: normalizedQuestion.id,
-            partName,
-            text: normalizedQuestion.text,
-            audioUrl: normalizedQuestion.audioUrl || null,
-            options: normalizedQuestion.options.map((opt, idx) => ({
-                key: String.fromCharCode(65 + idx), // A, B, C, D...
-                text: opt,
-                isCorrect: idx === normalizedQuestion.correctOptionIndex,
-            })),
-        };
-        // TODO: gọi API ở đây nếu cần
-        console.log("Question payload:", payload);
+        try {
+            let uploadedImageKeys = [];
+            let uploadedAudioKey = null;
 
-        if (editingId) {
-            setQuestions((prev) =>
-                prev.map((q) => (q.id === editingId ? normalizedQuestion : q))
-            );
-        } else {
-            setQuestions((prev) => [...prev, normalizedQuestion]);
+            const fd = new FormData();
+
+            if (draftQuestion.audioFile) {
+                fd.append("audios", draftQuestion.audioFile);
+            }
+
+            if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
+                draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
+            }
+
+            if (draftQuestion.audioFile || (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0)) {
+                const uploadRes = await postFormData("/api/media/upload", fd, true);
+
+                const audioList = Array.isArray(uploadRes?.audios) ? uploadRes.audios : [];
+                if (audioList.length > 0) {
+                    uploadedAudioKey = audioList[0]?.key || null;
+                }
+
+                const imgList = Array.isArray(uploadRes?.images) ? uploadRes.images : [];
+                uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
+            }
+
+            const existingImageKeys = Array.isArray(draftQuestion.imageKeys) ? draftQuestion.imageKeys : [];
+            const existingAudioKey = draftQuestion.audioKey || null;
+
+            const imagesPayload = buildMediaPayload({
+                existingKeys: existingImageKeys,
+                uploadedKeys: uploadedImageKeys,
+            });
+
+            const audiosPayload = [];
+            const finalAudioKey = uploadedAudioKey || existingAudioKey;
+            if (finalAudioKey) {
+                audiosPayload.push({ url: finalAudioKey });
+            }
+
+            const basePayload = {
+                part: String(partNumber),
+                detail: draftQuestion.detail.trim(),
+                conversation: draftQuestion.conversation || null,
+                clarify: (draftQuestion.clarify || "").trim(),
+                examId: Number(examId),
+                random: true,
+                options: trimmedOptions.map((opt, optIdx) => ({
+                    mark: LETTERS[optIdx],
+                    detail: opt,
+                })),
+                result: LETTERS[idx],
+                audios: audiosPayload,
+                images: imagesPayload,
+            };
+
+            if (editingQuestionId != null) {
+                const idxInList = questions.findIndex((q) => q.id === editingQuestionId);
+                const payload = {
+                    ...basePayload,
+                    indexNumber: idxInList >= 0 ? idxInList + 1 : null,
+                };
+
+                await put(payload, `/api/toeic-question/${editingQuestionId}`, true);
+
+                const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(Boolean);
+
+                const updatedLocal = {
+                    ...draftQuestion,
+                    detail: payload.detail,
+                    clarify: payload.clarify || "",
+                    conversation: payload.conversation,
+                    result: payload.result,
+
+                    options: trimmedOptions,
+                    correctOptionIndex: idx,
+
+                    audioKey: finalAudioKey || "",
+                    audioFile: null,
+                    audioPreview: "",
+
+                    imageKeys: allImageKeys,
+                    imageFiles: [],
+                    imagePreviews: [],
+
+                    indexNumber: payload.indexNumber,
+                };
+
+                setQuestions((prev) => prev.map((q) => (q.id === editingQuestionId ? updatedLocal : q)));
+
+            } else {
+                const saved = await post(basePayload, "/api/toeic-question", true);
+
+                if (!saved) {
+                    throw new Error("Create question failed");
+                }
+
+                const createdLocal = mapToeicQuestionResponseToLocal(saved);
+
+                const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(Boolean);
+
+                createdLocal.audioKey = finalAudioKey || "";
+                createdLocal.imageKeys = allImageKeys;
+
+                createdLocal.audioFile = null;
+                createdLocal.audioPreview = "";
+                createdLocal.imageFiles = [];
+                createdLocal.imagePreviews = [];
+
+                setQuestions((prev) => [...prev, createdLocal]);
+            }
+
+            setCreatingNew(false);
+            setEditingQuestionId(null);
+            setDraftQuestion(null);
+            setShowQuestionModal(false);
+        } catch (err) {
+            console.error("Save question error", err);
+            alert(err?.message || "Lưu câu hỏi thất bại");
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    // ==== Drag & drop ====
+
+    const handleDragStart = (id) => setDraggingId(id);
+    const handleDragOver = (e) => e.preventDefault();
+
+    const handleDropOn = async (targetId) => {
+        if (!draggingId || draggingId === targetId) return;
+
+        const from = questions.findIndex((q) => q.id === draggingId);
+        const to = questions.findIndex((q) => q.id === targetId);
+        if (from === -1 || to === -1) {
+            setDraggingId(null);
+            return;
         }
 
-        setCreatingNew(false);
-        setEditingId(null);
-        setDraftQuestion(null);
-    };
+        const updated = [...questions];
+        const [moved] = updated.splice(from, 1);
+        updated.splice(to, 0, moved);
 
-    // Drag & drop
-    const handleDragStart = (id) => {
-        setDraggingId(id);
-    };
+        const nextQuestions = updated.map((q, i) => ({
+            ...q,
+            indexNumber: i + 1,
+        }));
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-    };
-
-    const handleDropOn = (targetId) => {
-        if (!draggingId || draggingId === targetId) return;
-        setQuestions((prev) => {
-            const fromIndex = prev.findIndex((q) => q.id === draggingId);
-            const toIndex = prev.findIndex((q) => q.id === targetId);
-            if (fromIndex === -1 || toIndex === -1) return prev;
-            const updated = [...prev];
-            const [moved] = updated.splice(fromIndex, 1);
-            updated.splice(toIndex, 0, moved);
-            return updated;
-        });
+        setQuestions(nextQuestions);
         setDraggingId(null);
+
+        try {
+            const hasInvalidId = nextQuestions.some((q) => q.id == null || Number.isNaN(Number(q.id)));
+            if (hasInvalidId) return;
+
+            const reorderPayload = buildReorderPayload({
+                examId,
+                partNumber,
+                questions: nextQuestions,
+            });
+
+            await put(reorderPayload, `/api/toeic-question/reorder/${examId}`, true);
+        } catch (e) {
+            console.error("Reorder failed:", e);
+        }
     };
 
     const handleDragEnd = () => setDraggingId(null);
 
-    const renderQuestionViewCard = (q, index) => {
-        const isExpanded = expandedId === q.id && editingId !== q.id;
+    const renderQuestionCard = (q, index) => {
+        const isExpanded = expandedId === q.id && editingQuestionId !== q.id;
         const isDragging = draggingId === q.id;
 
         return (
             <div
-                key={q.id}
+                key={q.id || `local-${index}`}
                 className={
                     "question-card" +
                     (isExpanded ? " question-card--expanded" : " question-card--collapsed") +
                     (isDragging ? " question-card--dragging" : "")
                 }
-                draggable
+                draggable={true}
                 onDragStart={() => handleDragStart(q.id)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDropOn(q.id)}
                 onDragEnd={handleDragEnd}
             >
-                <div
-                    className="question-card__header"
-                    onClick={() => handleClickCard(q.id)}
-                >
+                <div className="question-card__header" onClick={() => handleClickCard(q.id)}>
                     <div className="question-card__drag-handle">⋮⋮</div>
                     <div className="question-card__title">
-                        {`Câu ${index + 1} - `}&nbsp;
-                        <span className="question-card__part-name">{partName}</span>
+                        {`Câu ${index + 1} - `}
+                        <span className="question-card__part-name">Part {partNumber}</span>
                     </div>
                     <div className="question-card__actions">
                         <button
@@ -294,14 +584,30 @@ export default function PartDetailPage({
                 </div>
 
                 <div className="question-card__body">
-                    <p className="question-card__text">
-                        {q.text || "Chưa có nội dung câu hỏi."}
-                    </p>
+                    <p className="question-card__text">{q.detail || "Chưa có nội dung câu hỏi."}</p>
 
+                    {/* ✅ Hiển thị single audio */}
                     {q.audioUrl && (
                         <div className="question-card__audio">
                             <span>Âm thanh:</span>
-                            <audio src={q.audioUrl} controls />
+                            <audio src={q.audioUrl} controls style={{ marginTop: 4, width: "100%" }} />
+                        </div>
+                    )}
+
+                    {/* ✅ Hiển thị images list */}
+                    {q.imageUrls && q.imageUrls.length > 0 && (
+                        <div className="question-card__images">
+                            <span>Hình ảnh:</span>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                                {q.imageUrls.map((url, idx) => (
+                                    <img
+                                        key={idx}
+                                        src={url}
+                                        alt={`img-${idx}`}
+                                        style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 4 }}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     )}
 
@@ -311,13 +617,9 @@ export default function PartDetailPage({
                             <ul>
                                 {q.options.map((opt, idx) => (
                                     <li key={idx}>
-                                        {String.fromCharCode(65 + idx)}. {opt}
+                                        {LETTERS[idx]}. {opt}
                                         {q.correctOptionIndex === idx && (
-                                            <strong
-                                                style={{ color: "#16a34a", marginLeft: 6, fontSize: 12 }}
-                                            >
-                                                ✓
-                                            </strong>
+                                            <strong style={{ color: "#16a34a", marginLeft: 6, fontSize: 12 }}>✓</strong>
                                         )}
                                     </li>
                                 ))}
@@ -329,11 +631,11 @@ export default function PartDetailPage({
         );
     };
 
-    const showFormCard = creatingNew || editingId;
+    const showFormCard = creatingNew || editingQuestionId != null;
 
     return (
         <div className="part-detail">
-            {/* Header */}
+            {/* HEADER */}
             <div className="part-detail__hero">
                 <div className="part-detail__hero-left">
                     <button
@@ -345,14 +647,14 @@ export default function PartDetailPage({
                 </div>
 
                 <div className="part-detail__hero-center">
-                    <p>{testName} -</p>
-                    <span className="part-detail__part-name">{partName}</span>
+                    <p>{examTitle} -</p>
+                    <span className="part-detail__part-name">Part {partNumber}</span>
                 </div>
 
                 <div className="part-detail__hero-actions">
                     <button className="part-detail__btn part-detail__btn--outlined">
                         <img src={crown} className="crown-icon" alt="crown-icon" />
-                        Dùng thử bộ câu hỏi
+                        Ngân hàng câu hỏi
                     </button>
                     <button
                         className="part-detail__btn part-detail__btn--solid"
@@ -363,10 +665,9 @@ export default function PartDetailPage({
                 </div>
             </div>
 
-            {/* Content */}
+            {/* CONTENT */}
             <div className="part-detail__content">
                 <div className="part-detail__left">
-                    {/* Nếu chưa có câu hỏi & không show form, hiển thị nút Thêm */}
                     {questions.length === 0 && !showFormCard && (
                         <div className="part-detail__empty">
                             <p>Part này chưa có câu hỏi nào.</p>
@@ -379,221 +680,33 @@ export default function PartDetailPage({
                         </div>
                     )}
 
-                    {/* Danh sách câu hỏi */}
                     {questions.length > 0 && (
                         <div className="part-detail__question-list">
-                            {questions.map((q, index) => renderQuestionViewCard(q, index))}
-                        </div>
-                    )}
-
-                    {/* Nút thêm dưới list */}
-                    {questions.length > 0 && !creatingNew && !editingId && (
-                        <div className="part-detail__add-bottom">
-                            <button
-                                className="part-detail__btn part-detail__btn--solid"
-                                onClick={handleStartCreate}
-                            >
-                                + Thêm câu hỏi
-                            </button>
+                            {questions.map((q, index) => renderQuestionCard(q, index))}
                         </div>
                     )}
                 </div>
 
-                {/* Card form: thêm / chỉnh sửa */}
-                {showFormCard && draftQuestion && (
-                    <div className="part-detail__right">
-                        <div className="question-form">
-                            <div className="question-form__header">
-                                <div className="question-form__title">
-                                    {editingId
-                                        ? `Chỉnh sửa - ${partName}`
-                                        : `Câu ${questions.length + 1} - ${partName}`}
-                                </div>
-                                <button
-                                    className="question-form__close"
-                                    onClick={() => {
-                                        setCreatingNew(false);
-                                        setEditingId(null);
-                                        setDraftQuestion(null);
-                                    }}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            {/* TEXT */}
-                            <div className="question-form__group">
-                                <label>Câu hỏi</label>
-                                <textarea
-                                    value={draftQuestion.text}
-                                    onChange={(e) => handleChangeDraft("text", e.target.value)}
-                                    rows={4}
-                                />
-                            </div>
-
-                            {/* TỆP ĐÍNH KÈM */}
-                            <div className="question-form__group">
-                                <label>Tệp đính kèm</label>
-
-                                <div className="question-form__attachments">
-                                    {/* AUDIO */}
-                                    <div className="question-form__attachment">
-                                        <div className="question-form__attachment-header">
-                                            <span className="question-form__attachment-label">Âm thanh</span>
-                                            {draftQuestion.audioUrl && (
-                                                <button
-                                                    type="button"
-                                                    className="question-form__attachment-remove"
-                                                    onClick={handleClearAudio}
-                                                >
-                                                    Xoá
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="question-form__attachment-body">
-                                            <label className="part-detail__btn part-detail__btn--dash question-form__upload-btn">
-                                                <span>{draftQuestion.audioUrl ? "Thay audio" : "+ Tải audio"}</span>
-                                                <input
-                                                    type="file"
-                                                    accept="audio/*"
-                                                    onChange={handleAudioChange}
-                                                />
-                                            </label>
-
-                                            {draftQuestion.audioName && (
-                                                <span className="question-form__file-name">
-                                                    {draftQuestion.audioName}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {draftQuestion.audioUrl && (
-                                            <audio
-                                                controls
-                                                src={draftQuestion.audioUrl}
-                                                style={{ marginTop: "8px", width: "100%" }}
-                                            />
-                                        )}
-                                    </div>
-
-                                    {/* IMAGE */}
-                                    <div className="question-form__attachment">
-                                        <div className="question-form__attachment-header">
-                                            <span className="question-form__attachment-label">Hình ảnh</span>
-                                            {draftQuestion.imageUrl && (
-                                                <button
-                                                    type="button"
-                                                    className="question-form__attachment-remove"
-                                                    onClick={handleClearImage}
-                                                >
-                                                    Xoá
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="question-form__attachment-body">
-                                            <label className="part-detail__btn part-detail__btn--dash question-form__upload-btn">
-                                                <span>{draftQuestion.imageUrl ? "Thay hình" : "+ Tải hình"}</span>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleImageChange}
-                                                />
-                                            </label>
-
-                                            {draftQuestion.imageName && (
-                                                <span className="question-form__file-name">
-                                                    {draftQuestion.imageName}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {draftQuestion.imageUrl && (
-                                            <img
-                                                src={draftQuestion.imageUrl}
-                                                alt="preview"
-                                                className="question-form__preview-img"
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* ĐÁP ÁN */}
-                            <div className="question-form__group">
-                                <div className="question-form__group-header">
-                                    <label>Đáp án (nhiều nhất 4 đáp án)</label>
-                                    <button
-                                        className="part-detail__btn part-detail__btn--dash"
-                                        onClick={handleAddOption}
-                                        disabled={draftQuestion.options.length >= 4}
-                                        type="button"
-                                    >
-                                        + Thêm đáp án
-                                    </button>
-                                </div>
-
-                                <div className="question-form__options">
-                                    {draftQuestion.options.map((opt, idx) => {
-                                        const isCorrect = draftQuestion.correctOptionIndex === idx;
-
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className={
-                                                    "question-form__option-row" +
-                                                    (isCorrect ? " question-form__option-row--correct" : "")
-                                                }
-                                            >
-                                                <span className="question-form__option-label">
-                                                    {String.fromCharCode(65 + idx)}.
-                                                </span>
-
-                                                <input
-                                                    type="text"
-                                                    value={opt}
-                                                    placeholder="Nhập nội dung đáp án"
-                                                    onChange={(e) => handleChangeOption(idx, e.target.value)}
-                                                />
-
-                                                <button
-                                                    type="button"
-                                                    className={
-                                                        "question-form__option-check" +
-                                                        (isCorrect ? " question-form__option-check--active" : "")
-                                                    }
-                                                    onClick={() => handleMarkCorrect(idx)}
-                                                    title="Đánh dấu đúng"
-                                                >
-                                                    ✓
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    className="question-form__option-remove"
-                                                    onClick={() => handleRemoveOption(idx)}
-                                                    title="Xoá"
-                                                >
-                                                    ✕
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="question-form__footer">
-                                <button
-                                    className="part-detail__btn part-detail__btn--solid"
-                                    onClick={handleSaveDraft}
-                                >
-                                    Lưu
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* Modal create/edit question */}
+                <CreateToeicQuestion
+                    open={showQuestionModal}
+                    onClose={handleCloseQuestionModal}
+                    draftQuestion={draftQuestion}
+                    onChangeDraftField={handleChangeDraftField}
+                    onChangeOption={handleChangeOption}
+                    onAddOption={handleAddOption}
+                    onRemoveOption={handleRemoveOption}
+                    onMarkCorrect={handleMarkCorrect}
+                    onAudioChange={handleAudioChange}
+                    onClearAudio={handleClearAudio}
+                    onAddImage={handleAddImage}
+                    onRemoveImage={handleRemoveImage}
+                    onSave={handleSaveDraftQuestionToState}
+                    partNumber={partNumber}
+                    isEditing={editingQuestionId != null}
+                    questionIndex={questions.length + 1}
+                    loading={uploading}
+                />
             </div>
         </div>
     );

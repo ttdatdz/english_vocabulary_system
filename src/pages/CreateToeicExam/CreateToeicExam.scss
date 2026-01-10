@@ -246,8 +246,13 @@
 }
 /* Card teaser */
 .create-test_teaser-card {
-    background-color: #f59e0b;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 20px;
     border-radius: 12px;
+    background: #f97316;
+    min-height: 200px; /* hoặc height phù hợp */
     border: 1px solid #e5e7eb;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     padding: 16px 18px 18px;
@@ -258,6 +263,7 @@
 
 /* Vùng video / gif */
 .create-test_teaser-media {
+    flex: 1; /* chiếm hết không gian còn lại */
     border-radius: 10px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -273,10 +279,79 @@
 
 /* Ghi chú nhỏ */
 .create-test_teaser-note {
+    order: 3; /* hiển thị sau actions */
     margin: 0;
     font-size: 12px;
     color: #ffff;
     font-style: italic;
+}
+
+/* Actions inside teaser card, stick to bottom of card */
+.create-test_teaser-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 100px;
+    margin-bottom: 8px;
+    pointer-events: auto;
+    width: calc(100% - 32px);
+    max-width: 520px;
+}
+
+/* Base button */
+.create-test__btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+/* Confirm: cam gradient */
+.create-test__btn--confirm {
+    background: linear-gradient(90deg, #f97316 0%, #ffb36b 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 6px 18px rgba(249, 115, 22, 0.18);
+}
+.create-test__btn--confirm:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.24);
+}
+
+/* Cancel: outline with cam text */
+.create-test__btn--cancel {
+    background: #ffffff;
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.16);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+}
+.create-test__btn--cancel:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15,23,42,0.08);
+}
+
+/* Small screens: stack buttons */
+@media (max-width: 640px) {
+    .create-test_teaser-card { 
+        min-height: auto;
+        padding-bottom: 20px;
+    }
+    .create-test_teaser-actions {
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+    .create-test__btn { 
+        width: 100%; 
+        min-width: unset; 
+    }
 }
 
 /* Responsive: dưới 768px thì chuyển thành 1 cột (teaser xuống dưới) */

@@ -15,7 +15,7 @@ export default function CardItemExam({exam}) {
             <div className="card-item-exam__info">
                 <p className="card-item-exam__info-item">
                     <FieldTimeOutlined className="card-item-exam__icon" />
-                    <span>{exam.duration} phút</span>
+                    <span>{exam.duration||""} phút</span>
                 </p>
                 <p className="card-item-exam__info-item">
                     <UserOutlined className="card-item-exam__icon" />
