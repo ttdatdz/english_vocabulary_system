@@ -47,6 +47,10 @@ async function apiFetch(path, options = {}, requireAuth = false) {
   const headers =
     options.headers || buildHeaders(method, requireAuth, options.body);
   const fetchOpts = { ...options, method, headers };
+  // Force fresh GETs to avoid stale cached responses
+  if (method === "GET") {
+    fetchOpts.cache = "no-store";
+  }
 
   let res = await fetch(url, fetchOpts);
 
