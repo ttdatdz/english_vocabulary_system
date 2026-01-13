@@ -2,14 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./PartDetailPage.scss";
 import crown from "../../assets/images/crown.png";
-import {
-  postFormData,
-  post,
-  put,
-  get,
-  del,
-  getWithParams,
-} from "../../utils/request";
+import { postFormData, post, put, get, del } from "../../utils/request";
 import CreateToeicQuestion from "../../components/CreateToeicQuestion";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
@@ -20,20 +13,13 @@ function mapToeicQuestionResponseToLocal(q) {
 
   const correctIdx = LETTERS.indexOf(q.result);
 
-  // ✅ Backend trả list nhưng single question chỉ lấy phần tử đầu
-  let audioUrl = "";
-  if (Array.isArray(q.audios) && q.audios.length > 0) {
-    const first = q.audios[0];
-    if (typeof first === "string") audioUrl = first;
-    else if (first.url) audioUrl = first.url;
-    else if (first.key) audioUrl = first.key;
-    else audioUrl = String(first);
-  } else if (q.audio) {
-    audioUrl =
-      typeof q.audio === "string" ? q.audio : q.audio.url || q.audio.key || "";
-  }
-
+  // Backend trả về cả URLs và Keys
+  const audioUrl = q.audio || "";
+  const audioKey = q.audioKey || "";
   const imageUrls = Array.isArray(q.images) ? q.images.filter(Boolean) : [];
+  const imageKeys = Array.isArray(q.imageKeys)
+    ? q.imageKeys.filter(Boolean)
+    : [];
 
   return {
     id: q.id ?? null,
@@ -42,15 +28,15 @@ function mapToeicQuestionResponseToLocal(q) {
     detail: q.detail || "",
     result: q.result || "",
 
-    // ✅ Single audio (string, not array)
+    // ✅ Audio - cả URL và Key từ server
     audioUrl,
-    audioKey: "",
+    audioKey,
     audioFile: null,
     audioPreview: "",
 
-    // Images vẫn là list
+    // ✅ Images - cả URLs và Keys từ server
     imageUrls,
-    imageKeys: [],
+    imageKeys,
     imageFiles: [],
     imagePreviews: [],
 
@@ -76,13 +62,11 @@ const createEmptyQuestion = (part) => ({
   options: ["", ""],
   correctOptionIndex: null,
 
-  // ✅ Single audio (not array)
   audioUrl: "",
   audioKey: "",
   audioFile: null,
   audioPreview: "",
 
-  // Images vẫn là list
   imageUrls: [],
   imageKeys: [],
   imageFiles: [],
@@ -108,7 +92,7 @@ const buildReorderPayload = ({ examId, partNumber, questions }) => {
   };
 };
 
-export default function DetailPart() {
+export default function PartDetailPage() {
   const location = useLocation();
   const routeState = location.state || {};
   const { examId, partNumber } = useParams();
@@ -116,8 +100,7 @@ export default function DetailPart() {
   const navigate = useNavigate();
   const [examTitle, setExamTitle] = useState(routeState.examName || "");
   const [duration, setDuration] = useState(routeState.durationMinutes || 120);
-  console.log("PartDetailPage routeState:", routeState);
-  const { partQuestions } = routeState;
+
   const [questions, setQuestions] = useState([]);
 
   const [expandedId, setExpandedId] = useState(null);
@@ -128,71 +111,16 @@ export default function DetailPart() {
   const [uploading, setUploading] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
 
-  const refreshQuestionsFromServer = async () => {
-    try {
-      const examData = await get(`/api/exam/detail/${examId}`, true);
-      if (examData) {
-        window.__toeicExamData = examData;
-        const list = Array.isArray(examData?.questions)
-          ? examData.questions
-          : [];
-        const partQuestions = list.filter(
-          (q) => String(q.part) === String(partNumber)
-        );
-        const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
-        setQuestions(mapped);
-      }
-    } catch (err) {
-      console.error("Refresh questions from server failed", err);
-    }
-  };
-
-  // ✅ Refresh full exam + update global caches
-  const refreshExamAndPartCache = async () => {
-    const examData = await get(`/api/exam/detail/${examId}`, true);
-
-    // cache full exam
-    window.__toeicExamData = examData;
-
-    // build partQuestions cache
-    const byPart = {};
-
-    (examData.questions || []).forEach((q) => {
-      const p = String(q.part || "");
-      byPart[p] = byPart[p] || [];
-      byPart[p].push(q);
-    });
-
-    (examData.groupQuestions || []).forEach((g) => {
-      const p = String(g.part || "");
-      byPart[p] = byPart[p] || [];
-      (g.questions || []).forEach((qq) => byPart[p].push(qq));
-    });
-
-    window.__partQuestions = window.__partQuestions || {};
-    window.__partQuestions[examId] = byPart;
-
-    return byPart[String(partNumber)] || [];
-  };
-
-  // ===== Load câu hỏi từ route state =====
+  // ===== Load câu hỏi từ route state hoặc API =====
   useEffect(() => {
     let cancelled = false;
 
     const loadQuestions = async () => {
       try {
-        // If routeState contains `partQuestions` (even empty), treat it as canonical
-        if (Object.prototype.hasOwnProperty.call(routeState, "partQuestions")) {
-          const fromState = routeState.partQuestions || [];
-          const mapped = (Array.isArray(fromState) ? fromState : []).map(
-            mapToeicQuestionResponseToLocal
-          );
+        const fromState = routeState.partQuestions;
+        if (Array.isArray(fromState) && fromState.length > 0) {
+          const mapped = fromState.map(mapToeicQuestionResponseToLocal);
           if (!cancelled) setQuestions(mapped);
-          // if empty, keep UI in create mode
-          if (!cancelled && mapped.length === 0) {
-            setCreatingNew(true);
-            setDraftQuestion(createEmptyQuestion(String(partNumber)));
-          }
           return;
         }
 
@@ -240,7 +168,7 @@ export default function DetailPart() {
   const handleEditQuestion = (q) => {
     setDraftQuestion({
       ...q,
-      // ✅ Copy keys để giữ khi update
+      // ✅ Keys đã có sẵn từ server
       audioKey: q.audioKey || "",
       imageKeys: [...(q.imageKeys || [])],
 
@@ -290,6 +218,7 @@ export default function DetailPart() {
       if (expandedId === id) setExpandedId(null);
       if (editingQuestionId === id) setEditingQuestionId(null);
 
+      // Sync global cache
       if (window.__toeicExamData?.questions) {
         window.__toeicExamData = {
           ...window.__toeicExamData,
@@ -302,7 +231,7 @@ export default function DetailPart() {
       const hasInvalidId = nextQuestions.some(
         (q) => q?.id == null || Number.isNaN(Number(q.id))
       );
-      if (!hasInvalidId) {
+      if (!hasInvalidId && nextQuestions.length > 0) {
         const reorderPayload = buildReorderPayload({
           examId,
           partNumber,
@@ -315,16 +244,6 @@ export default function DetailPart() {
           true
         );
       }
-      // notify central CreateToeicExam to refresh shared exam data
-      const refreshedPart = await refreshExamAndPartCache();
-      setQuestions(refreshedPart.map(mapToeicQuestionResponseToLocal));
-      try {
-        window.dispatchEvent(
-          new CustomEvent("toeic:partQuestionsUpdated", {
-            detail: { examId, partNumber, partQuestions: refreshedPart },
-          })
-        );
-      } catch (e) {}
     } catch (err) {
       console.error("Delete question error:", err);
       alert(err?.message || "Xoá câu hỏi thất bại");
@@ -472,22 +391,23 @@ export default function DetailPart() {
     try {
       let uploadedImageKeys = [];
       let uploadedAudioKey = null;
-      let uploadedAudioUrl = null;
 
-      const fd = new FormData();
-
-      if (draftQuestion.audioFile) {
-        fd.append("audios", draftQuestion.audioFile);
-      }
-
-      if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
-        draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
-      }
-
-      if (
+      // Upload media mới (nếu có)
+      const hasNewMedia =
         draftQuestion.audioFile ||
-        (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0)
-      ) {
+        (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0);
+
+      if (hasNewMedia) {
+        const fd = new FormData();
+
+        if (draftQuestion.audioFile) {
+          fd.append("audios", draftQuestion.audioFile);
+        }
+
+        if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
+          draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
+        }
+
         const uploadRes = await postFormData("/api/media/upload", fd, true);
 
         const audioList = Array.isArray(uploadRes?.audios)
@@ -495,7 +415,6 @@ export default function DetailPart() {
           : [];
         if (audioList.length > 0) {
           uploadedAudioKey = audioList[0]?.key || null;
-          uploadedAudioUrl = audioList[0]?.url || null;
         }
 
         const imgList = Array.isArray(uploadRes?.images)
@@ -504,22 +423,18 @@ export default function DetailPart() {
         uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
       }
 
+      // ✅ Gộp keys cũ (từ server) + keys mới (vừa upload)
       const existingImageKeys = Array.isArray(draftQuestion.imageKeys)
         ? draftQuestion.imageKeys
         : [];
       const existingAudioKey = draftQuestion.audioKey || null;
 
-      const imagesPayload = buildMediaPayload({
-        existingKeys: existingImageKeys,
-        uploadedKeys: uploadedImageKeys,
-      });
-
-      const audiosPayload = [];
+      const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(
+        Boolean
+      );
       const finalAudioKey = uploadedAudioKey || existingAudioKey;
-      const finalAudioUrl = uploadedAudioUrl || draftQuestion.audioUrl || null;
-      if (finalAudioKey) {
-        audiosPayload.push({ url: finalAudioKey });
-      }
+
+      const imagesPayload = allImageKeys.map((key) => ({ url: key }));
 
       const basePayload = {
         part: String(partNumber),
@@ -533,13 +448,12 @@ export default function DetailPart() {
           detail: opt,
         })),
         result: LETTERS[idx],
-        audios: audiosPayload,
-        // Backend model uses single `audio` field — include it so DB is updated
         audio: finalAudioKey || null,
         images: imagesPayload,
       };
 
       if (editingQuestionId != null) {
+        // ==================== UPDATE ====================
         const idxInList = questions.findIndex(
           (q) => q.id === editingQuestionId
         );
@@ -550,97 +464,52 @@ export default function DetailPart() {
 
         await put(payload, `/api/toeic-question/${editingQuestionId}`, true);
 
-        const allImageKeys = [
-          ...existingImageKeys,
-          ...uploadedImageKeys,
-        ].filter(Boolean);
-
-        const updatedLocal = {
-          ...draftQuestion,
-          detail: payload.detail,
-          clarify: payload.clarify || "",
-          conversation: payload.conversation,
-          result: payload.result,
-
-          options: trimmedOptions,
-          correctOptionIndex: idx,
-
-          audioKey: finalAudioKey || "",
-          audioUrl: finalAudioUrl || "",
-          audioFile: null,
-          audioPreview: "",
-
-          imageKeys: allImageKeys,
-          imageFiles: [],
-          imagePreviews: [],
-
-          indexNumber: payload.indexNumber,
-        };
-
-        setQuestions((prev) =>
-          prev.map((q) => (q.id === editingQuestionId ? updatedLocal : q))
+        // ✅ Reload question từ exam để lấy URLs mới
+        const examData = await get(`/api/exam/detail/${examId}`, true);
+        const updatedQuestion = (examData?.questions || []).find(
+          (q) => q.id === editingQuestionId
         );
-        // prefer the central refresh in CreateToeicExam when available
-        if (window.__refreshPartQuestions) {
-          const refreshed = await window.__refreshPartQuestions(
-            examId,
-            partNumber
+
+        if (updatedQuestion) {
+          const updatedLocal = mapToeicQuestionResponseToLocal(updatedQuestion);
+          setQuestions((prev) =>
+            prev.map((q) => (q.id === editingQuestionId ? updatedLocal : q))
           );
-          if (Array.isArray(refreshed)) {
-            try {
-              navigate(location.pathname, {
-                replace: true,
-                state: { ...(routeState || {}), partQuestions: refreshed },
-              });
-            } catch (e) {}
-            setQuestions(refreshed.map(mapToeicQuestionResponseToLocal));
-            try {
-              window.dispatchEvent(
-                new CustomEvent("toeic:partQuestionsUpdated", {
-                  detail: { examId, partNumber, partQuestions: refreshed },
-                })
-              );
-            } catch (e) {}
-          } else {
-            await refreshQuestionsFromServer();
-          }
-        } else {
-          await refreshQuestionsFromServer();
         }
       } else {
+        // ==================== CREATE ====================
         const saved = await post(basePayload, "/api/toeic-question", true);
 
         if (!saved) {
           throw new Error("Create question failed");
         }
 
-        const createdLocal = mapToeicQuestionResponseToLocal(saved);
+        // const createdLocal = mapToeicQuestionResponseToLocal(saved);
+        // setQuestions((prev) => [...prev, createdLocal]);
 
-        const allImageKeys = [
-          ...existingImageKeys,
-          ...uploadedImageKeys,
-        ].filter(Boolean);
-
-        createdLocal.audioKey = finalAudioKey || "";
-        createdLocal.imageKeys = allImageKeys;
-
-        createdLocal.audioFile = null;
-        createdLocal.audioPreview = "";
-        // Ensure audioUrl present (use uploaded full URL if available)
-        createdLocal.audioUrl = createdLocal.audioUrl || finalAudioUrl || "";
-        createdLocal.imageFiles = [];
-        createdLocal.imagePreviews = [];
-
-        setQuestions((prev) => [...prev, createdLocal]);
-        const refreshedPart = await refreshExamAndPartCache();
-        setQuestions(refreshedPart.map(mapToeicQuestionResponseToLocal));
+        let createdLocal;
         try {
-          window.dispatchEvent(
-            new CustomEvent("toeic:partQuestionsUpdated", {
-              detail: { examId, partNumber, partQuestions: refreshedPart },
-            })
+          const full = await get(`/api/toeic-question/${saved.id}`, true);
+          createdLocal = mapToeicQuestionResponseToLocal(full || saved);
+        } catch (e) {
+          // Fallback: exam detail
+          const examData = await get(`/api/exam/detail/${examId}`, true);
+          const createdFromExam = (examData?.questions || []).find(
+            (q) => q.id === saved.id
           );
-        } catch (e) {}
+          createdLocal = mapToeicQuestionResponseToLocal(
+            createdFromExam || saved
+          );
+        }
+        setQuestions((prev) => [...prev, createdLocal]);
+
+        // Sync global cache
+        if (window.__toeicExamData?.questions) {
+          window.__toeicExamData = {
+            ...window.__toeicExamData,
+            questions: [...(window.__toeicExamData.questions || []), saved],
+          };
+        }
       }
 
       setCreatingNew(false);
@@ -695,15 +564,6 @@ export default function DetailPart() {
       });
 
       await put(reorderPayload, `/api/toeic-question/reorder/${examId}`, true);
-      const refreshedPart = await refreshExamAndPartCache();
-      setQuestions(refreshedPart.map(mapToeicQuestionResponseToLocal));
-      try {
-        window.dispatchEvent(
-          new CustomEvent("toeic:partQuestionsUpdated", {
-            detail: { examId, partNumber, partQuestions: refreshedPart },
-          })
-        );
-      } catch (e) {}
     } catch (e) {
       console.error("Reorder failed:", e);
     }
@@ -712,7 +572,6 @@ export default function DetailPart() {
   const handleDragEnd = () => setDraggingId(null);
 
   const renderQuestionCard = (q, index) => {
-    console.log("Render question", q, index);
     const isExpanded = expandedId === q.id && editingQuestionId !== q.id;
     const isDragging = draggingId === q.id;
 
@@ -768,7 +627,7 @@ export default function DetailPart() {
             {q.detail || "Chưa có nội dung câu hỏi."}
           </p>
 
-          {/* ✅ Hiển thị single audio */}
+          {/* Hiển thị audio */}
           {q.audioUrl && (
             <div className="question-card__audio">
               <span>Âm thanh:</span>
@@ -780,7 +639,7 @@ export default function DetailPart() {
             </div>
           )}
 
-          {/* ✅ Hiển thị images list */}
+          {/* Hiển thị images */}
           {q.imageUrls && q.imageUrls.length > 0 && (
             <div className="question-card__images">
               <span>Hình ảnh:</span>
