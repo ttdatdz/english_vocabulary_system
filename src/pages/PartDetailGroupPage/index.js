@@ -3,26 +3,9 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./PartDetailGroupPage.scss";
 import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
-import CreateToeicQuestion from "../../components/CreateToeicQuestion";
+import CreateGroupToeicQuestion from "../../components/CreateGroupToeicQuestion";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
-
-// Helper: lấy số câu hỏi mỗi nhóm theo part
-// const getQuestionsPerGroup = (part) => {
-//     switch (String(part)) {
-//         case "3":
-//         case "Part 3":
-//             return 3;  // Part 3: 3 câu/nhóm
-//         case "4":
-//         case "Part 4":
-//             return 3;  // Part 4: 3 câu/nhóm
-//         case "7":
-//         case "Part 7":
-//             return 5;  // Part 7: 5 câu/nhóm (hoặc có thể là 2-5 tuỳ loại)
-//         default:
-//             return 3;
-//     }
-// };
 
 // Helper: lấy số bắt đầu của part
 const getPartStartIndex = (part) => {
@@ -53,90 +36,29 @@ const getPartStartIndex = (part) => {
   }
 };
 
-// Helper: tạo title và questionRange dựa vào thứ tự group
-// const generateGroupMetadata = (groupOrder, part, questionsCount) => {
-//      ✅ Nếu không có câu hỏi
-//     if (!questionsCount || questionsCount === 0) {
-//         let contentType = "content";
-//         switch (String(part)) {
-//             case "3":
-//             case "Part 3":
-//                 contentType = "conversation";
-//                 break;
-//             case "4":
-//             case "Part 4":
-//                 contentType = "talk";
-//                 break;
-//             case "7":
-//             case "Part 7":
-//                 contentType = "passage";
-//                 break;
-//         }
+const isUrl = (s) => typeof s === "string" && /^https?:\/\//i.test(s);
 
-//         return {
-//             title: `No questions - ${contentType}`,
-//             questionRange: "",
-//             startIndex: null,
-//             endIndex: null,
-//         };
-//     }
-
-//     const startIndex = getPartStartIndex(part);
-
-//     // ✅ Tính vị trí bắt đầu dựa vào tất cả groups trước đó
-//     // groupOrder là thứ tự của group này trong danh sách
-//     const groupStartQuestion = startIndex + (groupOrder * questionsCount);
-//     const groupEndQuestion = groupStartQuestion + questionsCount - 1;
-
-//     let contentType = "content";
-//     switch (String(part)) {
-//         case "3":
-//         case "Part 3":
-//             contentType = "conversation";
-//             break;
-//         case "4":
-//         case "Part 4":
-//             contentType = "talk";
-//             break;
-//         case "7":
-//         case "Part 7":
-//             contentType = "passage";
-//             break;
-//     }
-
-//     return {
-//         title: `Use the given ${contentType} to answer the questions ${groupStartQuestion} to ${groupEndQuestion}`,
-//         questionRange: `${groupStartQuestion}-${groupEndQuestion}`,
-//         startIndex: groupStartQuestion,
-//         endIndex: groupEndQuestion,
-//     };
-// };
-
-// Map GroupQuestionResponseDTO từ backend sang local model
 function mapGroupQuestionResponseToLocal(group) {
   if (!group) return null;
 
-  // Backend trả về presigned URLs
-  const imageUrls = Array.isArray(group.images)
+  const rawImages = Array.isArray(group.images)
     ? group.images.filter(Boolean)
     : [];
-  const audioUrls = Array.isArray(group.audios)
+  const rawAudios = Array.isArray(group.audios)
     ? group.audios.filter(Boolean)
     : [];
 
-  // use shared extractKeyFromUrl helper
+  // CHỈ lấy URL cho hiển thị
+  const imageUrls = rawImages.filter(isUrl);
+  const audioUrls = rawAudios.filter(isUrl);
 
-  const imageKeys = imageUrls.map((it) => {
-    if (!it) return it;
-    if (typeof it === "object") return it.key || it.url || JSON.stringify(it);
-    return extractKeyFromUrl(it);
-  });
-
-  const audioKeys = audioUrls.map((it) => {
-    if (!it) return it;
-    if (typeof it === "object") return it.key || it.url || JSON.stringify(it);
-    return extractKeyFromUrl(it);
-  });
+  // KEY giữ riêng để PUT/POST
+  const imageKeys = Array.isArray(group.imageKeys)
+    ? group.imageKeys.filter(Boolean)
+    : [];
+  const audioKeys = Array.isArray(group.audioKeys)
+    ? group.audioKeys.filter(Boolean)
+    : [];
 
   return {
     id: group.id ?? null,
@@ -146,12 +68,10 @@ function mapGroupQuestionResponseToLocal(group) {
     questionRange: group.questionRange || "",
     examId: group.examId ?? null,
 
-    imageUrls: imageUrls, // ✅ Presigned URLs để hiển thị
-    audioUrls: audioUrls, // ✅ Presigned URLs để hiển thị
-
-    // Keep keys (prefer actual key when available, otherwise derive from URL)
-    imageKeys,
-    audioKeys,
+    imageUrls, // render
+    audioUrls, // render
+    imageKeys, // PUT/POST
+    audioKeys, // PUT/POST
 
     imageFiles: [],
     imagePreviews: [],
@@ -163,20 +83,17 @@ function mapGroupQuestionResponseToLocal(group) {
       : [],
   };
 }
-// Map ToeicQuestionResponse sang local model
+
 function mapToeicQuestionResponseToLocal(q) {
   if (!q) return null;
 
   const correctIdx = LETTERS.indexOf(q.result);
-  const imageUrls = Array.isArray(q.images) ? q.images.filter(Boolean) : [];
+  const rawImages = Array.isArray(q.images) ? q.images.filter(Boolean) : [];
 
-  // use shared extractKeyFromUrl helper
-
-  const imageKeys = imageUrls.map((it) => {
-    if (!it) return it;
-    if (typeof it === "object") return it.key || it.url || JSON.stringify(it);
-    return extractKeyFromUrl(it);
-  });
+  const imageUrls = rawImages.filter(isUrl); // render
+  const imageKeys = Array.isArray(q.imageKeys)
+    ? q.imageKeys.filter(Boolean)
+    : []; // payload
 
   return {
     id: q.id ?? null,
@@ -240,36 +157,6 @@ const createEmptyQuestion = (part) => ({
   clarify: "",
 });
 
-const buildMediaPayload = ({ existingKeys = [], uploadedKeys = [] }) => {
-  const all = [...(existingKeys || []), ...(uploadedKeys || [])].filter(
-    Boolean
-  );
-  const uniq = Array.from(new Set(all));
-  return uniq.map((key) => ({ url: key }));
-};
-
-// Helper: extract storage key from a presigned URL or return input
-const extractKeyFromUrl = (u) => {
-  if (!u) return u;
-  try {
-    const url = new URL(u);
-    return normalizeStorageKey(url.pathname.replace(/^\//, ""));
-  } catch (e) {
-    try {
-      const k = String(u).split("/").filter(Boolean).pop() || String(u);
-      return normalizeStorageKey(k);
-    } catch (e2) {
-      return normalizeStorageKey(String(u));
-    }
-  }
-};
-
-// Strip known bucket prefix to avoid double-prefixing on backend
-const normalizeStorageKey = (k) => {
-  if (!k) return k;
-  return String(k).replace(/^vocalearn\//i, "");
-};
-
 // Helper: extract start index từ questionRange "32-35" -> 32
 const extractStartIndex = (range) => {
   try {
@@ -301,63 +188,44 @@ export default function PartDetailGroupPage() {
   const [uploading, setUploading] = useState(false);
   const [draggingGroupId, setDraggingGroupId] = useState(null);
 
-  // Helper: PUT group while preserving existing media lists when payload omits them
-  const putGroupPreservingMedia = async (groupId, payload) => {
-    try {
-      const server = await get(`/api/group-question/${groupId}`, true);
+  // Load groups từ route state hoặc API
 
-      const finalPayload = { ...payload };
-
-      if (!payload.images || payload.images.length === 0) {
-        finalPayload.images = (server?.images || [])
-          .map((i) => i?.key || i?.url || i)
-          .filter(Boolean)
-          .map((k) => ({ url: extractKeyFromUrl(k) }));
-      }
-
-      if (!payload.audios || payload.audios.length === 0) {
-        finalPayload.audios = (server?.audios || [])
-          .map((a) => a?.key || a?.url || a)
-          .filter(Boolean)
-          .map((k) => ({ url: extractKeyFromUrl(k) }));
-      }
-
-      await put(finalPayload, `/api/group-question/${groupId}`, true);
-
-      // Return fresh object
-      return await get(`/api/group-question/${groupId}`, true);
-    } catch (err) {
-      console.error("putGroupPreservingMedia failed", err);
-      throw err;
-    }
-  };
-
-  // Load groups từ route state hoặc API, sau đó sort
   useEffect(() => {
     let cancelled = false;
 
     const loadGroups = async () => {
       try {
-        const fromState = routeState.partGroups;
-        if (Array.isArray(fromState) && fromState.length > 0) {
-          const mapped = fromState.map(mapGroupQuestionResponseToLocal);
-          const sorted = sortGroups(mapped);
-          if (!cancelled) setGroups(sorted);
-          return;
-        }
-
+        // 1) Luôn gọi exam detail (bỏ routeState ưu tiên)
         const examData = await get(`/api/exam/detail/${examId}`, true);
         const list = Array.isArray(examData?.groupQuestions)
           ? examData.groupQuestions
           : [];
+
+        // 2) Lọc theo part
         const partGroups = list.filter(
           (g) => String(g.part) === String(partNumber)
         );
-        const mapped = partGroups.map(mapGroupQuestionResponseToLocal);
+
+        // 3) Song song gọi chi tiết từng group để lấy URL hình/audio chuẩn
+        const details = await Promise.all(
+          partGroups.map(async (g) => {
+            try {
+              const full = await get(`/api/group-question/${g.id}`, true);
+              return full || g; // fallback nếu lỗi
+            } catch (e) {
+              console.error("Load group detail error", g.id, e);
+              return g;
+            }
+          })
+        );
+
+        // 4) Map → sort → set state
+        const mapped = details.map(mapGroupQuestionResponseToLocal);
         const sorted = sortGroups(mapped);
 
         if (!cancelled) setGroups(sorted);
 
+        // 5) Nếu không có group nào → mở form tạo mới
         if (!cancelled && sorted.length === 0) {
           setCreatingNewGroup(true);
           setDraftGroup(createEmptyGroup(String(partNumber), examId));
@@ -368,22 +236,18 @@ export default function PartDetailGroupPage() {
     };
 
     loadGroups();
-
     return () => {
       cancelled = true;
     };
-  }, [examId, partNumber, routeState.partGroups]);
+  }, [examId, partNumber]);
 
-  // Sort groups theo questionRange (ví dụ: "32-34" < "35-37")
-  // Sort groups theo questionRange, nhưng đưa groups rỗng xuống cuối
+  // Sort groups theo questionRange
   const sortGroups = (groupsList) => {
     return [...groupsList].sort((a, b) => {
-      // Groups rỗng (không có questionRange) luôn ở cuối
       if (!a.questionRange && !b.questionRange) return 0;
-      if (!a.questionRange) return 1; // a xuống cuối
-      if (!b.questionRange) return -1; // b xuống cuối
+      if (!a.questionRange) return 1;
+      if (!b.questionRange) return -1;
 
-      // Groups có questionRange thì sort theo số
       const startA = extractStartIndex(a.questionRange);
       const startB = extractStartIndex(b.questionRange);
       return startA - startB;
@@ -397,7 +261,6 @@ export default function PartDetailGroupPage() {
     return groupsList.map((group) => {
       const questionsCount = group.questions.length;
 
-      // ✅ Nếu không có câu hỏi
       if (questionsCount === 0) {
         let contentType = "content";
         switch (String(partNumber)) {
@@ -423,7 +286,6 @@ export default function PartDetailGroupPage() {
         };
       }
 
-      // ✅ Có câu hỏi - tính toán bình thường
       const groupStartQuestion = currentQuestionIndex;
       const groupEndQuestion = currentQuestionIndex + questionsCount - 1;
 
@@ -446,13 +308,11 @@ export default function PartDetailGroupPage() {
       const title = `Use the given ${contentType} to answer the questions ${groupStartQuestion} to ${groupEndQuestion}`;
       const questionRange = `${groupStartQuestion}-${groupEndQuestion}`;
 
-      // Cập nhật indexNumber cho các câu hỏi con
       const updatedQuestions = group.questions.map((q, qIdx) => ({
         ...q,
         indexNumber: groupStartQuestion + qIdx,
       }));
 
-      // Di chuyển currentQuestionIndex cho group tiếp theo
       currentQuestionIndex += questionsCount;
 
       return {
@@ -485,21 +345,9 @@ export default function PartDetailGroupPage() {
       imagePreviews: [],
       audioFiles: [],
       audioPreviews: [],
-      // ✅ GIỮ NGUYÊN KEYS
-      // Prefer URLs (group.imageUrls / group.audioUrls) when available so
-      // subsequent updates send playable URLs back to server instead of raw keys.
-      imageKeys:
-        Array.isArray(group.imageKeys) && group.imageKeys.length > 0
-          ? group.imageKeys
-          : Array.isArray(group.imageUrls)
-          ? group.imageUrls.map((u) => extractKeyFromUrl(u))
-          : [],
-      audioKeys:
-        Array.isArray(group.audioKeys) && group.audioKeys.length > 0
-          ? group.audioKeys
-          : Array.isArray(group.audioUrls)
-          ? group.audioUrls.map((u) => extractKeyFromUrl(u))
-          : [],
+      // ✅ Keys đã có sẵn từ server
+      imageKeys: [...(group.imageKeys || [])],
+      audioKeys: [...(group.audioKeys || [])],
     });
     setEditingGroupId(group.id);
     setCreatingNewGroup(false);
@@ -527,6 +375,7 @@ export default function PartDetailGroupPage() {
       imageFiles: [...(prev.imageFiles || []), file],
       imagePreviews: [...(prev.imagePreviews || []), previewUrl],
     }));
+    e.target.value = "";
   };
 
   const handleRemoveGroupImage = (source, idx) => {
@@ -554,6 +403,7 @@ export default function PartDetailGroupPage() {
       audioFiles: [...(prev.audioFiles || []), file],
       audioPreviews: [...(prev.audioPreviews || []), previewUrl],
     }));
+    e.target.value = "";
   };
 
   const handleRemoveGroupAudio = (source, idx) => {
@@ -581,23 +431,23 @@ export default function PartDetailGroupPage() {
     setUploading(true);
 
     try {
-      // Upload media
+      // Upload media mới (nếu có)
       let uploadedImageKeys = [];
       let uploadedAudioKeys = [];
 
       const fd = new FormData();
+      let hasNewMedia = false;
 
       if (draftGroup.imageFiles && draftGroup.imageFiles.length > 0) {
         draftGroup.imageFiles.forEach((f) => fd.append("images", f));
+        hasNewMedia = true;
       }
       if (draftGroup.audioFiles && draftGroup.audioFiles.length > 0) {
         draftGroup.audioFiles.forEach((f) => fd.append("audios", f));
+        hasNewMedia = true;
       }
 
-      if (
-        (draftGroup.imageFiles && draftGroup.imageFiles.length > 0) ||
-        (draftGroup.audioFiles && draftGroup.audioFiles.length > 0)
-      ) {
+      if (hasNewMedia) {
         const uploadRes = await postFormData("/api/media/upload", fd, true);
 
         const imgList = Array.isArray(uploadRes?.images)
@@ -611,23 +461,13 @@ export default function PartDetailGroupPage() {
         uploadedAudioKeys = audioList.map((x) => x?.key).filter(Boolean);
       }
 
-      // Build payload - GỬI KEYS
+      // ✅ Gộp keys cũ (từ server) + keys mới (vừa upload)
       const existingImageKeys = Array.isArray(draftGroup.imageKeys)
         ? draftGroup.imageKeys
         : [];
       const existingAudioKeys = Array.isArray(draftGroup.audioKeys)
         ? draftGroup.audioKeys
         : [];
-
-      const imagesPayload = buildMediaPayload({
-        existingKeys: existingImageKeys,
-        uploadedKeys: uploadedImageKeys,
-      });
-
-      const audiosPayload = buildMediaPayload({
-        existingKeys: existingAudioKeys,
-        uploadedKeys: uploadedAudioKeys,
-      });
 
       const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(
         Boolean
@@ -636,12 +476,14 @@ export default function PartDetailGroupPage() {
         Boolean
       );
 
-      let updatedGroups;
+      const imagesPayload = allImageKeys.map((key) => ({ url: key }));
+      const audiosPayload = allAudioKeys.map((key) => ({ url: key }));
 
       if (editingGroupId != null) {
-        // Update group - giữ nguyên vị trí và questions
+        // ==================== UPDATE GROUP ====================
         const currentGroup = groups.find((g) => g.id === editingGroupId);
 
+        // Tính toán title và questionRange
         const tempGroups = groups.map((g) =>
           g.id === editingGroupId
             ? {
@@ -649,13 +491,15 @@ export default function PartDetailGroupPage() {
                 content: draftGroup.content.trim(),
                 imageKeys: allImageKeys,
                 audioKeys: allAudioKeys,
+                // GIỮ NGUYÊN url đang hiển thị
+                imageUrls: g.imageUrls,
+                audioUrls: g.audioUrls,
                 questions: currentGroup.questions,
               }
             : g
         );
-
-        updatedGroups = recalculateAllGroups(tempGroups);
-        const recalculatedGroup = updatedGroups.find(
+        const recalculated = recalculateAllGroups(tempGroups);
+        const recalculatedGroup = recalculated.find(
           (g) => g.id === editingGroupId
         );
 
@@ -665,39 +509,30 @@ export default function PartDetailGroupPage() {
           questionRange: recalculatedGroup.questionRange,
           content: draftGroup.content.trim(),
           examId: Number(examId),
-          questions: recalculatedGroup.questions.map((q) => ({
-            indexNumber: q.indexNumber,
-            detail: q.detail,
-            result: q.result,
-            clarify: q.clarify,
-            audios: [],
-            conversation: null,
-            options: q.options.map((opt, idx) => ({
-              mark: LETTERS[idx],
-              detail: opt,
-            })),
-            images: q.imageKeys.map((key) => ({ url: key })),
-          })),
         };
 
-        if (imagesPayload && imagesPayload.length > 0)
+        if (
+          uploadedImageKeys.length > 0 ||
+          draftGroup.imageKeys?.length !== currentGroup.imageKeys?.length
+        ) {
           basePayload.images = imagesPayload;
-        if (audiosPayload && audiosPayload.length > 0)
+        }
+
+        if (
+          uploadedAudioKeys.length > 0 ||
+          draftGroup.audioKeys?.length !== currentGroup.audioKeys?.length
+        ) {
           basePayload.audios = audiosPayload;
+        }
 
-        const response = await putGroupPreservingMedia(
-          editingGroupId,
-          basePayload
+        await put(basePayload, `/api/group-question/${editingGroupId}`, true);
+
+        // Reload từ server để lấy data mới nhất
+        const reloaded = await get(
+          `/api/group-question/${editingGroupId}`,
+          true
         );
-
-        const updatedLocal = mapGroupQuestionResponseToLocal(response);
-        updatedLocal.imageKeys = allImageKeys;
-        updatedLocal.audioKeys = allAudioKeys;
-        updatedLocal.imageFiles = [];
-        updatedLocal.imagePreviews = [];
-        updatedLocal.audioFiles = [];
-        updatedLocal.audioPreviews = [];
-        updatedLocal.questions = recalculatedGroup.questions;
+        const updatedLocal = mapGroupQuestionResponseToLocal(reloaded);
 
         setGroups((prev) => {
           const next = prev.map((g) =>
@@ -705,33 +540,9 @@ export default function PartDetailGroupPage() {
           );
           return sortGroups(next);
         });
-
-        // Update global cache with updated questions from this group (if provided by the response)
-        if (response?.questions && Array.isArray(response.questions)) {
-          if (window.__toeicExamData?.questions) {
-            const existing = window.__toeicExamData.questions || [];
-            const updatedQs = response.questions;
-            const merged = existing
-              .filter((q) => !updatedQs.some((uq) => uq.id === q.id))
-              .concat(updatedQs);
-            window.__toeicExamData = {
-              ...window.__toeicExamData,
-              questions: merged,
-            };
-          } else {
-            window.__toeicExamData = {
-              ...(window.__toeicExamData || {}),
-              questions: response.questions,
-            };
-          }
-        }
       } else {
-        // ✅ CREATE NEW GROUP - Reload sau khi tạo
-        // Tính toán metadata TRƯỚC khi gửi lên backend
-        const tempGroups = [
-          ...groups.filter((g) => g.questionRange),
-          draftGroup,
-        ]; // Lọc bỏ groups rỗng cũ
+        // ==================== CREATE NEW GROUP ====================
+        const tempGroups = [...groups, draftGroup];
         const recalculated = recalculateAllGroups(tempGroups);
         const newGroup = recalculated[recalculated.length - 1];
 
@@ -741,12 +552,10 @@ export default function PartDetailGroupPage() {
           questionRange: newGroup.questionRange,
           content: draftGroup.content.trim(),
           examId: Number(examId),
+          images: imagesPayload,
+          audios: audiosPayload,
           questions: [],
         };
-        if (imagesPayload && imagesPayload.length > 0)
-          basePayload.images = imagesPayload;
-        if (audiosPayload && audiosPayload.length > 0)
-          basePayload.audios = audiosPayload;
 
         const saved = await post(basePayload, "/api/group-question", true);
 
@@ -754,29 +563,15 @@ export default function PartDetailGroupPage() {
           throw new Error("Create group failed");
         }
 
-        // ✅ RELOAD để lấy URLs
+        // Reload để lấy data đầy đủ
         const reloadedGroup = await get(
           `/api/group-question/${saved.id}`,
           true
         );
-
         const createdLocal = mapGroupQuestionResponseToLocal(reloadedGroup);
-        createdLocal.imageKeys = allImageKeys;
-        createdLocal.audioKeys = allAudioKeys;
-        createdLocal.imageFiles = [];
-        createdLocal.imagePreviews = [];
-        createdLocal.audioFiles = [];
-        createdLocal.audioPreviews = [];
-
-        // ✅ Đảm bảo title và questionRange từ backend
-        createdLocal.title = reloadedGroup.title || newGroup.title;
-        createdLocal.questionRange =
-          reloadedGroup.questionRange || newGroup.questionRange;
 
         setGroups((prev) => {
-          // Loại bỏ groups rỗng cũ, thêm group mới
-          const filtered = prev.filter((g) => g.questionRange);
-          const next = [...filtered, createdLocal];
+          const next = [...prev, createdLocal];
           return sortGroups(next);
         });
       }
@@ -784,6 +579,7 @@ export default function PartDetailGroupPage() {
       setCreatingNewGroup(false);
       setEditingGroupId(null);
       setDraftGroup(null);
+      setExpandedGroupId(null);
     } catch (err) {
       console.error("Save group error", err);
       alert(err?.message || "Lưu nhóm câu hỏi thất bại");
@@ -802,46 +598,26 @@ export default function PartDetailGroupPage() {
       const nextGroups = groups.filter((g) => g.id !== groupId);
       const recalculated = recalculateAllGroups(nextGroups);
 
-      // Update tất cả groups còn lại
+      // Update các groups còn lại trên server
       for (const group of recalculated) {
-        if (group.id) {
+        if (group.id && group.questionRange) {
           const payload = {
             part: String(partNumber),
             title: group.title,
             questionRange: group.questionRange,
             content: group.content,
             examId: Number(examId),
-            images: group.imageKeys.map((key) => ({ url: key })), // ✅ Gửi keys
-            audios: group.audioKeys.map((key) => ({ url: key })), // ✅ Gửi keys
-            questions: group.questions.map((q) => ({
-              indexNumber: q.indexNumber,
-              detail: q.detail,
-              result: q.result,
-              clarify: q.clarify,
-              audios: [],
-              conversation: null,
-              options: q.options.map((opt, idx) => ({
-                mark: LETTERS[idx],
-                detail: opt,
-              })),
-              images: q.imageKeys.map((key) => ({ url: key })),
-            })),
+            images: (group.imageKeys || []).map((key) => ({ url: key })),
+            audios: (group.audioKeys || []).map((key) => ({ url: key })),
           };
 
-          // Only include media fields if present to avoid overwriting server lists
-          const pruned = { ...payload };
-          if (!payload.images || payload.images.length === 0)
-            delete pruned.images;
-          if (!payload.audios || payload.audios.length === 0)
-            delete pruned.audios;
-
-          await putGroupPreservingMedia(group.id, pruned);
+          await put(payload, `/api/group-question/${group.id}`, true);
         }
       }
 
       setGroups(recalculated);
 
-      // Sync global cache: remove questions for this part that no longer exist and update indexNumbers
+      // Sync global cache
       if (window.__toeicExamData?.questions) {
         const remainingIds = new Set(
           recalculated
@@ -849,22 +625,9 @@ export default function PartDetailGroupPage() {
             .filter(Boolean)
         );
 
-        // keep questions that are not from this part OR that are still present
         let newQuestions = (window.__toeicExamData.questions || []).filter(
           (q) => String(q.part) !== String(partNumber) || remainingIds.has(q.id)
         );
-
-        // update indexNumber for remaining questions in this part
-        newQuestions = newQuestions.map((qq) => {
-          if (String(qq.part) !== String(partNumber)) return qq;
-          if (remainingIds.has(qq.id)) {
-            for (const g of recalculated) {
-              const found = (g.questions || []).find((x) => x.id === qq.id);
-              if (found) return { ...qq, indexNumber: found.indexNumber };
-            }
-          }
-          return qq;
-        });
 
         window.__toeicExamData = {
           ...window.__toeicExamData,
@@ -917,60 +680,25 @@ export default function PartDetailGroupPage() {
     setGroups(recalculated);
     setDraggingGroupId(null);
 
-    // Update tất cả groups
+    // Update trên server
     try {
       for (const group of recalculated) {
-        if (group.id) {
+        if (group.id && group.questionRange) {
           const payload = {
             part: String(partNumber),
             title: group.title,
             questionRange: group.questionRange,
             content: group.content,
             examId: Number(examId),
-            images: group.imageKeys.map((key) => ({ url: key })),
-            audios: group.audioKeys.map((key) => ({ url: key })),
-            questions: group.questions.map((q) => ({
-              indexNumber: q.indexNumber,
-              detail: q.detail,
-              result: q.result,
-              clarify: q.clarify,
-              audios: [],
-              conversation: null,
-              options: q.options.map((opt, idx) => ({
-                mark: LETTERS[idx],
-                detail: opt,
-              })),
-              images: q.imageKeys.map((key) => ({ url: key })),
-            })),
+            images: (group.imageKeys || []).map((key) => ({ url: key })),
+            audios: (group.audioKeys || []).map((key) => ({ url: key })),
           };
 
-          const pruned = { ...payload };
-          if (!payload.images || payload.images.length === 0)
-            delete pruned.images;
-          if (!payload.audios || payload.audios.length === 0)
-            delete pruned.audios;
-
-          await putGroupPreservingMedia(group.id, pruned);
+          await put(payload, `/api/group-question/${group.id}`, true);
         }
       }
     } catch (err) {
       console.error("Reorder groups error", err);
-    }
-
-    // Update global question indexNumbers in cache to reflect new ordering
-    if (window.__toeicExamData?.questions) {
-      const idxMap = new Map();
-      for (const g of recalculated) {
-        for (const q of g.questions || []) {
-          if (q?.id != null) idxMap.set(q.id, q.indexNumber);
-        }
-      }
-      window.__toeicExamData = {
-        ...window.__toeicExamData,
-        questions: (window.__toeicExamData.questions || []).map((qq) =>
-          idxMap.has(qq.id) ? { ...qq, indexNumber: idxMap.get(qq.id) } : qq
-        ),
-      };
     }
   };
 
@@ -990,6 +718,8 @@ export default function PartDetailGroupPage() {
     setCurrentGroupId(groupId);
     setDraftQuestion({
       ...question,
+      imageUrls: [...(question.imageUrls || [])],
+      imageKeys: [...(question.imageKeys || [])], // ✅ Keys từ server
       imageFiles: [],
       imagePreviews: [],
     });
@@ -1055,6 +785,7 @@ export default function PartDetailGroupPage() {
       imageFiles: [...(prev.imageFiles || []), file],
       imagePreviews: [...(prev.imagePreviews || []), previewUrl],
     }));
+    e.target.value = "";
   };
 
   const handleRemoveImage = (source, idx) => {
@@ -1097,32 +828,28 @@ export default function PartDetailGroupPage() {
     setUploading(true);
 
     try {
-      // Upload media
+      // Upload media mới
       let uploadedImageKeys = [];
 
-      const fd = new FormData();
-
       if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
+        const fd = new FormData();
         draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
-      }
 
-      if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
         const uploadRes = await postFormData("/api/media/upload", fd, true);
-
         const imgList = Array.isArray(uploadRes?.images)
           ? uploadRes.images
           : [];
         uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
       }
 
-      // Build payload
+      // Gộp keys
       const existingKeys = Array.isArray(draftQuestion.imageKeys)
         ? draftQuestion.imageKeys
         : [];
-      const imagesPayload = buildMediaPayload({
-        existingKeys,
-        uploadedKeys: uploadedImageKeys,
-      });
+      const allImageKeys = [...existingKeys, ...uploadedImageKeys].filter(
+        Boolean
+      );
+      const imagesPayload = allImageKeys.map((key) => ({ url: key }));
 
       const basePayload = {
         part: String(partNumber),
@@ -1136,183 +863,103 @@ export default function PartDetailGroupPage() {
           detail: opt,
         })),
         result: LETTERS[idx],
-        audios: [], // ✅ Group question không có audio
+        audio: null,
         images: imagesPayload,
       };
 
       if (editingQuestionId != null) {
-        // Update question - recalculate group
+        // ==================== UPDATE QUESTION ====================
         await put(
           basePayload,
           `/api/toeic-question/${editingQuestionId}`,
           true
         );
 
-        const updatedLocal = {
-          ...draftQuestion,
-          detail: basePayload.detail,
-          clarify: basePayload.clarify,
-          result: basePayload.result,
-          options: trimmedOptions,
-          correctOptionIndex: idx,
-          imageKeys: [...existingKeys, ...uploadedImageKeys].filter(Boolean),
-          imageFiles: [],
-          imagePreviews: [],
-        };
+        // Reload group để lấy data mới
+        const reloaded = await get(
+          `/api/group-question/${currentGroupId}`,
+          true
+        );
+        const mappedGroup = mapGroupQuestionResponseToLocal(reloaded);
 
-        // ✅ Recalculate groups
+        // Recalculate và update state
         const updatedGroups = groups.map((g) =>
-          g.id === currentGroupId
-            ? {
-                ...g,
-                questions: g.questions.map((q) =>
-                  q.id === editingQuestionId ? updatedLocal : q
-                ),
-              }
-            : g
+          g.id === currentGroupId ? mappedGroup : g
         );
         const recalculated = recalculateAllGroups(updatedGroups);
-
         setGroups(recalculated);
 
-        // ✅ UPDATE GROUP với title và questionRange mới
+        // Update group metadata trên server
         const updatedGroup = recalculated.find((g) => g.id === currentGroupId);
-        if (updatedGroup) {
+        if (updatedGroup && updatedGroup.questionRange) {
           const groupPayload = {
             part: String(partNumber),
             title: updatedGroup.title,
             questionRange: updatedGroup.questionRange,
             content: updatedGroup.content,
             examId: Number(examId),
-            images: updatedGroup.imageKeys.map((key) => ({ url: key })),
-            audios: updatedGroup.audioKeys.map((key) => ({ url: key })),
-            questions: updatedGroup.questions.map((q) => ({
-              indexNumber: q.indexNumber,
-              detail: q.detail,
-              result: q.result,
-              clarify: q.clarify,
-              audios: [], // ✅ Group question không có audio
-              conversation: null,
-              options: q.options.map((opt, idx) => ({
-                mark: LETTERS[idx],
-                detail: opt,
-              })),
-              images: q.imageKeys.map((key) => ({ url: key })),
-            })),
+            images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
+            audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
           };
-
-          const pruned = { ...groupPayload };
-          if (!groupPayload.images || groupPayload.images.length === 0)
-            delete pruned.images;
-          if (!groupPayload.audios || groupPayload.audios.length === 0)
-            delete pruned.audios;
-
-          await putGroupPreservingMedia(currentGroupId, pruned);
-        }
-
-        // Update global cache
-        if (window.__toeicExamData?.questions) {
-          window.__toeicExamData = {
-            ...window.__toeicExamData,
-            questions: (window.__toeicExamData.questions || []).map((qq) =>
-              qq?.id === editingQuestionId
-                ? {
-                    ...qq,
-                    detail: basePayload.detail,
-                    result: basePayload.result,
-                    clarify: basePayload.clarify,
-                    options: basePayload.options
-                      ? basePayload.options.map((o) => ({
-                          mark: o.mark,
-                          detail: o.detail,
-                        }))
-                      : qq.options,
-                    images: (basePayload.images || []).map((i) => i.url),
-                  }
-                : qq
-            ),
-          };
+          await put(
+            groupPayload,
+            `/api/group-question/${currentGroupId}`,
+            true
+          );
         }
       } else {
-        // Create new question
+        // ==================== CREATE QUESTION ====================
         const saved = await post(basePayload, "/api/toeic-question", true);
 
         if (!saved) {
           throw new Error("Create question failed");
         }
 
-        const createdLocal = mapToeicQuestionResponseToLocal(saved);
-        const updateGroupIdForQuestion = {
-          groupId: currentGroupId,
-        };
-
+        // Gán câu hỏi vào group
         await put(
-          updateGroupIdForQuestion,
-          `/api/group-question/question/${createdLocal.id}`
+          { groupId: currentGroupId },
+          `/api/group-question/question/${saved.id}`
         );
 
-        createdLocal.imageKeys = [...existingKeys, ...uploadedImageKeys].filter(
-          Boolean
+        // Reload group để lấy data đầy đủ
+        const reloaded = await get(
+          `/api/group-question/${currentGroupId}`,
+          true
         );
+        const mappedGroup = mapGroupQuestionResponseToLocal(reloaded);
 
-        // ✅ Recalculate groups
+        // Recalculate và update state
         const updatedGroups = groups.map((g) =>
-          g.id === currentGroupId
-            ? { ...g, questions: [...g.questions, createdLocal] }
-            : g
+          g.id === currentGroupId ? mappedGroup : g
         );
         const recalculated = recalculateAllGroups(updatedGroups);
-
         setGroups(recalculated);
 
-        // ✅ UPDATE GROUP với title và questionRange mới
+        // Update group metadata trên server
         const updatedGroup = recalculated.find((g) => g.id === currentGroupId);
-        if (updatedGroup) {
+        if (updatedGroup && updatedGroup.questionRange) {
           const groupPayload = {
             part: String(partNumber),
             title: updatedGroup.title,
             questionRange: updatedGroup.questionRange,
             content: updatedGroup.content,
             examId: Number(examId),
-            images: updatedGroup.imageKeys.map((key) => ({ url: key })),
-            audios: updatedGroup.audioKeys.map((key) => ({ url: key })),
-            questions: updatedGroup.questions.map((q) => ({
-              indexNumber: q.indexNumber,
-              detail: q.detail,
-              result: q.result,
-              clarify: q.clarify,
-              audios: [], // ✅ Group question không có audio
-              conversation: null,
-              options: q.options.map((opt, idx) => ({
-                mark: LETTERS[idx],
-                detail: opt,
-              })),
-              images: q.imageKeys.map((key) => ({ url: key })),
-            })),
+            images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
+            audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
           };
-
-          const pruned = { ...groupPayload };
-          if (!groupPayload.images || groupPayload.images.length === 0)
-            delete pruned.images;
-          if (!groupPayload.audios || groupPayload.audios.length === 0)
-            delete pruned.audios;
-
-          await putGroupPreservingMedia(currentGroupId, pruned);
+          await put(
+            groupPayload,
+            `/api/group-question/${currentGroupId}`,
+            true
+          );
         }
 
         // Update global cache
-        if (saved) {
-          if (window.__toeicExamData?.questions) {
-            window.__toeicExamData = {
-              ...window.__toeicExamData,
-              questions: [...(window.__toeicExamData.questions || []), saved],
-            };
-          } else {
-            window.__toeicExamData = {
-              ...(window.__toeicExamData || {}),
-              questions: [saved],
-            };
-          }
+        if (window.__toeicExamData?.questions) {
+          window.__toeicExamData = {
+            ...window.__toeicExamData,
+            questions: [...(window.__toeicExamData.questions || []), saved],
+          };
         }
       }
 
@@ -1332,17 +979,18 @@ export default function PartDetailGroupPage() {
     try {
       await del(`/api/toeic-question/${questionId}`, true);
 
-      // ✅ Recalculate groups
+      // Reload group
+      const reloaded = await get(`/api/group-question/${groupId}`, true);
+      const mappedGroup = mapGroupQuestionResponseToLocal(reloaded);
+
+      // Recalculate
       const updatedGroups = groups.map((g) =>
-        g.id === groupId
-          ? { ...g, questions: g.questions.filter((q) => q.id !== questionId) }
-          : g
+        g.id === groupId ? mappedGroup : g
       );
       const recalculated = recalculateAllGroups(updatedGroups);
-
       setGroups(recalculated);
 
-      // ✅ UPDATE GROUP với title và questionRange mới
+      // Update group metadata
       const updatedGroup = recalculated.find((g) => g.id === groupId);
       if (updatedGroup) {
         const groupPayload = {
@@ -1351,33 +999,13 @@ export default function PartDetailGroupPage() {
           questionRange: updatedGroup.questionRange,
           content: updatedGroup.content,
           examId: Number(examId),
-          images: updatedGroup.imageKeys.map((key) => ({ url: key })),
-          audios: updatedGroup.audioKeys.map((key) => ({ url: key })),
-          questions: updatedGroup.questions.map((q) => ({
-            indexNumber: q.indexNumber,
-            detail: q.detail,
-            result: q.result,
-            clarify: q.clarify,
-            audio: null,
-            conversation: null,
-            options: q.options.map((opt, idx) => ({
-              mark: LETTERS[idx],
-              detail: opt,
-            })),
-            images: q.imageKeys.map((key) => ({ url: key })),
-          })),
+          images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
+          audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
         };
-
-        const pruned = { ...groupPayload };
-        if (!groupPayload.images || groupPayload.images.length === 0)
-          delete pruned.images;
-        if (!groupPayload.audios || groupPayload.audios.length === 0)
-          delete pruned.audios;
-
-        await putGroupPreservingMedia(groupId, pruned);
+        await put(groupPayload, `/api/group-question/${groupId}`, true);
       }
 
-      // Update global cache so CreateToeicExam reflects deletion immediately
+      // Update global cache
       if (window.__toeicExamData?.questions) {
         window.__toeicExamData = {
           ...window.__toeicExamData,
@@ -1400,7 +1028,6 @@ export default function PartDetailGroupPage() {
 
   // === RENDER ===
   const renderGroupCard = (group, index) => {
-    console.log("groups", group.audioUrls);
     const isExpanded =
       expandedGroupId === group.id && editingGroupId !== group.id;
     const isEditing = editingGroupId === group.id;
@@ -1472,19 +1099,14 @@ export default function PartDetailGroupPage() {
             {group.audioUrls && group.audioUrls.length > 0 && (
               <div className="group-card__media">
                 <strong>Âm thanh:</strong>
-                {group.audioUrls.map(
-                  (url, idx) => (
-                    console.log("audio url", url),
-                    (
-                      <audio
-                        key={idx}
-                        src={url}
-                        controls
-                        style={{ marginTop: 4, width: "100%" }}
-                      />
-                    )
-                  )
-                )}
+                {group.audioUrls.map((url, idx) => (
+                  <audio
+                    key={idx}
+                    src={url}
+                    controls
+                    style={{ marginTop: 4, width: "100%" }}
+                  />
+                ))}
               </div>
             )}
 
@@ -1492,19 +1114,14 @@ export default function PartDetailGroupPage() {
               <div className="group-card__media">
                 <strong>Hình ảnh:</strong>
                 <div className="group-card__images">
-                  {group.imageUrls.map(
-                    (url, idx) => (
-                      console.log("image url", url),
-                      (
-                        <img
-                          key={idx}
-                          src={url}
-                          alt={`group-img-${idx}`}
-                          className="group-card__img"
-                        />
-                      )
-                    )
-                  )}
+                  {group.imageUrls.map((url, idx) => (
+                    <img
+                      key={idx}
+                      src={url}
+                      alt={`group-img-${idx}`}
+                      className="group-card__img"
+                    />
+                  ))}
                 </div>
               </div>
             )}
@@ -1796,7 +1413,7 @@ export default function PartDetailGroupPage() {
         </div>
       </div>
 
-      <CreateToeicQuestion
+      <CreateGroupToeicQuestion
         open={showQuestionModal}
         onClose={handleCloseQuestionModal}
         draftQuestion={draftQuestion}

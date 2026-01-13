@@ -76,14 +76,11 @@ export default function CreateToeicExam() {
 
         const res = await apiPromise;
 
-        setData(res || { id: null, title: "New Toeic Exam" });
+        setData(res);
 
         localStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify({
-            id: res?.id || null,
-            title: res?.title || "New Toeic Exam",
-          })
+          JSON.stringify({ id: res.id, title: res.title || "New Toeic Exam" })
         );
 
         lastSavedRef.current = {
@@ -126,57 +123,6 @@ export default function CreateToeicExam() {
     };
   }, [data?.id]);
 
-  // ✅ Always refresh exam data when coming back to this page
-  useEffect(() => {
-    if (data?.id) {
-      fetchExamDataAndUpdateParts(data.id);
-    }
-  }, []);
-
-  // Expose a refresh function for PartDetailPage to call so CreateToeicExam
-  // keeps the canonical `window.__toeicExamData` and parts counts up-to-date.
-  //   useEffect(() => {
-  //     // attach helper
-  //     window.__refreshPartQuestions = async (examId, partNumber) => {
-  //       try {
-  //         await fetchExamDataAndUpdateParts(examId || data?.id);
-
-  //         // return refreshed array for the requested part if available
-  //         const pMap = (window.__partQuestions || {})[examId || data?.id] || {};
-  //         const arr = partNumber != null ? pMap[String(partNumber)] || [] : pMap;
-  //         return arr;
-  //       } catch (err) {
-  //         console.error("__refreshPartQuestions failed", err);
-  //         return null;
-  //       }
-  //     };
-
-  //     return () => {
-  //       try {
-  //         if (window.__refreshPartQuestions) delete window.__refreshPartQuestions;
-  //       } catch {}
-  //     };
-  //   }, [data?.id]);
-
-  // Listen for external updates to partQuestions (from PartDetailPage) and refresh
-  useEffect(() => {
-    const handler = async (e) => {
-      try {
-        const detail = e?.detail || {};
-        const examId = detail.examId || data?.id;
-        if (!examId) return;
-        // Refresh exam data to update parts counts
-        await fetchExamDataAndUpdateParts(examId);
-      } catch (err) {
-        console.error("partQuestions update handler failed", err);
-      }
-    };
-
-    // window.addEventListener("toeic:partQuestionsUpdated", handler);
-    return () =>
-      window.removeEventListener("toeic:partQuestionsUpdated", handler);
-  }, [data?.id]);
-
   // Refetch exam data when the user navigates back to this route (ensure counts stay in sync)
   useEffect(() => {
     if (location?.pathname === "/CreateToeicExam" && data?.id) {
@@ -215,27 +161,6 @@ export default function CreateToeicExam() {
       );
 
       window.__toeicExamData = examData;
-
-      // Build per-part cache so PartDetailPage can use routeState.partQuestions
-      try {
-        window.__partQuestions = window.__partQuestions || {};
-        const byPart = {};
-        (examData.questions || []).forEach((q) => {
-          const p = String(q.part || "");
-          byPart[p] = byPart[p] || [];
-          byPart[p].push(q);
-        });
-        // include groupQuestions items as flat questions if present
-        (examData.groupQuestions || []).forEach((g) => {
-          const p = String(g.part || "");
-          byPart[p] = byPart[p] || [];
-          (g.questions || []).forEach((qq) => byPart[p].push(qq));
-        });
-
-        window.__partQuestions[examId] = byPart;
-      } catch (err) {
-        console.warn("build partQuestions cache failed", err);
-      }
     } catch (err) {
       console.error("Fetch exam data error", err);
     }
@@ -306,7 +231,7 @@ export default function CreateToeicExam() {
     // Xoá draft local trong localStorage (khóa dùng ở CreateToeicExam)
     localStorage.removeItem("toeic:draftExam");
     // cập nhật state nếu cần
-    setData((prev) => ({ ...(prev || {}) }));
+    setData((prev) => ({ ...prev }));
     setSaveStatus("idle");
     navigate("/ToeicTests");
   };
@@ -323,7 +248,7 @@ export default function CreateToeicExam() {
 
       // dọn local + state
       localStorage.removeItem("toeic:draftExam");
-      setData((prev) => ({ ...(prev || {}) }));
+      setData((prev) => ({ ...prev }));
 
       navigate("/ToeicTests");
 
@@ -342,7 +267,7 @@ export default function CreateToeicExam() {
   };
 
   const handleSelectPart = (part) => {
-    if (!data?.id) return;
+    if (!data.id) return;
 
     const isGroupPart = part.id === 3 || part.id === 4 || part.id === 7;
 
@@ -359,7 +284,7 @@ export default function CreateToeicExam() {
 
       navigate(`/PartDetailGroup/${data.id}/parts/${part.id}/group`, {
         state: {
-          examName: data?.title || "New Toeic Exam",
+          examName: data.title,
           durationMinutes: duration,
           partLabel: part.label,
           mode: "GROUP",
@@ -370,7 +295,7 @@ export default function CreateToeicExam() {
     } else {
       navigate(`/PartDetail/${data.id}/parts/${part.id}/single`, {
         state: {
-          examName: data?.title || "New Toeic Exam",
+          examName: data.title,
           durationMinutes: duration,
           partLabel: part.label,
           mode: "SINGLE",
@@ -388,9 +313,9 @@ export default function CreateToeicExam() {
             <h1 className="create-test__title">File</h1>
             <input
               className="create-test__title-input"
-              value={data?.title || ""}
+              value={data.title}
               onChange={(e) =>
-                setData((prev) => ({ ...(prev || {}), title: e.target.value }))
+                setData((prev) => ({ ...prev, title: e.target.value }))
               }
               placeholder="Nhập tên đề thi"
               disabled={isCreating}
@@ -438,7 +363,7 @@ export default function CreateToeicExam() {
                 key={part.id}
                 className="create-test__part-row"
                 onClick={() => handleSelectPart(part)}
-                disabled={!data?.id} // chưa tạo xong exam thì không cho vào part
+                disabled={!data.id} // chưa tạo xong exam thì không cho vào part
               >
                 <div className="create-test__part-left">
                   <div className="create-test__part-index">{part.id}</div>
