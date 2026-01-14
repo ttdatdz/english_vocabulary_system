@@ -112,27 +112,61 @@ export default function PartDetailPage() {
   const [showQuestionModal, setShowQuestionModal] = useState(false);
 
   // ===== Load câu hỏi từ route state hoặc API =====
+  // useEffect(() => {
+  //   let cancelled = false;
+
+  //   const loadQuestions = async () => {
+  //     try {
+  //       const fromState = routeState.partQuestions;
+  //       if (Array.isArray(fromState) && fromState.length > 0) {
+  //         const mapped = fromState.map(mapToeicQuestionResponseToLocal);
+  //         if (!cancelled) setQuestions(mapped);
+  //         return;
+  //       }
+
+  //       const examData = await get(`/api/exam/detail/${examId}`, true);
+  //       const list = Array.isArray(examData?.questions)
+  //         ? examData.questions
+  //         : [];
+  //       const partQuestions = list.filter(
+  //         (q) => String(q.part) === String(partNumber)
+  //       );
+
+  //       const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
+  //       if (!cancelled) setQuestions(mapped);
+
+  //       if (!cancelled && mapped.length === 0) {
+  //         setCreatingNew(true);
+  //         setDraftQuestion(createEmptyQuestion(String(partNumber)));
+  //       }
+  //     } catch (err) {
+  //       console.error("Load part questions error", err);
+  //     }
+  //   };
+
+  //   loadQuestions();
+
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [examId, partNumber, routeState.partQuestions]);
   useEffect(() => {
     let cancelled = false;
 
     const loadQuestions = async () => {
       try {
-        const fromState = routeState.partQuestions;
-        if (Array.isArray(fromState) && fromState.length > 0) {
-          const mapped = fromState.map(mapToeicQuestionResponseToLocal);
-          if (!cancelled) setQuestions(mapped);
-          return;
-        }
-
         const examData = await get(`/api/exam/detail/${examId}`, true);
+
         const list = Array.isArray(examData?.questions)
           ? examData.questions
           : [];
+
         const partQuestions = list.filter(
           (q) => String(q.part) === String(partNumber)
         );
 
         const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
+
         if (!cancelled) setQuestions(mapped);
 
         if (!cancelled && mapped.length === 0) {
@@ -149,7 +183,25 @@ export default function PartDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [examId, partNumber, routeState.partQuestions]);
+  }, [examId, partNumber]);
+
+  const reloadPartQuestions = async () => {
+    try {
+      const examData = await get(`/api/exam/detail/${examId}`, true);
+
+      const list = Array.isArray(examData?.questions) ? examData.questions : [];
+
+      const partQuestions = list.filter(
+        (q) => String(q.part) === String(partNumber)
+      );
+
+      const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
+
+      setQuestions(mapped);
+    } catch (err) {
+      console.error("Reload part questions failed:", err);
+    }
+  };
 
   const handleBack = () => navigate(-1);
 
@@ -168,15 +220,15 @@ export default function PartDetailPage() {
   const handleEditQuestion = (q) => {
     setDraftQuestion({
       ...q,
-      // ✅ Keys đã có sẵn từ server
       audioKey: q.audioKey || "",
       imageKeys: [...(q.imageKeys || [])],
 
-      // Reset upload files
       audioFile: null,
       audioPreview: "",
       imageFiles: [],
       imagePreviews: [],
+
+      removeAudio: false, // reset flag
     });
     setEditingQuestionId(q.id);
     setCreatingNew(false);
@@ -191,6 +243,67 @@ export default function PartDetailPage() {
     setDraftQuestion(null);
   };
 
+  // const handleDeleteQuestion = async (id) => {
+  //   if (id == null) return;
+  //   if (!window.confirm("Xoá câu hỏi này?")) return;
+
+  //   if (editingQuestionId === id) {
+  //     setShowQuestionModal(false);
+  //     setCreatingNew(false);
+  //     setEditingQuestionId(null);
+  //     setDraftQuestion(null);
+  //   }
+
+  //   setUploading(true);
+  //   try {
+  //     const isPersisted = id != null && !Number.isNaN(Number(id));
+  //     if (isPersisted) {
+  //       await del(`/api/toeic-question/${id}`, true);
+  //     }
+
+  //     const nextQuestions = (questions || [])
+  //       .filter((q) => q?.id !== id)
+  //       .map((q, i) => ({ ...q, indexNumber: i + 1 }));
+
+  //     setQuestions(nextQuestions);
+
+  //     if (expandedId === id) setExpandedId(null);
+  //     if (editingQuestionId === id) setEditingQuestionId(null);
+
+  //     // Sync global cache
+  //     if (window.__toeicExamData?.questions) {
+  //       window.__toeicExamData = {
+  //         ...window.__toeicExamData,
+  //         questions: (window.__toeicExamData.questions || []).filter(
+  //           (q) => q?.id !== id
+  //         ),
+  //       };
+  //     }
+
+  //     const hasInvalidId = nextQuestions.some(
+  //       (q) => q?.id == null || Number.isNaN(Number(q.id))
+  //     );
+  //     if (!hasInvalidId && nextQuestions.length > 0) {
+  //       const reorderPayload = buildReorderPayload({
+  //         examId,
+  //         partNumber,
+  //         questions: nextQuestions,
+  //       });
+
+  //       await put(
+  //         reorderPayload,
+  //         `/api/toeic-question/reorder/${examId}`,
+  //         true
+  //       );
+  //     }
+  //   } catch (err) {
+  //     console.error("Delete question error:", err);
+  //     alert(err?.message || "Xoá câu hỏi thất bại");
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
   const handleDeleteQuestion = async (id) => {
     if (id == null) return;
     if (!window.confirm("Xoá câu hỏi này?")) return;
@@ -204,46 +317,13 @@ export default function PartDetailPage() {
 
     setUploading(true);
     try {
-      const isPersisted = id != null && !Number.isNaN(Number(id));
-      if (isPersisted) {
-        await del(`/api/toeic-question/${id}`, true);
-      }
+      await del(`/api/toeic-question/${id}`, true);
 
-      const nextQuestions = (questions || [])
-        .filter((q) => q?.id !== id)
-        .map((q, i) => ({ ...q, indexNumber: i + 1 }));
-
-      setQuestions(nextQuestions);
+      // ✅ reload lại toàn bộ part từ server
+      await reloadPartQuestions();
 
       if (expandedId === id) setExpandedId(null);
       if (editingQuestionId === id) setEditingQuestionId(null);
-
-      // Sync global cache
-      if (window.__toeicExamData?.questions) {
-        window.__toeicExamData = {
-          ...window.__toeicExamData,
-          questions: (window.__toeicExamData.questions || []).filter(
-            (q) => q?.id !== id
-          ),
-        };
-      }
-
-      const hasInvalidId = nextQuestions.some(
-        (q) => q?.id == null || Number.isNaN(Number(q.id))
-      );
-      if (!hasInvalidId && nextQuestions.length > 0) {
-        const reorderPayload = buildReorderPayload({
-          examId,
-          partNumber,
-          questions: nextQuestions,
-        });
-
-        await put(
-          reorderPayload,
-          `/api/toeic-question/reorder/${examId}`,
-          true
-        );
-      }
     } catch (err) {
       console.error("Delete question error:", err);
       alert(err?.message || "Xoá câu hỏi thất bại");
@@ -311,6 +391,9 @@ export default function PartDetailPage() {
       ...prev,
       audioFile: file,
       audioPreview: previewUrl,
+
+      // vì user đã chọn audio mới → KHÔNG xoá nữa
+      removeAudio: false,
     }));
 
     e.target.value = "";
@@ -323,6 +406,7 @@ export default function PartDetailPage() {
       audioPreview: "",
       audioUrl: "",
       audioKey: "",
+      removeAudio: true, // flag xoá
     }));
   };
 
@@ -365,6 +449,178 @@ export default function PartDetailPage() {
     });
   };
 
+  // const handleSaveDraftQuestionToState = async () => {
+  //   if (!draftQuestion?.detail?.trim()) {
+  //     alert("Vui lòng nhập nội dung câu hỏi");
+  //     return;
+  //   }
+
+  //   const trimmedOptions = (draftQuestion.options || []).map((o) =>
+  //     (o || "").trim()
+  //   );
+  //   const filled = trimmedOptions.filter(Boolean);
+  //   if (filled.length < 2) {
+  //     alert("Vui lòng nhập ít nhất 2 đáp án");
+  //     return;
+  //   }
+
+  //   const idx = draftQuestion.correctOptionIndex;
+  //   if (idx == null || idx < 0 || !trimmedOptions[idx]) {
+  //     alert("Vui lòng chọn đáp án đúng");
+  //     return;
+  //   }
+
+  //   setUploading(true);
+
+  //   try {
+  //     let uploadedImageKeys = [];
+  //     let uploadedAudioKey = null;
+
+  //     // Upload media mới (nếu có)
+  //     const hasNewMedia =
+  //       draftQuestion.audioFile ||
+  //       (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0);
+
+  //     if (hasNewMedia) {
+  //       const fd = new FormData();
+
+  //       if (draftQuestion.audioFile) {
+  //         fd.append("audios", draftQuestion.audioFile);
+  //       }
+
+  //       if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
+  //         draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
+  //       }
+
+  //       const uploadRes = await postFormData("/api/media/upload", fd, true);
+
+  //       const audioList = Array.isArray(uploadRes?.audios)
+  //         ? uploadRes.audios
+  //         : [];
+  //       if (audioList.length > 0) {
+  //         uploadedAudioKey = audioList[0]?.key || null;
+  //       }
+
+  //       const imgList = Array.isArray(uploadRes?.images)
+  //         ? uploadRes.images
+  //         : [];
+  //       uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
+  //     }
+
+  //     // ✅ Gộp keys cũ (từ server) + keys mới (vừa upload)
+  //     const existingImageKeys = Array.isArray(draftQuestion.imageKeys)
+  //       ? draftQuestion.imageKeys
+  //       : [];
+  //     const existingAudioKey = draftQuestion.audioKey || null;
+
+  //     const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(
+  //       Boolean
+  //     );
+  //     const finalAudioKey = uploadedAudioKey || existingAudioKey;
+
+  //     const imagesPayload = allImageKeys.map((key) => ({ url: key }));
+
+  //     const basePayload = {
+  //       part: String(partNumber),
+  //       detail: draftQuestion.detail.trim(),
+  //       conversation: draftQuestion.conversation || null,
+  //       clarify: (draftQuestion.clarify || "").trim(),
+  //       examId: Number(examId),
+  //       random: true,
+  //       options: trimmedOptions.map((opt, optIdx) => ({
+  //         mark: LETTERS[optIdx],
+  //         detail: opt,
+  //       })),
+  //       result: LETTERS[idx],
+  //       images: imagesPayload,
+  //     };
+
+  //     // ===== AUDIO UPDATE LOGIC (RẤT QUAN TRỌNG) =====
+  //     if (draftQuestion.removeAudio) {
+  //       // user bấm xoá audio
+  //       basePayload.audio = null;
+  //     } else if (uploadedAudioKey) {
+  //       // user upload audio mới
+  //       basePayload.audio = uploadedAudioKey;
+  //     } else if (draftQuestion.audioKey) {
+  //       // giữ nguyên audio cũ
+  //       basePayload.audio = draftQuestion.audioKey;
+  //     }
+  //     // nếu không rơi vào case nào → KHÔNG gửi field audio
+
+  //     if (editingQuestionId != null) {
+  //       // ==================== UPDATE ====================
+  //       const idxInList = questions.findIndex(
+  //         (q) => q.id === editingQuestionId
+  //       );
+  //       const payload = {
+  //         ...basePayload,
+  //         indexNumber: idxInList >= 0 ? idxInList + 1 : null,
+  //       };
+
+  //       await put(payload, `/api/toeic-question/${editingQuestionId}`, true);
+
+  //       // ✅ Reload question từ exam để lấy URLs mới
+  //       const examData = await get(`/api/exam/detail/${examId}`, true);
+  //       const updatedQuestion = (examData?.questions || []).find(
+  //         (q) => q.id === editingQuestionId
+  //       );
+
+  //       if (updatedQuestion) {
+  //         const updatedLocal = mapToeicQuestionResponseToLocal(updatedQuestion);
+  //         setQuestions((prev) =>
+  //           prev.map((q) => (q.id === editingQuestionId ? updatedLocal : q))
+  //         );
+  //       }
+  //     } else {
+  //       // ==================== CREATE ====================
+  //       const saved = await post(basePayload, "/api/toeic-question", true);
+
+  //       if (!saved) {
+  //         throw new Error("Create question failed");
+  //       }
+
+  //       // const createdLocal = mapToeicQuestionResponseToLocal(saved);
+  //       // setQuestions((prev) => [...prev, createdLocal]);
+
+  //       let createdLocal;
+  //       try {
+  //         const full = await get(`/api/toeic-question/${saved.id}`, true);
+  //         createdLocal = mapToeicQuestionResponseToLocal(full || saved);
+  //       } catch (e) {
+  //         // Fallback: exam detail
+  //         const examData = await get(`/api/exam/detail/${examId}`, true);
+  //         const createdFromExam = (examData?.questions || []).find(
+  //           (q) => q.id === saved.id
+  //         );
+  //         createdLocal = mapToeicQuestionResponseToLocal(
+  //           createdFromExam || saved
+  //         );
+  //       }
+  //       setQuestions((prev) => [...prev, createdLocal]);
+
+  //       // Sync global cache
+  //       if (window.__toeicExamData?.questions) {
+  //         window.__toeicExamData = {
+  //           ...window.__toeicExamData,
+  //           questions: [...(window.__toeicExamData.questions || []), saved],
+  //         };
+  //       }
+  //     }
+
+  //     setCreatingNew(false);
+  //     setEditingQuestionId(null);
+  //     setDraftQuestion(null);
+  //     setShowQuestionModal(false);
+  //   } catch (err) {
+  //     console.error("Save question error", err);
+  //     alert(err?.message || "Lưu câu hỏi thất bại");
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
+  // ==== Drag & drop ====
   const handleSaveDraftQuestionToState = async () => {
     if (!draftQuestion?.detail?.trim()) {
       alert("Vui lòng nhập nội dung câu hỏi");
@@ -392,7 +648,7 @@ export default function PartDetailPage() {
       let uploadedImageKeys = [];
       let uploadedAudioKey = null;
 
-      // Upload media mới (nếu có)
+      // ===== UPLOAD MEDIA =====
       const hasNewMedia =
         draftQuestion.audioFile ||
         (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0);
@@ -404,26 +660,19 @@ export default function PartDetailPage() {
           fd.append("audios", draftQuestion.audioFile);
         }
 
-        if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
+        if (draftQuestion.imageFiles?.length > 0) {
           draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
         }
 
         const uploadRes = await postFormData("/api/media/upload", fd, true);
 
-        const audioList = Array.isArray(uploadRes?.audios)
-          ? uploadRes.audios
-          : [];
-        if (audioList.length > 0) {
-          uploadedAudioKey = audioList[0]?.key || null;
-        }
-
-        const imgList = Array.isArray(uploadRes?.images)
-          ? uploadRes.images
-          : [];
-        uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
+        uploadedAudioKey = uploadRes?.audios?.[0]?.key || null;
+        uploadedImageKeys = (uploadRes?.images || [])
+          .map((x) => x?.key)
+          .filter(Boolean);
       }
 
-      // ✅ Gộp keys cũ (từ server) + keys mới (vừa upload)
+      // ===== MERGE OLD + NEW =====
       const existingImageKeys = Array.isArray(draftQuestion.imageKeys)
         ? draftQuestion.imageKeys
         : [];
@@ -432,7 +681,6 @@ export default function PartDetailPage() {
       const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(
         Boolean
       );
-      const finalAudioKey = uploadedAudioKey || existingAudioKey;
 
       const imagesPayload = allImageKeys.map((key) => ({ url: key }));
 
@@ -448,69 +696,31 @@ export default function PartDetailPage() {
           detail: opt,
         })),
         result: LETTERS[idx],
-        audio: finalAudioKey || null,
         images: imagesPayload,
       };
 
-      if (editingQuestionId != null) {
-        // ==================== UPDATE ====================
-        const idxInList = questions.findIndex(
-          (q) => q.id === editingQuestionId
-        );
-        const payload = {
-          ...basePayload,
-          indexNumber: idxInList >= 0 ? idxInList + 1 : null,
-        };
-
-        await put(payload, `/api/toeic-question/${editingQuestionId}`, true);
-
-        // ✅ Reload question từ exam để lấy URLs mới
-        const examData = await get(`/api/exam/detail/${examId}`, true);
-        const updatedQuestion = (examData?.questions || []).find(
-          (q) => q.id === editingQuestionId
-        );
-
-        if (updatedQuestion) {
-          const updatedLocal = mapToeicQuestionResponseToLocal(updatedQuestion);
-          setQuestions((prev) =>
-            prev.map((q) => (q.id === editingQuestionId ? updatedLocal : q))
-          );
-        }
-      } else {
-        // ==================== CREATE ====================
-        const saved = await post(basePayload, "/api/toeic-question", true);
-
-        if (!saved) {
-          throw new Error("Create question failed");
-        }
-
-        // const createdLocal = mapToeicQuestionResponseToLocal(saved);
-        // setQuestions((prev) => [...prev, createdLocal]);
-
-        let createdLocal;
-        try {
-          const full = await get(`/api/toeic-question/${saved.id}`, true);
-          createdLocal = mapToeicQuestionResponseToLocal(full || saved);
-        } catch (e) {
-          // Fallback: exam detail
-          const examData = await get(`/api/exam/detail/${examId}`, true);
-          const createdFromExam = (examData?.questions || []).find(
-            (q) => q.id === saved.id
-          );
-          createdLocal = mapToeicQuestionResponseToLocal(
-            createdFromExam || saved
-          );
-        }
-        setQuestions((prev) => [...prev, createdLocal]);
-
-        // Sync global cache
-        if (window.__toeicExamData?.questions) {
-          window.__toeicExamData = {
-            ...window.__toeicExamData,
-            questions: [...(window.__toeicExamData.questions || []), saved],
-          };
-        }
+      // ===== AUDIO LOGIC =====
+      if (draftQuestion.removeAudio) {
+        basePayload.audio = null;
+      } else if (uploadedAudioKey) {
+        basePayload.audio = uploadedAudioKey;
+      } else if (existingAudioKey) {
+        basePayload.audio = existingAudioKey;
       }
+
+      // ===== SAVE =====
+      if (editingQuestionId != null) {
+        await put(
+          basePayload,
+          `/api/toeic-question/${editingQuestionId}`,
+          true
+        );
+      } else {
+        await post(basePayload, "/api/toeic-question", true);
+      }
+
+      // ✅ reload lại từ server cho chắc chắn có URL mới
+      await reloadPartQuestions();
 
       setCreatingNew(false);
       setEditingQuestionId(null);
@@ -523,8 +733,6 @@ export default function PartDetailPage() {
       setUploading(false);
     }
   };
-
-  // ==== Drag & drop ====
 
   const handleDragStart = (id) => setDraggingId(id);
   const handleDragOver = (e) => e.preventDefault();
@@ -572,6 +780,7 @@ export default function PartDetailPage() {
   const handleDragEnd = () => setDraggingId(null);
 
   const renderQuestionCard = (q, index) => {
+    console.log("Render question card:", q);
     const isExpanded = expandedId === q.id && editingQuestionId !== q.id;
     const isDragging = draggingId === q.id;
 
@@ -628,16 +837,18 @@ export default function PartDetailPage() {
           </p>
 
           {/* Hiển thị audio */}
-          {q.audioUrl && (
-            <div className="question-card__audio">
-              <span>Âm thanh:</span>
-              <audio
-                src={q.audioUrl}
-                controls
-                style={{ marginTop: 4, width: "100%" }}
-              />
-            </div>
-          )}
+          {q.audioUrl &&
+            (console.log("Rendering audio for question:", q),
+            (
+              <div className="question-card__audio">
+                <span>Âm thanh:</span>
+                <audio
+                  src={q.audioUrl}
+                  controls
+                  style={{ marginTop: 4, width: "100%" }}
+                />
+              </div>
+            ))}
 
           {/* Hiển thị images */}
           {q.imageUrls && q.imageUrls.length > 0 && (
