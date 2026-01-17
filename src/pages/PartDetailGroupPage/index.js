@@ -1369,10 +1369,10 @@ export default function PartDetailGroupPage() {
         </div>
 
         <div className="part-detail-group__hero-center">
-          <p>{examTitle} -</p>
-          <span className="part-detail-group__part-name">
+          <p>{examTitle} - <span className="part-detail-group__part-name">
             Part {partNumber}
-          </span>
+          </span></p>
+       
         </div>
 
         <div className="part-detail-group__hero-actions">

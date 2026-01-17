@@ -29,3 +29,8 @@ export const SubmitExam = async (value) => {
   const result = await post(value, "api/exam/submit", true);
   return result;
 };
+
+export const GetCustomExams = async()=>{
+  const result = await get("api/exam/get-custom", true);
+  return result;
+}

@@ -15,6 +15,7 @@
       font-weight: bold;
       color: #fff;
     }
+
     &-createExam {
       background-color: #e8f2ff;
       font-weight: 500;
@@ -101,4 +102,109 @@
   &:hover {
     background-color: #f97316 !important;
   }
+}
+
+/* Thêm các styles sau vào file ToeicTest.scss */
+
+/* ===== TABS STYLES ===== */
+.ToeicTests-page__tabs {
+  margin-bottom: 20px;
+
+  .ant-tabs-nav {
+    margin-bottom: 0;
+
+    &::before {
+      border-bottom: 1px solid #e8e8e8;
+    }
+  }
+
+  .ant-tabs-tab {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #ff8159;
+    }
+
+    &.ant-tabs-tab-active {
+      .ant-tabs-tab-btn {
+        color: #ff8159;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .ant-tabs-ink-bar {
+    background: #ff8159;
+    height: 3px;
+    border-radius: 2px;
+  }
+}
+
+/* ===== CUSTOM TAB FILTER CONTAINER ===== */
+.ToeicTests-page__ContainerSelect--custom {
+  justify-content: flex-end;
+  padding: 16px 0;
+}
+
+/* ===== TEST ITEM WITH EDIT BUTTON ===== */
+.Test-item {
+  position: relative;
+
+  &--custom {
+    padding-right: 100px;
+    /* Thêm space cho actions */
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  &__edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    color: #666;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 129, 89, 0.1) !important;
+      color: #ff8159 !important;
+    }
+
+    .anticon {
+      font-size: 16px;
+    }
+  }
+
+  &__info {
+    color: #999;
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #ff8159;
+    }
+  }
+}
+
+/* ===== EMPTY STATE ===== */
+.Test-list__empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 15px;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px dashed #e0e0e0;
 }

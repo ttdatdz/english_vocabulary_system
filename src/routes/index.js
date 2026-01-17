@@ -39,6 +39,7 @@ import PricingPage from "../pages/PricingPage";
 import CreateToeicExam from "../pages/CreateToeicExam";
 import PartDetailPage from "../pages/PartDetailPage";
 import PartDetailGroupPage from "../pages/PartDetailGroupPage";
+import DetailCustomToeicExam from "../pages/DetailToeicCustomExam";
 
 function MainRoutes() {
   useEffect(() => {
@@ -110,6 +111,7 @@ function MainRoutes() {
           <Route path="CreateToeicExam" element={<CreateToeicExam/>}/>
           <Route path="PartDetail/:examId/parts/:partNumber/single" element={<PartDetailPage/>}/>
           <Route path="PartDetailGroup/:examId/parts/:partNumber/group" element={<PartDetailGroupPage/>}/>
+          <Route path="DetailToeicCustomExam/:id" element={<DetailCustomToeicExam/>}/>
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>
