@@ -4,6 +4,7 @@ import "./PartDetailPage.scss";
 import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
 import CreateToeicQuestion from "../../components/CreateToeicQuestion";
+import QuestionBank from "../../components/QuestionBank";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
 
@@ -110,6 +111,7 @@ export default function PartDetailPage() {
   const [draggingId, setDraggingId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [showQuestionBank, setShowQuestionBank] = useState(false);
 
   // ===== Load câu hỏi từ route state hoặc API =====
   // useEffect(() => {
@@ -928,7 +930,10 @@ export default function PartDetailPage() {
         </div>
 
         <div className="part-detail__hero-actions">
-          <button className="part-detail__btn part-detail__btn--outlined">
+          <button
+            className="part-detail__btn part-detail__btn--outlined"
+            onClick={() => setShowQuestionBank(true)}
+          >
             <img src={crown} className="crown-icon" alt="crown-icon" />
             Ngân hàng câu hỏi
           </button>
@@ -984,6 +989,12 @@ export default function PartDetailPage() {
           loading={uploading}
         />
       </div>
+      {/* Modal question bank */}
+      <QuestionBank
+        open={showQuestionBank}
+        onClose={() => setShowQuestionBank(false)}
+        partNumber={partNumber}
+      />
     </div>
   );
 }
