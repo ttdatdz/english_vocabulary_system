@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./PartDetailGroupPage.scss";
 import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
 import CreateGroupToeicQuestion from "../../components/CreateGroupToeicQuestion";
+import QuestionBank from "../../components/QuestionBank";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
 
-// Helper: lấy số bắt đầu của part
 const getPartStartIndex = (part) => {
   switch (String(part)) {
     case "1":
@@ -40,19 +40,14 @@ const isUrl = (s) => typeof s === "string" && /^https?:\/\//i.test(s);
 
 function mapGroupQuestionResponseToLocal(group) {
   if (!group) return null;
-
   const rawImages = Array.isArray(group.images)
     ? group.images.filter(Boolean)
     : [];
   const rawAudios = Array.isArray(group.audios)
     ? group.audios.filter(Boolean)
     : [];
-
-  // CHỈ lấy URL cho hiển thị
   const imageUrls = rawImages.filter(isUrl);
   const audioUrls = rawAudios.filter(isUrl);
-
-  // KEY giữ riêng để PUT/POST
   const imageKeys = Array.isArray(group.imageKeys)
     ? group.imageKeys.filter(Boolean)
     : [];
@@ -67,17 +62,15 @@ function mapGroupQuestionResponseToLocal(group) {
     content: group.content || "",
     questionRange: group.questionRange || "",
     examId: group.examId ?? null,
-
-    imageUrls, // render
-    audioUrls, // render
-    imageKeys, // PUT/POST
-    audioKeys, // PUT/POST
-
+    imageUrls,
+    audioUrls,
+    imageKeys,
+    audioKeys,
     imageFiles: [],
     imagePreviews: [],
     audioFiles: [],
     audioPreviews: [],
-
+    bankGroupId: group.bankGroupId || null,
     questions: Array.isArray(group.questions)
       ? group.questions.map(mapToeicQuestionResponseToLocal)
       : [],
@@ -86,14 +79,12 @@ function mapGroupQuestionResponseToLocal(group) {
 
 function mapToeicQuestionResponseToLocal(q) {
   if (!q) return null;
-
   const correctIdx = LETTERS.indexOf(q.result);
   const rawImages = Array.isArray(q.images) ? q.images.filter(Boolean) : [];
-
-  const imageUrls = rawImages.filter(isUrl); // render
+  const imageUrls = rawImages.filter(isUrl);
   const imageKeys = Array.isArray(q.imageKeys)
     ? q.imageKeys.filter(Boolean)
-    : []; // payload
+    : [];
 
   return {
     id: q.id ?? null,
@@ -101,16 +92,12 @@ function mapToeicQuestionResponseToLocal(q) {
     part: q.part ?? "",
     detail: q.detail || "",
     result: q.result || "",
-
     imageUrls,
     imageKeys,
-
     imageFiles: [],
     imagePreviews: [],
-
     options: (q.options || []).map((o) => o.detail || ""),
     correctOptionIndex: correctIdx >= 0 ? correctIdx : null,
-
     conversation: null,
     clarify: q.clarify || "",
   };
@@ -123,17 +110,15 @@ const createEmptyGroup = (part, examId) => ({
   content: "",
   questionRange: "",
   examId: Number(examId),
-
   imageUrls: [],
   audioUrls: [],
   imageKeys: [],
   audioKeys: [],
-
   imageFiles: [],
   imagePreviews: [],
   audioFiles: [],
   audioPreviews: [],
-
+  bankGroupId: null,
   questions: [],
 });
 
@@ -143,21 +128,16 @@ const createEmptyQuestion = (part) => ({
   part: String(part),
   detail: "",
   result: "",
-
   imageUrls: [],
   imageKeys: [],
-
   imageFiles: [],
   imagePreviews: [],
-
   options: ["", ""],
   correctOptionIndex: null,
-
   conversation: null,
   clarify: "",
 });
 
-// Helper: extract start index từ questionRange "32-35" -> 32
 const extractStartIndex = (range) => {
   try {
     return parseInt(range.split("-")[0].trim());
@@ -174,58 +154,48 @@ export default function PartDetailGroupPage() {
 
   const [examTitle, setExamTitle] = useState(routeState.examName || "");
   const [groups, setGroups] = useState([]);
-
   const [expandedGroupId, setExpandedGroupId] = useState(null);
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [draftGroup, setDraftGroup] = useState(null);
   const [creatingNewGroup, setCreatingNewGroup] = useState(false);
-
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [draftQuestion, setDraftQuestion] = useState(null);
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [currentGroupId, setCurrentGroupId] = useState(null);
-
   const [uploading, setUploading] = useState(false);
   const [draggingGroupId, setDraggingGroupId] = useState(null);
+  const [showQuestionBank, setShowQuestionBank] = useState(false);
 
-  // Load groups từ route state hoặc API
+  const usedBankGroupIds = useMemo(() => {
+    return groups
+      .filter((g) => g.bankGroupId != null)
+      .map((g) => g.bankGroupId);
+  }, [groups]);
 
   useEffect(() => {
     let cancelled = false;
-
     const loadGroups = async () => {
       try {
-        // 1) Luôn gọi exam detail (bỏ routeState ưu tiên)
         const examData = await get(`/api/exam/detail/${examId}`, true);
         const list = Array.isArray(examData?.groupQuestions)
           ? examData.groupQuestions
           : [];
-
-        // 2) Lọc theo part
         const partGroups = list.filter(
-          (g) => String(g.part) === String(partNumber)
+          (g) => String(g.part) === String(partNumber),
         );
-
-        // 3) Song song gọi chi tiết từng group để lấy URL hình/audio chuẩn
         const details = await Promise.all(
           partGroups.map(async (g) => {
             try {
               const full = await get(`/api/group-question/${g.id}`, true);
-              return full || g; // fallback nếu lỗi
+              return full || g;
             } catch (e) {
-              console.error("Load group detail error", g.id, e);
               return g;
             }
-          })
+          }),
         );
-
-        // 4) Map → sort → set state
         const mapped = details.map(mapGroupQuestionResponseToLocal);
         const sorted = sortGroups(mapped);
-
         if (!cancelled) setGroups(sorted);
-
-        // 5) Nếu không có group nào → mở form tạo mới
         if (!cancelled && sorted.length === 0) {
           setCreatingNewGroup(true);
           setDraftGroup(createEmptyGroup(String(partNumber), examId));
@@ -234,50 +204,60 @@ export default function PartDetailGroupPage() {
         console.error("Load groups error", err);
       }
     };
-
     loadGroups();
     return () => {
       cancelled = true;
     };
   }, [examId, partNumber]);
 
-  // Sort groups theo questionRange
-  const sortGroups = (groupsList) => {
-    return [...groupsList].sort((a, b) => {
+  const reloadGroups = async () => {
+    try {
+      const examData = await get(`/api/exam/detail/${examId}`, true);
+      const list = Array.isArray(examData?.groupQuestions)
+        ? examData.groupQuestions
+        : [];
+      const partGroups = list.filter(
+        (g) => String(g.part) === String(partNumber),
+      );
+      const details = await Promise.all(
+        partGroups.map(async (g) => {
+          try {
+            const full = await get(`/api/group-question/${g.id}`, true);
+            return full || g;
+          } catch (e) {
+            return g;
+          }
+        }),
+      );
+      const mapped = details.map(mapGroupQuestionResponseToLocal);
+      setGroups(sortGroups(mapped));
+    } catch (err) {
+      console.error("Reload groups error", err);
+    }
+  };
+
+  const sortGroups = (groupsList) =>
+    [...groupsList].sort((a, b) => {
       if (!a.questionRange && !b.questionRange) return 0;
       if (!a.questionRange) return 1;
       if (!b.questionRange) return -1;
-
-      const startA = extractStartIndex(a.questionRange);
-      const startB = extractStartIndex(b.questionRange);
-      return startA - startB;
+      return (
+        extractStartIndex(a.questionRange) - extractStartIndex(b.questionRange)
+      );
     });
-  };
 
-  // Recalculate tất cả metadata cho groups
   const recalculateAllGroups = (groupsList) => {
     let currentQuestionIndex = getPartStartIndex(partNumber);
-
     return groupsList.map((group) => {
       const questionsCount = group.questions.length;
-
       if (questionsCount === 0) {
         let contentType = "content";
-        switch (String(partNumber)) {
-          case "3":
-          case "Part 3":
-            contentType = "conversation";
-            break;
-          case "4":
-          case "Part 4":
-            contentType = "talk";
-            break;
-          case "7":
-          case "Part 7":
-            contentType = "passage";
-            break;
-        }
-
+        if (["3", "Part 3"].includes(String(partNumber)))
+          contentType = "conversation";
+        else if (["4", "Part 4"].includes(String(partNumber)))
+          contentType = "talk";
+        else if (["7", "Part 7"].includes(String(partNumber)))
+          contentType = "passage";
         return {
           ...group,
           title: `No questions - ${contentType}`,
@@ -285,52 +265,30 @@ export default function PartDetailGroupPage() {
           questions: [],
         };
       }
-
       const groupStartQuestion = currentQuestionIndex;
       const groupEndQuestion = currentQuestionIndex + questionsCount - 1;
-
       let contentType = "content";
-      switch (String(partNumber)) {
-        case "3":
-        case "Part 3":
-          contentType = "conversation";
-          break;
-        case "4":
-        case "Part 4":
-          contentType = "talk";
-          break;
-        case "7":
-        case "Part 7":
-          contentType = "passage";
-          break;
-      }
-
+      if (["3", "Part 3"].includes(String(partNumber)))
+        contentType = "conversation";
+      else if (["4", "Part 4"].includes(String(partNumber)))
+        contentType = "talk";
+      else if (["7", "Part 7"].includes(String(partNumber)))
+        contentType = "passage";
       const title = `Use the given ${contentType} to answer the questions ${groupStartQuestion} to ${groupEndQuestion}`;
       const questionRange = `${groupStartQuestion}-${groupEndQuestion}`;
-
       const updatedQuestions = group.questions.map((q, qIdx) => ({
         ...q,
         indexNumber: groupStartQuestion + qIdx,
       }));
-
       currentQuestionIndex += questionsCount;
-
-      return {
-        ...group,
-        title,
-        questionRange,
-        questions: updatedQuestions,
-      };
+      return { ...group, title, questionRange, questions: updatedQuestions };
     });
   };
 
   const handleBack = () => navigate(-1);
-
-  const handleClickGroupCard = (id) => {
+  const handleClickGroupCard = (id) =>
     setExpandedGroupId((prev) => (prev === id ? null : id));
-  };
 
-  // === GROUP HANDLERS ===
   const handleStartCreateGroup = () => {
     setDraftGroup(createEmptyGroup(String(partNumber), examId));
     setCreatingNewGroup(true);
@@ -345,7 +303,6 @@ export default function PartDetailGroupPage() {
       imagePreviews: [],
       audioFiles: [],
       audioPreviews: [],
-      // ✅ Keys đã có sẵn từ server
       imageKeys: [...(group.imageKeys || [])],
       audioKeys: [...(group.audioKeys || [])],
     });
@@ -361,8 +318,32 @@ export default function PartDetailGroupPage() {
     setExpandedGroupId(null);
   };
 
-  const handleChangeGroupField = (field, value) => {
+  const handleChangeGroupField = (field, value) =>
     setDraftGroup((prev) => ({ ...prev, [field]: value }));
+
+  // ===== QUESTION BANK HANDLERS =====
+  const handleOpenQuestionBank = () => {
+    // Đóng form tạo nhóm nếu đang mở
+    if (creatingNewGroup || editingGroupId != null) {
+      setCreatingNewGroup(false);
+      setEditingGroupId(null);
+      setDraftGroup(null);
+      setExpandedGroupId(null);
+    }
+    // Đóng form tạo câu hỏi nếu đang mở
+    if (showQuestionModal) {
+      setShowQuestionModal(false);
+      setEditingQuestionId(null);
+      setDraftQuestion(null);
+      setCurrentGroupId(null);
+    }
+    setShowQuestionBank(true);
+  };
+
+  const handleCloseQuestionBank = () => setShowQuestionBank(false);
+
+  const handleQuestionsAddedFromBank = async () => {
+    await reloadGroups();
   };
 
   // Group media handlers
@@ -382,15 +363,17 @@ export default function PartDetailGroupPage() {
     setDraftGroup((prev) => {
       if (!prev) return prev;
       if (source === "server") {
-        const newUrls = (prev.imageUrls || []).filter((_, i) => i !== idx);
-        const newKeys = (prev.imageKeys || []).filter((_, i) => i !== idx);
-        return { ...prev, imageUrls: newUrls, imageKeys: newKeys };
+        return {
+          ...prev,
+          imageUrls: prev.imageUrls.filter((_, i) => i !== idx),
+          imageKeys: prev.imageKeys.filter((_, i) => i !== idx),
+        };
       }
-      const newFiles = (prev.imageFiles || []).filter((_, i) => i !== idx);
-      const newPreviews = (prev.imagePreviews || []).filter(
-        (_, i) => i !== idx
-      );
-      return { ...prev, imageFiles: newFiles, imagePreviews: newPreviews };
+      return {
+        ...prev,
+        imageFiles: prev.imageFiles.filter((_, i) => i !== idx),
+        imagePreviews: prev.imagePreviews.filter((_, i) => i !== idx),
+      };
     });
   };
 
@@ -410,15 +393,17 @@ export default function PartDetailGroupPage() {
     setDraftGroup((prev) => {
       if (!prev) return prev;
       if (source === "server") {
-        const newUrls = (prev.audioUrls || []).filter((_, i) => i !== idx);
-        const newKeys = (prev.audioKeys || []).filter((_, i) => i !== idx);
-        return { ...prev, audioUrls: newUrls, audioKeys: newKeys };
+        return {
+          ...prev,
+          audioUrls: prev.audioUrls.filter((_, i) => i !== idx),
+          audioKeys: prev.audioKeys.filter((_, i) => i !== idx),
+        };
       }
-      const newFiles = (prev.audioFiles || []).filter((_, i) => i !== idx);
-      const newPreviews = (prev.audioPreviews || []).filter(
-        (_, i) => i !== idx
-      );
-      return { ...prev, audioFiles: newFiles, audioPreviews: newPreviews };
+      return {
+        ...prev,
+        audioFiles: prev.audioFiles.filter((_, i) => i !== idx),
+        audioPreviews: prev.audioPreviews.filter((_, i) => i !== idx),
+      };
     });
   };
 
@@ -427,82 +412,57 @@ export default function PartDetailGroupPage() {
       alert("Vui lòng nhập nội dung nhóm câu hỏi");
       return;
     }
-
     setUploading(true);
-
     try {
-      // Upload media mới (nếu có)
-      let uploadedImageKeys = [];
-      let uploadedAudioKeys = [];
-
+      let uploadedImageKeys = [],
+        uploadedAudioKeys = [];
       const fd = new FormData();
       let hasNewMedia = false;
-
-      if (draftGroup.imageFiles && draftGroup.imageFiles.length > 0) {
+      if (draftGroup.imageFiles?.length > 0) {
         draftGroup.imageFiles.forEach((f) => fd.append("images", f));
         hasNewMedia = true;
       }
-      if (draftGroup.audioFiles && draftGroup.audioFiles.length > 0) {
+      if (draftGroup.audioFiles?.length > 0) {
         draftGroup.audioFiles.forEach((f) => fd.append("audios", f));
         hasNewMedia = true;
       }
-
       if (hasNewMedia) {
         const uploadRes = await postFormData("/api/media/upload", fd, true);
-
-        const imgList = Array.isArray(uploadRes?.images)
-          ? uploadRes.images
-          : [];
-        uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
-
-        const audioList = Array.isArray(uploadRes?.audios)
-          ? uploadRes.audios
-          : [];
-        uploadedAudioKeys = audioList.map((x) => x?.key).filter(Boolean);
+        uploadedImageKeys = (uploadRes?.images || [])
+          .map((x) => x?.key)
+          .filter(Boolean);
+        uploadedAudioKeys = (uploadRes?.audios || [])
+          .map((x) => x?.key)
+          .filter(Boolean);
       }
-
-      // ✅ Gộp keys cũ (từ server) + keys mới (vừa upload)
-      const existingImageKeys = Array.isArray(draftGroup.imageKeys)
-        ? draftGroup.imageKeys
-        : [];
-      const existingAudioKeys = Array.isArray(draftGroup.audioKeys)
-        ? draftGroup.audioKeys
-        : [];
-
-      const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(
-        Boolean
-      );
-      const allAudioKeys = [...existingAudioKeys, ...uploadedAudioKeys].filter(
-        Boolean
-      );
-
+      const allImageKeys = [
+        ...(draftGroup.imageKeys || []),
+        ...uploadedImageKeys,
+      ].filter(Boolean);
+      const allAudioKeys = [
+        ...(draftGroup.audioKeys || []),
+        ...uploadedAudioKeys,
+      ].filter(Boolean);
       const imagesPayload = allImageKeys.map((key) => ({ url: key }));
       const audiosPayload = allAudioKeys.map((key) => ({ url: key }));
 
       if (editingGroupId != null) {
-        // ==================== UPDATE GROUP ====================
         const currentGroup = groups.find((g) => g.id === editingGroupId);
-
-        // Tính toán title và questionRange
         const tempGroups = groups.map((g) =>
           g.id === editingGroupId
             ? {
-                ...g,
-                content: draftGroup.content.trim(),
-                imageKeys: allImageKeys,
-                audioKeys: allAudioKeys,
-                // GIỮ NGUYÊN url đang hiển thị
-                imageUrls: g.imageUrls,
-                audioUrls: g.audioUrls,
-                questions: currentGroup.questions,
-              }
-            : g
+              ...g,
+              content: draftGroup.content.trim(),
+              imageKeys: allImageKeys,
+              audioKeys: allAudioKeys,
+              questions: currentGroup.questions,
+            }
+            : g,
         );
         const recalculated = recalculateAllGroups(tempGroups);
         const recalculatedGroup = recalculated.find(
-          (g) => g.id === editingGroupId
+          (g) => g.id === editingGroupId,
         );
-
         const basePayload = {
           part: String(partNumber),
           title: recalculatedGroup.title,
@@ -510,42 +470,34 @@ export default function PartDetailGroupPage() {
           content: draftGroup.content.trim(),
           examId: Number(examId),
         };
-
         if (
           uploadedImageKeys.length > 0 ||
           draftGroup.imageKeys?.length !== currentGroup.imageKeys?.length
-        ) {
+        )
           basePayload.images = imagesPayload;
-        }
-
         if (
           uploadedAudioKeys.length > 0 ||
           draftGroup.audioKeys?.length !== currentGroup.audioKeys?.length
-        ) {
+        )
           basePayload.audios = audiosPayload;
-        }
-
         await put(basePayload, `/api/group-question/${editingGroupId}`, true);
-
-        // Reload từ server để lấy data mới nhất
         const reloaded = await get(
           `/api/group-question/${editingGroupId}`,
-          true
+          true,
         );
-        const updatedLocal = mapGroupQuestionResponseToLocal(reloaded);
-
-        setGroups((prev) => {
-          const next = prev.map((g) =>
-            g.id === editingGroupId ? updatedLocal : g
-          );
-          return sortGroups(next);
-        });
+        setGroups((prev) =>
+          sortGroups(
+            prev.map((g) =>
+              g.id === editingGroupId
+                ? mapGroupQuestionResponseToLocal(reloaded)
+                : g,
+            ),
+          ),
+        );
       } else {
-        // ==================== CREATE NEW GROUP ====================
         const tempGroups = [...groups, draftGroup];
         const recalculated = recalculateAllGroups(tempGroups);
         const newGroup = recalculated[recalculated.length - 1];
-
         const basePayload = {
           part: String(partNumber),
           title: newGroup.title,
@@ -556,26 +508,16 @@ export default function PartDetailGroupPage() {
           audios: audiosPayload,
           questions: [],
         };
-
         const saved = await post(basePayload, "/api/group-question", true);
-
-        if (!saved || !saved.id) {
-          throw new Error("Create group failed");
-        }
-
-        // Reload để lấy data đầy đủ
+        if (!saved?.id) throw new Error("Create group failed");
         const reloadedGroup = await get(
           `/api/group-question/${saved.id}`,
-          true
+          true,
         );
-        const createdLocal = mapGroupQuestionResponseToLocal(reloadedGroup);
-
-        setGroups((prev) => {
-          const next = [...prev, createdLocal];
-          return sortGroups(next);
-        });
+        setGroups((prev) =>
+          sortGroups([...prev, mapGroupQuestionResponseToLocal(reloadedGroup)]),
+        );
       }
-
       setCreatingNewGroup(false);
       setEditingGroupId(null);
       setDraftGroup(null);
@@ -590,51 +532,29 @@ export default function PartDetailGroupPage() {
 
   const handleDeleteGroup = async (groupId) => {
     if (!window.confirm("Xoá nhóm câu hỏi này?")) return;
-
     setUploading(true);
     try {
       await del(`/api/group-question/${groupId}`, true);
-
       const nextGroups = groups.filter((g) => g.id !== groupId);
       const recalculated = recalculateAllGroups(nextGroups);
-
-      // Update các groups còn lại trên server
       for (const group of recalculated) {
         if (group.id && group.questionRange) {
-          const payload = {
-            part: String(partNumber),
-            title: group.title,
-            questionRange: group.questionRange,
-            content: group.content,
-            examId: Number(examId),
-            images: (group.imageKeys || []).map((key) => ({ url: key })),
-            audios: (group.audioKeys || []).map((key) => ({ url: key })),
-          };
-
-          await put(payload, `/api/group-question/${group.id}`, true);
+          await put(
+            {
+              part: String(partNumber),
+              title: group.title,
+              questionRange: group.questionRange,
+              content: group.content,
+              examId: Number(examId),
+              images: (group.imageKeys || []).map((key) => ({ url: key })),
+              audios: (group.audioKeys || []).map((key) => ({ url: key })),
+            },
+            `/api/group-question/${group.id}`,
+            true,
+          );
         }
       }
-
       setGroups(recalculated);
-
-      // Sync global cache
-      if (window.__toeicExamData?.questions) {
-        const remainingIds = new Set(
-          recalculated
-            .flatMap((g) => (g.questions || []).map((q) => q.id))
-            .filter(Boolean)
-        );
-
-        let newQuestions = (window.__toeicExamData.questions || []).filter(
-          (q) => String(q.part) !== String(partNumber) || remainingIds.has(q.id)
-        );
-
-        window.__toeicExamData = {
-          ...window.__toeicExamData,
-          questions: newQuestions,
-        };
-      }
-
       if (expandedGroupId === groupId) setExpandedGroupId(null);
       if (editingGroupId === groupId) {
         setEditingGroupId(null);
@@ -648,65 +568,51 @@ export default function PartDetailGroupPage() {
     }
   };
 
-  // === DRAG & DROP GROUPS ===
-  const handleDragStartGroup = (groupId) => {
-    setDraggingGroupId(groupId);
-  };
-
-  const handleDragOverGroup = (e) => {
-    e.preventDefault();
-  };
-
+  // Drag & Drop
+  const handleDragStartGroup = (groupId) => setDraggingGroupId(groupId);
+  const handleDragOverGroup = (e) => e.preventDefault();
   const handleDropOnGroup = async (targetId) => {
     if (!draggingGroupId || draggingGroupId === targetId) {
       setDraggingGroupId(null);
       return;
     }
-
     const from = groups.findIndex((g) => g.id === draggingGroupId);
     const to = groups.findIndex((g) => g.id === targetId);
-
     if (from === -1 || to === -1) {
       setDraggingGroupId(null);
       return;
     }
-
     const reordered = [...groups];
     const [moved] = reordered.splice(from, 1);
     reordered.splice(to, 0, moved);
-
     const recalculated = recalculateAllGroups(reordered);
-
     setGroups(recalculated);
     setDraggingGroupId(null);
-
-    // Update trên server
     try {
       for (const group of recalculated) {
         if (group.id && group.questionRange) {
-          const payload = {
-            part: String(partNumber),
-            title: group.title,
-            questionRange: group.questionRange,
-            content: group.content,
-            examId: Number(examId),
-            images: (group.imageKeys || []).map((key) => ({ url: key })),
-            audios: (group.audioKeys || []).map((key) => ({ url: key })),
-          };
-
-          await put(payload, `/api/group-question/${group.id}`, true);
+          await put(
+            {
+              part: String(partNumber),
+              title: group.title,
+              questionRange: group.questionRange,
+              content: group.content,
+              examId: Number(examId),
+              images: (group.imageKeys || []).map((key) => ({ url: key })),
+              audios: (group.audioKeys || []).map((key) => ({ url: key })),
+            },
+            `/api/group-question/${group.id}`,
+            true,
+          );
         }
       }
     } catch (err) {
       console.error("Reorder groups error", err);
     }
   };
+  const handleDragEndGroup = () => setDraggingGroupId(null);
 
-  const handleDragEndGroup = () => {
-    setDraggingGroupId(null);
-  };
-
-  // === QUESTION HANDLERS ===
+  // Question handlers
   const handleStartCreateQuestion = (groupId) => {
     setCurrentGroupId(groupId);
     setDraftQuestion(createEmptyQuestion(String(partNumber)));
@@ -719,7 +625,7 @@ export default function PartDetailGroupPage() {
     setDraftQuestion({
       ...question,
       imageUrls: [...(question.imageUrls || [])],
-      imageKeys: [...(question.imageKeys || [])], // ✅ Keys từ server
+      imageKeys: [...(question.imageKeys || [])],
       imageFiles: [],
       imagePreviews: [],
     });
@@ -734,56 +640,42 @@ export default function PartDetailGroupPage() {
     setCurrentGroupId(null);
   };
 
-  const handleChangeDraftField = (field, value) => {
+  const handleChangeDraftField = (field, value) =>
     setDraftQuestion((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleChangeOption = (index, value) => {
+  const handleChangeOption = (index, value) =>
     setDraftQuestion((prev) => {
       const options = [...prev.options];
       options[index] = value;
       return { ...prev, options };
     });
-  };
-
-  const handleAddOption = () => {
+  const handleAddOption = () =>
     setDraftQuestion((prev) => {
       if (!prev || prev.options.length >= 5) return prev;
       return { ...prev, options: [...prev.options, ""] };
     });
-  };
-
-  const handleRemoveOption = (index) => {
+  const handleRemoveOption = (index) =>
     setDraftQuestion((prev) => {
       if (!prev || prev.options.length <= 2) return prev;
-
       const newOptions = prev.options.filter((_, idx) => idx !== index);
       let newCorrect = prev.correctOptionIndex;
-
       if (prev.correctOptionIndex === index) newCorrect = null;
       else if (
         prev.correctOptionIndex != null &&
         prev.correctOptionIndex > index
-      ) {
+      )
         newCorrect = prev.correctOptionIndex - 1;
-      }
-
       return { ...prev, options: newOptions, correctOptionIndex: newCorrect };
     });
-  };
-
-  const handleMarkCorrect = (index) => {
+  const handleMarkCorrect = (index) =>
     setDraftQuestion((prev) => ({ ...prev, correctOptionIndex: index }));
-  };
 
   const handleAddImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const previewUrl = URL.createObjectURL(file);
     setDraftQuestion((prev) => ({
       ...prev,
       imageFiles: [...(prev.imageFiles || []), file],
-      imagePreviews: [...(prev.imagePreviews || []), previewUrl],
+      imagePreviews: [...(prev.imagePreviews || []), URL.createObjectURL(file)],
     }));
     e.target.value = "";
   };
@@ -791,16 +683,17 @@ export default function PartDetailGroupPage() {
   const handleRemoveImage = (source, idx) => {
     setDraftQuestion((prev) => {
       if (!prev) return prev;
-      if (source === "server") {
-        const newUrls = (prev.imageUrls || []).filter((_, i) => i !== idx);
-        const newKeys = (prev.imageKeys || []).filter((_, i) => i !== idx);
-        return { ...prev, imageUrls: newUrls, imageKeys: newKeys };
-      }
-      const newFiles = (prev.imageFiles || []).filter((_, i) => i !== idx);
-      const newPreviews = (prev.imagePreviews || []).filter(
-        (_, i) => i !== idx
-      );
-      return { ...prev, imageFiles: newFiles, imagePreviews: newPreviews };
+      if (source === "server")
+        return {
+          ...prev,
+          imageUrls: prev.imageUrls.filter((_, i) => i !== idx),
+          imageKeys: prev.imageKeys.filter((_, i) => i !== idx),
+        };
+      return {
+        ...prev,
+        imageFiles: prev.imageFiles.filter((_, i) => i !== idx),
+        imagePreviews: prev.imagePreviews.filter((_, i) => i !== idx),
+      };
     });
   };
 
@@ -809,48 +702,33 @@ export default function PartDetailGroupPage() {
       alert("Vui lòng nhập nội dung câu hỏi");
       return;
     }
-
     const trimmedOptions = (draftQuestion.options || []).map((o) =>
-      (o || "").trim()
+      (o || "").trim(),
     );
-    const filled = trimmedOptions.filter(Boolean);
-    if (filled.length < 2) {
+    if (trimmedOptions.filter(Boolean).length < 2) {
       alert("Vui lòng nhập ít nhất 2 đáp án");
       return;
     }
-
     const idx = draftQuestion.correctOptionIndex;
     if (idx == null || idx < 0 || !trimmedOptions[idx]) {
       alert("Vui lòng chọn đáp án đúng");
       return;
     }
-
     setUploading(true);
-
     try {
-      // Upload media mới
       let uploadedImageKeys = [];
-
-      if (draftQuestion.imageFiles && draftQuestion.imageFiles.length > 0) {
+      if (draftQuestion.imageFiles?.length > 0) {
         const fd = new FormData();
         draftQuestion.imageFiles.forEach((f) => fd.append("images", f));
-
         const uploadRes = await postFormData("/api/media/upload", fd, true);
-        const imgList = Array.isArray(uploadRes?.images)
-          ? uploadRes.images
-          : [];
-        uploadedImageKeys = imgList.map((x) => x?.key).filter(Boolean);
+        uploadedImageKeys = (uploadRes?.images || [])
+          .map((x) => x?.key)
+          .filter(Boolean);
       }
-
-      // Gộp keys
-      const existingKeys = Array.isArray(draftQuestion.imageKeys)
-        ? draftQuestion.imageKeys
-        : [];
-      const allImageKeys = [...existingKeys, ...uploadedImageKeys].filter(
-        Boolean
-      );
-      const imagesPayload = allImageKeys.map((key) => ({ url: key }));
-
+      const allImageKeys = [
+        ...(draftQuestion.imageKeys || []),
+        ...uploadedImageKeys,
+      ].filter(Boolean);
       const basePayload = {
         part: String(partNumber),
         detail: draftQuestion.detail.trim(),
@@ -864,81 +742,33 @@ export default function PartDetailGroupPage() {
         })),
         result: LETTERS[idx],
         audio: null,
-        images: imagesPayload,
+        images: allImageKeys.map((key) => ({ url: key })),
       };
 
       if (editingQuestionId != null) {
-        // ==================== UPDATE QUESTION ====================
         await put(
           basePayload,
           `/api/toeic-question/${editingQuestionId}`,
-          true
+          true,
         );
-
-        // Reload group để lấy data mới
-        const reloaded = await get(
-          `/api/group-question/${currentGroupId}`,
-          true
-        );
-        const mappedGroup = mapGroupQuestionResponseToLocal(reloaded);
-
-        // Recalculate và update state
-        const updatedGroups = groups.map((g) =>
-          g.id === currentGroupId ? mappedGroup : g
-        );
-        const recalculated = recalculateAllGroups(updatedGroups);
-        setGroups(recalculated);
-
-        // Update group metadata trên server
-        const updatedGroup = recalculated.find((g) => g.id === currentGroupId);
-        if (updatedGroup && updatedGroup.questionRange) {
-          const groupPayload = {
-            part: String(partNumber),
-            title: updatedGroup.title,
-            questionRange: updatedGroup.questionRange,
-            content: updatedGroup.content,
-            examId: Number(examId),
-            images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
-            audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
-          };
-          await put(
-            groupPayload,
-            `/api/group-question/${currentGroupId}`,
-            true
-          );
-        }
       } else {
-        // ==================== CREATE QUESTION ====================
         const saved = await post(basePayload, "/api/toeic-question", true);
-
-        if (!saved) {
-          throw new Error("Create question failed");
-        }
-
-        // Gán câu hỏi vào group
+        if (!saved) throw new Error("Create question failed");
         await put(
           { groupId: currentGroupId },
-          `/api/group-question/question/${saved.id}`
+          `/api/group-question/question/${saved.id}`,
         );
-
-        // Reload group để lấy data đầy đủ
-        const reloaded = await get(
-          `/api/group-question/${currentGroupId}`,
-          true
-        );
-        const mappedGroup = mapGroupQuestionResponseToLocal(reloaded);
-
-        // Recalculate và update state
-        const updatedGroups = groups.map((g) =>
-          g.id === currentGroupId ? mappedGroup : g
-        );
-        const recalculated = recalculateAllGroups(updatedGroups);
-        setGroups(recalculated);
-
-        // Update group metadata trên server
-        const updatedGroup = recalculated.find((g) => g.id === currentGroupId);
-        if (updatedGroup && updatedGroup.questionRange) {
-          const groupPayload = {
+      }
+      const reloaded = await get(`/api/group-question/${currentGroupId}`, true);
+      const updatedGroups = groups.map((g) =>
+        g.id === currentGroupId ? mapGroupQuestionResponseToLocal(reloaded) : g,
+      );
+      const recalculated = recalculateAllGroups(updatedGroups);
+      setGroups(recalculated);
+      const updatedGroup = recalculated.find((g) => g.id === currentGroupId);
+      if (updatedGroup?.questionRange) {
+        await put(
+          {
             part: String(partNumber),
             title: updatedGroup.title,
             questionRange: updatedGroup.questionRange,
@@ -946,23 +776,11 @@ export default function PartDetailGroupPage() {
             examId: Number(examId),
             images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
             audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
-          };
-          await put(
-            groupPayload,
-            `/api/group-question/${currentGroupId}`,
-            true
-          );
-        }
-
-        // Update global cache
-        if (window.__toeicExamData?.questions) {
-          window.__toeicExamData = {
-            ...window.__toeicExamData,
-            questions: [...(window.__toeicExamData.questions || []), saved],
-          };
-        }
+          },
+          `/api/group-question/${currentGroupId}`,
+          true,
+        );
       }
-
       handleCloseQuestionModal();
     } catch (err) {
       console.error("Save question error", err);
@@ -974,50 +792,32 @@ export default function PartDetailGroupPage() {
 
   const handleDeleteQuestion = async (groupId, questionId) => {
     if (!window.confirm("Xoá câu hỏi này?")) return;
-
     setUploading(true);
     try {
       await del(`/api/toeic-question/${questionId}`, true);
-
-      // Reload group
       const reloaded = await get(`/api/group-question/${groupId}`, true);
-      const mappedGroup = mapGroupQuestionResponseToLocal(reloaded);
-
-      // Recalculate
       const updatedGroups = groups.map((g) =>
-        g.id === groupId ? mappedGroup : g
+        g.id === groupId ? mapGroupQuestionResponseToLocal(reloaded) : g,
       );
       const recalculated = recalculateAllGroups(updatedGroups);
       setGroups(recalculated);
-
-      // Update group metadata
       const updatedGroup = recalculated.find((g) => g.id === groupId);
       if (updatedGroup) {
-        const groupPayload = {
-          part: String(partNumber),
-          title: updatedGroup.title,
-          questionRange: updatedGroup.questionRange,
-          content: updatedGroup.content,
-          examId: Number(examId),
-          images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
-          audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
-        };
-        await put(groupPayload, `/api/group-question/${groupId}`, true);
+        await put(
+          {
+            part: String(partNumber),
+            title: updatedGroup.title,
+            questionRange: updatedGroup.questionRange,
+            content: updatedGroup.content,
+            examId: Number(examId),
+            images: (updatedGroup.imageKeys || []).map((key) => ({ url: key })),
+            audios: (updatedGroup.audioKeys || []).map((key) => ({ url: key })),
+          },
+          `/api/group-question/${groupId}`,
+          true,
+        );
       }
-
-      // Update global cache
-      if (window.__toeicExamData?.questions) {
-        window.__toeicExamData = {
-          ...window.__toeicExamData,
-          questions: window.__toeicExamData.questions.filter(
-            (q) => q?.id !== questionId
-          ),
-        };
-      }
-
-      if (editingQuestionId === questionId) {
-        handleCloseQuestionModal();
-      }
+      if (editingQuestionId === questionId) handleCloseQuestionModal();
     } catch (err) {
       console.error("Delete question error", err);
       alert(err?.message || "Xoá câu hỏi thất bại");
@@ -1026,12 +826,12 @@ export default function PartDetailGroupPage() {
     }
   };
 
-  // === RENDER ===
   const renderGroupCard = (group, index) => {
     const isExpanded =
       expandedGroupId === group.id && editingGroupId !== group.id;
     const isEditing = editingGroupId === group.id;
     const isDragging = draggingGroupId === group.id;
+    const isFromBank = group.bankGroupId != null;
 
     return (
       <div
@@ -1040,7 +840,8 @@ export default function PartDetailGroupPage() {
           "group-card" +
           (isExpanded ? " group-card--expanded" : " group-card--collapsed") +
           (isEditing ? " group-card--editing" : "") +
-          (isDragging ? " group-card--dragging" : "")
+          (isDragging ? " group-card--dragging" : "") +
+          (isFromBank ? " group-card--from-bank" : "")
         }
         draggable={!isEditing}
         onDragStart={() => handleDragStartGroup(group.id)}
@@ -1060,6 +861,14 @@ export default function PartDetailGroupPage() {
               <span className="group-card__range">
                 {" "}
                 ({group.questionRange})
+              </span>
+            )}
+            {isFromBank && (
+              <span
+                className="group-card__bank-badge"
+                title="Từ ngân hàng câu hỏi"
+              >
+                📚 Bank
               </span>
             )}
           </div>
@@ -1084,7 +893,6 @@ export default function PartDetailGroupPage() {
             </button>
           </div>
         </div>
-
         {isExpanded && (
           <div className="group-card__body">
             <p className="group-card__text">
@@ -1095,8 +903,7 @@ export default function PartDetailGroupPage() {
                 <strong>Nội dung:</strong> {group.content}
               </p>
             )}
-
-            {group.audioUrls && group.audioUrls.length > 0 && (
+            {group.audioUrls?.length > 0 && (
               <div className="group-card__media">
                 <strong>Âm thanh:</strong>
                 {group.audioUrls.map((url, idx) => (
@@ -1109,8 +916,7 @@ export default function PartDetailGroupPage() {
                 ))}
               </div>
             )}
-
-            {group.imageUrls && group.imageUrls.length > 0 && (
+            {group.imageUrls?.length > 0 && (
               <div className="group-card__media">
                 <strong>Hình ảnh:</strong>
                 <div className="group-card__images">
@@ -1125,7 +931,6 @@ export default function PartDetailGroupPage() {
                 </div>
               </div>
             )}
-
             <div className="group-card__questions">
               <div className="group-card__questions-header">
                 <strong>Câu hỏi ({group.questions?.length || 0})</strong>
@@ -1136,8 +941,7 @@ export default function PartDetailGroupPage() {
                   + Thêm câu hỏi
                 </button>
               </div>
-
-              {group.questions && group.questions.length > 0 && (
+              {group.questions?.length > 0 && (
                 <div className="group-card__question-list">
                   {group.questions.map((q, qIdx) => (
                     <div
@@ -1164,17 +968,14 @@ export default function PartDetailGroupPage() {
                       <p className="question-mini-card__text">
                         {q.detail || "Chưa có nội dung"}
                       </p>
-                      {q.options && q.options.length > 0 && (
+                      {q.options?.length > 0 && (
                         <ul className="question-mini-card__options">
                           {q.options.map((opt, optIdx) => (
                             <li key={optIdx}>
                               {LETTERS[optIdx]}. {opt}
                               {q.correctOptionIndex === optIdx && (
                                 <strong
-                                  style={{
-                                    color: "#16a34a",
-                                    marginLeft: 6,
-                                  }}
+                                  style={{ color: "#16a34a", marginLeft: 6 }}
                                 >
                                   ✓
                                 </strong>
@@ -1196,20 +997,10 @@ export default function PartDetailGroupPage() {
 
   const renderGroupEditForm = () => {
     if (!draftGroup) return null;
-
-    const serverImages = Array.isArray(draftGroup.imageUrls)
-      ? draftGroup.imageUrls
-      : [];
-    const localImagePreviews = Array.isArray(draftGroup.imagePreviews)
-      ? draftGroup.imagePreviews
-      : [];
-
-    const serverAudios = Array.isArray(draftGroup.audioUrls)
-      ? draftGroup.audioUrls
-      : [];
-    const localAudioPreviews = Array.isArray(draftGroup.audioPreviews)
-      ? draftGroup.audioPreviews
-      : [];
+    const serverImages = draftGroup.imageUrls || [];
+    const localImagePreviews = draftGroup.imagePreviews || [];
+    const serverAudios = draftGroup.audioUrls || [];
+    const localAudioPreviews = draftGroup.audioPreviews || [];
 
     return (
       <div className="group-edit-form">
@@ -1220,7 +1011,6 @@ export default function PartDetailGroupPage() {
               : "Tạo nhóm câu hỏi mới"}
           </h3>
         </div>
-
         <div className="group-edit-form__body">
           <div className="group-edit-form__group">
             <label>Nội dung (hội thoại / đoạn văn)</label>
@@ -1233,8 +1023,6 @@ export default function PartDetailGroupPage() {
               placeholder="Nhập nội dung hội thoại hoặc đoạn văn"
             />
           </div>
-
-          {/* Group Images */}
           <div className="group-edit-form__group">
             <label>Hình ảnh</label>
             <div className="group-edit-form__media-section">
@@ -1246,7 +1034,6 @@ export default function PartDetailGroupPage() {
                   onChange={handleAddGroupImage}
                 />
               </label>
-
               {(serverImages.length > 0 || localImagePreviews.length > 0) && (
                 <div className="group-edit-form__image-list">
                   {serverImages.map((url, idx) => (
@@ -1281,8 +1068,6 @@ export default function PartDetailGroupPage() {
               )}
             </div>
           </div>
-
-          {/* Group Audios */}
           <div className="group-edit-form__group">
             <label>Âm thanh</label>
             <div className="group-edit-form__media-section">
@@ -1294,7 +1079,6 @@ export default function PartDetailGroupPage() {
                   onChange={handleAddGroupAudio}
                 />
               </label>
-
               {(serverAudios.length > 0 || localAudioPreviews.length > 0) && (
                 <div className="group-edit-form__audio-list">
                   {serverAudios.map((url, idx) => (
@@ -1330,7 +1114,6 @@ export default function PartDetailGroupPage() {
             </div>
           </div>
         </div>
-
         <div className="group-edit-form__footer">
           <button
             className="group-edit-form__btn group-edit-form__btn--outlined"
@@ -1346,8 +1129,8 @@ export default function PartDetailGroupPage() {
             {uploading
               ? "Đang lưu..."
               : editingGroupId != null
-              ? "Lưu thay đổi"
-              : "Tạo nhóm"}
+                ? "Lưu thay đổi"
+                : "Tạo nhóm"}
           </button>
         </div>
       </div>
@@ -1367,16 +1150,19 @@ export default function PartDetailGroupPage() {
             ⟵ Quay lại
           </button>
         </div>
-
         <div className="part-detail-group__hero-center">
-          <p>{examTitle} - <span className="part-detail-group__part-name">
-            Part {partNumber}
-          </span></p>
-       
+          <p>
+            {examTitle} -{" "}
+            <span className="part-detail-group__part-name">
+              Part {partNumber}
+            </span>
+          </p>
         </div>
-
         <div className="part-detail-group__hero-actions">
-          <button className="part-detail-group__btn part-detail-group__btn--outlined">
+          <button
+            className="part-detail-group__btn part-detail-group__btn--outlined"
+            onClick={handleOpenQuestionBank}
+          >
             <img src={crown} className="crown-icon" alt="crown-icon" />
             Ngân hàng câu hỏi
           </button>
@@ -1388,7 +1174,6 @@ export default function PartDetailGroupPage() {
           </button>
         </div>
       </div>
-
       <div className="part-detail-group__content">
         <div className="part-detail-group__left">
           {groups.length === 0 && !showGroupForm && (
@@ -1402,9 +1187,7 @@ export default function PartDetailGroupPage() {
               </button>
             </div>
           )}
-
           {showGroupForm && renderGroupEditForm()}
-
           {groups.length > 0 && (
             <div className="part-detail-group__group-list">
               {groups.map((g, index) => renderGroupCard(g, index))}
@@ -1412,7 +1195,6 @@ export default function PartDetailGroupPage() {
           )}
         </div>
       </div>
-
       <CreateGroupToeicQuestion
         open={showQuestionModal}
         onClose={handleCloseQuestionModal}
@@ -1435,6 +1217,15 @@ export default function PartDetailGroupPage() {
         }
         loading={uploading}
         isGroupQuestion={true}
+      />
+      <QuestionBank
+        open={showQuestionBank}
+        onClose={handleCloseQuestionBank}
+        partNumber={partNumber}
+        examId={Number(examId)}
+        onQuestionsAdded={handleQuestionsAddedFromBank}
+        usedBankQuestionIds={[]}
+        usedBankGroupIds={usedBankGroupIds}
       />
     </div>
   );

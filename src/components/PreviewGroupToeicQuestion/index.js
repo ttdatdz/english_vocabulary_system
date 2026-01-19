@@ -11,14 +11,22 @@ export default function PreviewGroupToeicQuestion({
 }) {
   if (!groupQuestion) return null;
 
-  const imageUrls = Array.isArray(groupQuestion.imageUrls)
+  // Support multiple image naming conventions
+  const groupImageUrls = Array.isArray(groupQuestion.imageUrls)
     ? groupQuestion.imageUrls
+    : Array.isArray(groupQuestion.imagePreviews)
+    ? groupQuestion.imagePreviews
     : Array.isArray(groupQuestion.images)
     ? groupQuestion.images
     : [];
 
-  const audioUrls = Array.isArray(groupQuestion.audioUrls)
+  // Support multiple audio naming conventions
+  const groupAudioUrls = Array.isArray(groupQuestion.audioUrls)
     ? groupQuestion.audioUrls
+    : groupQuestion.audioUrl
+    ? [groupQuestion.audioUrl]
+    : groupQuestion.audioPreview
+    ? [groupQuestion.audioPreview]
     : Array.isArray(groupQuestion.audios)
     ? groupQuestion.audios
     : [];
@@ -31,122 +39,231 @@ export default function PreviewGroupToeicQuestion({
     <BaseModal
       open={open}
       onCancel={onClose}
-      title={`Xem chi tiết nhóm - ${
-        groupQuestion.title || `Part ${groupQuestion.part}`
-      }`}
-      width={900}
+      title={
+        <div className="preview-group__modal-title">
+          <span className="preview-group__modal-title-icon">📚</span>
+          Xem chi tiết nhóm -{" "}
+          {groupQuestion.title || `Part ${groupQuestion.part || "?"}`}
+          {groupQuestion.questionRange && (
+            <span className="preview-group__modal-title-range">
+              ({groupQuestion.questionRange})
+            </span>
+          )}
+        </div>
+      }
+      width={950}
     >
-      <div className="preview-group-question">
-        <div className="preview-group-question__content">
+      <div className="preview-group">
+        <div className="preview-group__content">
+          {/* Thông tin nhóm */}
+          <div className="preview-group__info-bar">
+            <div className="preview-group__info-item">
+              <span className="preview-group__info-icon">🆔</span>
+              <span className="preview-group__info-label">ID:</span>
+              <span className="preview-group__info-value">
+                {groupQuestion.id || "N/A"}
+              </span>
+            </div>
+            <div className="preview-group__info-item">
+              <span className="preview-group__info-icon">📑</span>
+              <span className="preview-group__info-label">Part:</span>
+              <span className="preview-group__info-value">
+                {groupQuestion.part || "N/A"}
+              </span>
+            </div>
+            <div className="preview-group__info-item">
+              <span className="preview-group__info-icon">❓</span>
+              <span className="preview-group__info-label">Số câu:</span>
+              <span className="preview-group__info-value">
+                {questions.length}
+              </span>
+            </div>
+            {groupQuestion.contributor && (
+              <div className="preview-group__info-item">
+                <span className="preview-group__info-icon">👤</span>
+                <span className="preview-group__info-label">Người tạo:</span>
+                <span className="preview-group__info-value">
+                  {groupQuestion.contributor}
+                </span>
+              </div>
+            )}
+          </div>
+
           {/* Nội dung (hội thoại / đoạn văn) */}
-          <div className="preview-group-question__section">
-            <label className="preview-group-question__label">
-              Nội dung (hội thoại / đoạn văn):
-            </label>
-            <div className="preview-group-question__text-box">
-              {groupQuestion.content || "Không có nội dung"}
+          <div className="preview-group__section">
+            <div className="preview-group__section-header">
+              <span className="preview-group__section-icon">📝</span>
+              <label className="preview-group__label">
+                Nội dung (hội thoại / đoạn văn)
+              </label>
+            </div>
+            <div className="preview-group__text-box">
+              {groupQuestion.content || (
+                <span className="preview-group__empty">Không có nội dung</span>
+              )}
             </div>
           </div>
 
-          {/* Hình ảnh của nhóm */}
-          <div className="preview-group-question__section">
-            <label className="preview-group-question__label">Hình ảnh:</label>
-            {imageUrls.length > 0 ? (
-              <div className="preview-group-question__image-list">
-                {imageUrls.map((url, idx) => (
-                  <div key={idx} className="preview-group-question__image-item">
-                    <img
-                      src={url}
-                      alt={`group-img-${idx}`}
-                      className="preview-group-question__image"
-                    />
-                  </div>
-                ))}
+          {/* Tệp đính kèm của nhóm */}
+          <div className="preview-group__section">
+            <div className="preview-group__section-header">
+              <span className="preview-group__section-icon">📎</span>
+              <label className="preview-group__label">
+                Tệp đính kèm của nhóm
+              </label>
+            </div>
+
+            <div className="preview-group__attachments">
+              {/* Audio */}
+              <div className="preview-group__attachment">
+                <div className="preview-group__attachment-header">
+                  <span className="preview-group__attachment-icon">🔊</span>
+                  <span className="preview-group__attachment-label">
+                    Âm thanh ({groupAudioUrls.length})
+                  </span>
+                </div>
+                <div className="preview-group__attachment-body">
+                  {groupAudioUrls.length > 0 ? (
+                    <div className="preview-group__audio-list">
+                      {groupAudioUrls.map((url, idx) => (
+                        <div key={idx} className="preview-group__audio-item">
+                          <span className="preview-group__audio-label">
+                            Audio {idx + 1}
+                          </span>
+                          <audio
+                            controls
+                            src={url}
+                            className="preview-group__audio"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="preview-group__no-media">
+                      <span className="preview-group__no-media-icon">🔇</span>
+                      Không có âm thanh
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="preview-group-question__no-media">
-                Không có hình ảnh
+
+              {/* Images */}
+              <div className="preview-group__attachment">
+                <div className="preview-group__attachment-header">
+                  <span className="preview-group__attachment-icon">🖼️</span>
+                  <span className="preview-group__attachment-label">
+                    Hình ảnh ({groupImageUrls.length})
+                  </span>
+                </div>
+                <div className="preview-group__attachment-body">
+                  {groupImageUrls.length > 0 ? (
+                    <div className="preview-group__image-list">
+                      {groupImageUrls.map((url, idx) => (
+                        <div key={idx} className="preview-group__image-item">
+                          <img
+                            src={url}
+                            alt={`group-img-${idx}`}
+                            className="preview-group__image"
+                          />
+                          <div className="preview-group__image-overlay">
+                            <span>Ảnh {idx + 1}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="preview-group__no-media">
+                      <span className="preview-group__no-media-icon">🖼️</span>
+                      Không có hình ảnh
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Âm thanh của nhóm */}
-          <div className="preview-group-question__section">
-            <label className="preview-group-question__label">Âm thanh:</label>
-            {audioUrls.length > 0 ? (
-              <div className="preview-group-question__audio-list">
-                {audioUrls.map((url, idx) => (
-                  <audio
-                    key={idx}
-                    controls
-                    src={url}
-                    className="preview-group-question__audio"
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="preview-group-question__no-media">
-                Không có âm thanh
-              </div>
-            )}
-          </div>
-
-          {/* Câu hỏi */}
-          <div className="preview-group-question__section">
-            <label className="preview-group-question__label">
-              Câu hỏi ({questions.length || 0}):
-            </label>
+          {/* Danh sách câu hỏi */}
+          <div className="preview-group__section preview-group__section--questions">
+            <div className="preview-group__section-header">
+              <span className="preview-group__section-icon">❓</span>
+              <label className="preview-group__label">
+                Danh sách câu hỏi ({questions.length})
+              </label>
+            </div>
 
             {questions.length > 0 ? (
-              <div className="preview-group-question__questions">
+              <div className="preview-group__questions">
                 {questions.map((q, qIdx) => {
                   const options = Array.isArray(q.options) ? q.options : [];
                   const correctIndex =
                     q.correctOptionIndex ??
                     (q.result ? LETTERS.indexOf(q.result) : -1);
 
+                  // Hình ảnh của câu hỏi con
+                  const qImageUrls = Array.isArray(q.imageUrls)
+                    ? q.imageUrls
+                    : Array.isArray(q.imagePreviews)
+                    ? q.imagePreviews
+                    : [];
+
                   return (
-                    <div
-                      key={qIdx}
-                      className="preview-group-question__question-card"
-                    >
+                    <div key={qIdx} className="preview-group__question-card">
                       {/* Header câu hỏi */}
-                      <div className="preview-group-question__question-header">
-                        <span className="preview-group-question__question-number">
+                      <div className="preview-group__question-header">
+                        <span className="preview-group__question-number">
                           Câu {q.indexNumber || qIdx + 1}
                         </span>
+                        {correctIndex >= 0 && (
+                          <span className="preview-group__question-answer">
+                            Đáp án: {LETTERS[correctIndex]}
+                          </span>
+                        )}
                       </div>
 
                       {/* Nội dung câu hỏi */}
-                      <div className="preview-group-question__question-detail">
-                        {q.detail || "Không có nội dung"}
+                      <div className="preview-group__question-section">
+                        <label className="preview-group__question-label">
+                          Nội dung câu hỏi:
+                        </label>
+                        <div className="preview-group__question-detail">
+                          {q.detail || (
+                            <span className="preview-group__empty">
+                              Không có nội dung
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Hình ảnh của câu hỏi con */}
-                      {q.imageUrls && q.imageUrls.length > 0 && (
-                        <div className="preview-group-question__question-images">
-                          {q.imageUrls.map((url, idx) => (
-                            <div
-                              key={idx}
-                              className="preview-group-question__question-image-item"
-                            >
-                              <img
-                                src={url}
-                                alt={`q-img-${idx}`}
-                                className="preview-group-question__question-image"
-                              />
-                            </div>
-                          ))}
+                      {qImageUrls.length > 0 && (
+                        <div className="preview-group__question-section">
+                          <label className="preview-group__question-label">
+                            Hình ảnh:
+                          </label>
+                          <div className="preview-group__question-images">
+                            {qImageUrls.map((url, idx) => (
+                              <div
+                                key={idx}
+                                className="preview-group__question-image-item"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`q-img-${idx}`}
+                                  className="preview-group__question-image"
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {/* Đáp án */}
-                      {options.length > 0 && (
-                        <div className="preview-group-question__question-options">
-                          <label className="preview-group-question__options-label">
-                            Đáp án (nhiều nhất 5 đáp án):
-                          </label>
-                          <div className="preview-group-question__options">
+                      <div className="preview-group__question-section">
+                        <label className="preview-group__question-label">
+                          Đáp án ({options.length}/5):
+                        </label>
+                        {options.length > 0 ? (
+                          <div className="preview-group__question-options">
                             {options.map((opt, optIdx) => {
                               const isCorrect = correctIndex === optIdx;
                               const optionText =
@@ -157,20 +274,24 @@ export default function PreviewGroupToeicQuestion({
                               return (
                                 <div
                                   key={optIdx}
-                                  className={`preview-group-question__option ${
+                                  className={`preview-group__option ${
                                     isCorrect
-                                      ? "preview-group-question__option--correct"
+                                      ? "preview-group__option--correct"
                                       : ""
                                   }`}
                                 >
-                                  <span className="preview-group-question__option-letter">
-                                    {LETTERS[optIdx]}.
+                                  <span className="preview-group__option-letter">
+                                    {LETTERS[optIdx]}
                                   </span>
-                                  <span className="preview-group-question__option-text">
-                                    {optionText}
+                                  <span className="preview-group__option-text">
+                                    {optionText || (
+                                      <span className="preview-group__empty">
+                                        Chưa có nội dung
+                                      </span>
+                                    )}
                                   </span>
                                   {isCorrect && (
-                                    <span className="preview-group-question__option-check">
+                                    <span className="preview-group__option-check">
                                       ✓
                                     </span>
                                   )}
@@ -178,16 +299,24 @@ export default function PreviewGroupToeicQuestion({
                               );
                             })}
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="preview-group__no-options">
+                            Chưa có đáp án
+                          </div>
+                        )}
+                      </div>
 
                       {/* Giải thích */}
-                      <div className="preview-group-question__question-clarify">
-                        <label className="preview-group-question__clarify-label">
+                      <div className="preview-group__question-section">
+                        <label className="preview-group__question-label">
                           Giải thích:
                         </label>
-                        <div className="preview-group-question__clarify-text">
-                          {q.clarify || "Không có giải thích"}
+                        <div className="preview-group__question-clarify">
+                          {q.clarify || (
+                            <span className="preview-group__empty">
+                              Không có giải thích
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -195,66 +324,17 @@ export default function PreviewGroupToeicQuestion({
                 })}
               </div>
             ) : (
-              <div className="preview-group-question__no-questions">
-                Nhóm này chưa có câu hỏi nào
+              <div className="preview-group__no-questions">
+                <span className="preview-group__no-questions-icon">📭</span>
+                <span>Nhóm này chưa có câu hỏi nào</span>
               </div>
             )}
           </div>
-
-          {/* Thông tin bổ sung */}
-          {(groupQuestion.contributor ||
-            groupQuestion.id ||
-            groupQuestion.part) && (
-            <div className="preview-group-question__section">
-              <div className="preview-group-question__meta">
-                {groupQuestion.contributor && (
-                  <div className="preview-group-question__meta-item">
-                    <span className="preview-group-question__meta-label">
-                      Người đóng góp:
-                    </span>
-                    <span className="preview-group-question__meta-value">
-                      {groupQuestion.contributor}
-                    </span>
-                  </div>
-                )}
-                {groupQuestion.id && (
-                  <div className="preview-group-question__meta-item">
-                    <span className="preview-group-question__meta-label">
-                      ID nhóm:
-                    </span>
-                    <span className="preview-group-question__meta-value">
-                      {groupQuestion.id}
-                    </span>
-                  </div>
-                )}
-                {groupQuestion.part && (
-                  <div className="preview-group-question__meta-item">
-                    <span className="preview-group-question__meta-label">
-                      Part:
-                    </span>
-                    <span className="preview-group-question__meta-value">
-                      Part {groupQuestion.part}
-                    </span>
-                  </div>
-                )}
-                {groupQuestion.questionRange && (
-                  <div className="preview-group-question__meta-item">
-                    <span className="preview-group-question__meta-label">
-                      Phạm vi:
-                    </span>
-                    <span className="preview-group-question__meta-value">
-                      {groupQuestion.questionRange}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="preview-group-question__footer">
+        <div className="preview-group__footer">
           <button
-            className="preview-group-question__btn preview-group-question__btn--close"
+            className="preview-group__btn preview-group__btn--close"
             onClick={onClose}
           >
             Đóng
