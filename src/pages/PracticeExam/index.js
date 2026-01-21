@@ -133,26 +133,103 @@ export default function PracticeExam() {
     return `${h}:${m}:${sec}`;
   };
 
+  /**
+   * Load questions từ API mới
+   * - questions: Single questions (Part 1, 2, 5)
+   * - groupQuestions: Group questions (Part 3, 4, 6, 7) với child questions
+   */
   const loadQuestions = async () => {
     const data = await get(`api/exam/detail/${examId}`);
     if (!data) return;
-    console.log(data);
-    const all = data.questions || [];
+    console.log("Exam data:", data);
+
+    let allQuestions = [];
+
+    // 1. Single questions (Part 1, 2, 5) - không thuộc group
+    if (data.questions && Array.isArray(data.questions)) {
+      data.questions.forEach(q => {
+        allQuestions.push({
+          ...q,
+          // Không có group info
+          groupId: null,
+          groupContent: null,
+          groupQuestionRange: null,
+          groupImages: null,
+          groupAudios: null
+        });
+      });
+    }
+
+    // 2. Group questions (Part 3, 4, 6, 7) - flatten các child questions
+    if (data.groupQuestions && Array.isArray(data.groupQuestions)) {
+      data.groupQuestions.forEach(group => {
+        if (group.questions && Array.isArray(group.questions)) {
+          group.questions.forEach(q => {
+            allQuestions.push({
+              ...q,
+              // Attach group info vào mỗi câu hỏi con
+              groupId: group.id,
+              groupContent: group.content,
+              groupQuestionRange: group.questionRange,
+              groupImages: group.images || [],
+              groupAudios: group.audios || []
+            });
+          });
+        }
+      });
+    }
+
+    // Sort theo indexNumber
+    allQuestions.sort((a, b) => (a.indexNumber || 0) - (b.indexNumber || 0));
+
+    // Filter theo selected parts
     const filtered = selectedParts.length
-      ? all.filter((q) => selectedParts.includes(Number(q.part)))
-      : all;
+      ? allQuestions.filter(q => selectedParts.includes(Number(q.part)))
+      : allQuestions;
+
     setQuestions(filtered);
+
+    // Set active tab to first available part
+    if (filtered.length > 0) {
+      const firstPart = filtered[0].part;
+      setActiveTab(String(firstPart));
+    }
   };
 
-  const groupQuestions = () => {
+  /**
+   * Group questions để hiển thị
+   * - Single questions: mỗi câu là 1 group riêng
+   * - Group questions: các câu cùng groupId gộp lại
+   */
+  const groupQuestionsForDisplay = () => {
     const grouped = {};
-    questions.forEach((q) => {
+
+    questions.forEach(q => {
       const part = q.part;
       if (!grouped[part]) grouped[part] = {};
-      const key = q.conversation || `single-${q.indexNumber}`;
-      if (!grouped[part][key]) grouped[part][key] = [];
-      grouped[part][key].push(q);
+
+      // Key: groupId nếu có, hoặc single-{indexNumber}
+      const key = q.groupId ? `group-${q.groupId}` : `single-${q.indexNumber}`;
+
+      if (!grouped[part][key]) {
+        grouped[part][key] = {
+          groupId: q.groupId,
+          groupContent: q.groupContent,
+          groupImages: q.groupImages,
+          groupAudios: q.groupAudios,
+          questions: []
+        };
+      }
+      grouped[part][key].questions.push(q);
     });
+
+    // Sort questions trong mỗi group theo indexNumber
+    Object.values(grouped).forEach(partGroups => {
+      Object.values(partGroups).forEach(group => {
+        group.questions.sort((a, b) => (a.indexNumber || 0) - (b.indexNumber || 0));
+      });
+    });
+
     return grouped;
   };
 
@@ -245,7 +322,78 @@ export default function PracticeExam() {
     "Bạn đang làm bài thi. Nếu rời trang, bài làm sẽ bị mất. Bạn có chắc muốn rời trang không?"
   );
 
-  const grouped = groupQuestions();
+  const grouped = groupQuestionsForDisplay();
+
+  /**
+   * Render media cho group (images + audios)
+   */
+  const renderGroupMedia = (groupData, isScrollableImage = false) => {
+    const { groupImages, groupAudios, groupContent } = groupData;
+    const hasMedia = (groupImages && groupImages.length > 0) ||
+      (groupAudios && groupAudios.length > 0) ||
+      groupContent;
+
+    if (!hasMedia) return null;
+
+    return (
+      <div className={`ReviewExam__groupMedia ${isScrollableImage ? 'scrollable' : ''}`}>
+        {/* Group Content (passage/conversation) */}
+        {groupContent && (
+          <div className="ReviewExam__groupContent">
+            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+              {groupContent}
+            </pre>
+          </div>
+        )}
+
+        {/* Group Images */}
+        {groupImages && groupImages.length > 0 && (
+          <div className={isScrollableImage ? "ReviewExam__imageWrapper--scrollable" : "ReviewExam__imageWrapper"}>
+            {groupImages.map((imgUrl, idx) => (
+              <img
+                key={idx}
+                src={imgUrl}
+                alt={`group-img-${idx}`}
+                className={`ReviewExam__image ${isScrollableImage ? 'scrollable' : ''}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Group Audios */}
+        {groupAudios && groupAudios.length > 0 && (
+          <div className="ReviewExam__audioWrapper">
+            {groupAudios.map((audioUrl, idx) => (
+              <audio key={idx} controls src={audioUrl} style={{ marginTop: 10, width: '100%' }} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /**
+   * Render media cho single question
+   */
+  const renderSingleMedia = (question) => {
+    const hasMedia = (question.images && question.images.length > 0) || question.audio;
+    if (!hasMedia) return null;
+
+    return (
+      <div className="ReviewExam__questionMedia">
+        {question.images && question.images.length > 0 && (
+          <div className="ReviewExam__imageWrapper">
+            {question.images.map((imgUrl, idx) => (
+              <img key={idx} src={imgUrl} alt={`q-img-${idx}`} className="ReviewExam__image" />
+            ))}
+          </div>
+        )}
+        {question.audio && (
+          <audio controls src={question.audio} style={{ marginTop: 10, width: '100%' }} />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="PracticeExam">
@@ -260,39 +408,53 @@ export default function PracticeExam() {
         <div className="PracticeExam__content">
           <div className="PracticeExam__content-left">
             <Tabs activeKey={activeTab} onChange={setActiveTab}>
-              {Object.entries(grouped).map(([part, groups]) => (
-                <TabPane tab={`Part ${part}`} key={part}>
-                  {Object.values(groups).map((group, idx) => {
-                    const first = group[0];
-                    return (
-                      <Card key={idx} className="ReviewExam__questionGroup">
-                        {first.image && <img src={first.image} className="ReviewExam__image" alt="group" />}
-                        {first.audio && <audio controls src={first.audio} style={{ marginBottom: 10 }} />}
-                        {group.map((q) => (
-                          <Card
-                            key={q.indexNumber}
-                            title={`Câu ${q.indexNumber}`}
-                            className="ReviewExam__questionCard"
-                            ref={(el) => (questionRefs[q.indexNumber] = el)}
-                          >
-                            <p>{q.detail}</p>
-                            <Radio.Group
-                              value={answers[q.id]}
-                              onChange={(e) => handleSelect(q.id, e.target.value)}
+              {Object.entries(grouped).map(([part, groups]) => {
+                const isScrollableImage = part === "7" || part === "6";
+
+                return (
+                  <TabPane tab={`Part ${part}`} key={part}>
+                    {Object.entries(groups).map(([groupKey, groupData]) => {
+                      const { groupId, questions: groupQuestions } = groupData;
+                      const isGroup = !!groupId;
+
+                      return (
+                        <Card key={groupKey} className="ReviewExam__questionGroup">
+                          {/* Render group media nếu là group question */}
+                          {isGroup && renderGroupMedia(groupData, isScrollableImage)}
+
+                          {/* Render từng câu hỏi trong group */}
+                          {groupQuestions.map((q) => (
+                            <Card
+                              key={q.indexNumber}
+                              title={`Câu ${q.indexNumber}`}
+                              className="ReviewExam__questionCard"
+                              ref={(el) => (questionRefs[q.indexNumber] = el)}
                             >
-                              {q.options.map((opt) => (
-                                <Radio key={opt.mark} value={opt.mark}>
-                                  {opt.detail}
-                                </Radio>
-                              ))}
-                            </Radio.Group>
-                          </Card>
-                        ))}
-                      </Card>
-                    );
-                  })}
-                </TabPane>
-              ))}
+                              {/* Single question media (nếu không phải group) */}
+                              {!isGroup && renderSingleMedia(q)}
+
+                              {/* Question detail */}
+                              {q.detail && <p className="q-detail">{q.detail}</p>}
+
+                              {/* Options */}
+                              <Radio.Group
+                                value={answers[q.id]}
+                                onChange={(e) => handleSelect(q.id, e.target.value)}
+                              >
+                                {q.options && q.options.map((opt) => (
+                                  <Radio key={opt.mark} value={opt.mark}>
+                                    <span className="opt-mark">{opt.mark}.</span> {opt.detail}
+                                  </Radio>
+                                ))}
+                              </Radio.Group>
+                            </Card>
+                          ))}
+                        </Card>
+                      );
+                    })}
+                  </TabPane>
+                );
+              })}
             </Tabs>
           </div>
 
@@ -304,7 +466,7 @@ export default function PracticeExam() {
               <div key={part}>
                 <h4 className="PracticeExam__title-part">Part {part}</h4>
                 {Object.values(groups)
-                  .flat()
+                  .flatMap(g => g.questions)
                   .map((q) => (
                     <Button
                       key={q.id}
@@ -325,7 +487,7 @@ export default function PracticeExam() {
         </div>
       </div>
 
-      {/* Nút “pudding” giữa đáy */}
+      {/* Nút "pudding" giữa đáy */}
       {showBackTop && (
         <button
           className="PracticeExam__pudding"

@@ -10,7 +10,7 @@ export const DeleteUser = async (id) => {
   return response;
 };
 export const UpdateUser = async (value) => {
-  const response = await putFormData(`api/user/update`, value);
+  const response = await putFormData(`api/user/admin/update`, value);
   return response;
 };
 export const GetDetailUser = async (id) => {

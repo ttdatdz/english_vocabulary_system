@@ -14,6 +14,9 @@ export default function ReviewExam() {
     const [pendingScrollIndex, setPendingScrollIndex] = useState(null);
     const questionRefs = {};
 
+    /**
+     * Xác định Part dựa trên indexNumber (TOEIC standard)
+     */
     const getPart = (index) => {
         if (index <= 6) return 1;
         if (index <= 31) return 2;
@@ -27,7 +30,10 @@ export default function ReviewExam() {
     useEffect(() => {
         const loadReviewExam = async () => {
             const data = await get(`api/exam/result/id/${examReviewId}`);
-            if (data) setReviewExam(data);
+            if (data) {
+                console.log("Review data:", data);
+                setReviewExam(data);
+            }
         };
         loadReviewExam();
     }, [examReviewId]);
@@ -50,15 +56,49 @@ export default function ReviewExam() {
 
     const allowedParts = parseAllowedParts(reviewExam?.section);
 
-    const grouped = {};
-    reviewExam.questionReviews.forEach((q) => {
-        const part = getPart(q.indexNumber);
-        if (!allowedParts.includes(part)) return;
-        const groupKey = q.conversation || `single-${q.indexNumber}`;
-        if (!grouped[part]) grouped[part] = {};
-        if (!grouped[part][groupKey]) grouped[part][groupKey] = [];
-        grouped[part][groupKey].push(q);
-    });
+    /**
+     * Group questions để hiển thị
+     * - Sử dụng groupId từ QuestionReviewResponse
+     * - Single questions (không có groupId): mỗi câu là 1 group riêng
+     * - Group questions: các câu cùng groupId gộp lại
+     */
+    const groupQuestionsForDisplay = () => {
+        const grouped = {};
+
+        reviewExam.questionReviews.forEach((q) => {
+            // Xác định part từ indexNumber hoặc từ field part
+            const part = q.part ? Number(q.part) : getPart(q.indexNumber);
+            if (!allowedParts.includes(part)) return;
+
+            if (!grouped[part]) grouped[part] = {};
+
+            // Key: groupId nếu có, hoặc single-{indexNumber}
+            const groupKey = q.groupId ? `group-${q.groupId}` : `single-${q.indexNumber}`;
+
+            if (!grouped[part][groupKey]) {
+                grouped[part][groupKey] = {
+                    groupId: q.groupId,
+                    groupContent: q.groupContent,
+                    groupQuestionRange: q.groupQuestionRange,
+                    groupImages: q.groupImages || [],
+                    groupAudios: q.groupAudios || [],
+                    questions: []
+                };
+            }
+            grouped[part][groupKey].questions.push(q);
+        });
+
+        // Sort questions trong mỗi group theo indexNumber
+        Object.values(grouped).forEach(partGroups => {
+            Object.values(partGroups).forEach(group => {
+                group.questions.sort((a, b) => (a.indexNumber || 0) - (b.indexNumber || 0));
+            });
+        });
+
+        return grouped;
+    };
+
+    const grouped = groupQuestionsForDisplay();
 
     const accuracy =
         reviewExam.totalQuestions > 0
@@ -70,6 +110,77 @@ export default function ReviewExam() {
         const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
         const s = String(sec % 60).padStart(2, "0");
         return `${h}:${m}:${s}`;
+    };
+
+    /**
+     * Render media cho group (images + audios + content)
+     */
+    const renderGroupMedia = (groupData, isScrollableImage = false) => {
+        const { groupImages, groupAudios, groupContent } = groupData;
+        const hasMedia = (groupImages && groupImages.length > 0) ||
+            (groupAudios && groupAudios.length > 0) ||
+            groupContent;
+
+        if (!hasMedia) return null;
+
+        return (
+            <div className={`ReviewExam__groupMedia ${isScrollableImage ? 'scrollable' : ''}`}>
+                {/* Group Content (passage/conversation) */}
+                {groupContent && (
+                    <div className="ReviewExam__groupContent">
+                        <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>
+                            {groupContent}
+                        </pre>
+                    </div>
+                )}
+
+                {/* Group Images */}
+                {groupImages && groupImages.length > 0 && (
+                    <div className={isScrollableImage ? "ReviewExam__imageWrapper--scrollable" : "ReviewExam__imageWrapper"}>
+                        {groupImages.map((imgUrl, idx) => (
+                            <img
+                                key={idx}
+                                src={imgUrl}
+                                alt={`group-img-${idx}`}
+                                className={`ReviewExam__image ${isScrollableImage ? 'scrollable' : ''}`}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Group Audios */}
+                {groupAudios && groupAudios.length > 0 && (
+                    <div className="ReviewExam__audioWrapper">
+                        {groupAudios.map((audioUrl, idx) => (
+                            <audio key={idx} controls src={audioUrl} style={{ marginTop: 10, width: '100%' }} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    /**
+     * Render media cho single question (images + audio riêng của câu)
+     */
+    const renderSingleMedia = (question) => {
+        const hasMedia = (question.images && question.images.length > 0) || question.audio;
+        if (!hasMedia) return null;
+
+        return (
+            <div className="ReviewExam__questionMedia">
+                {question.images && question.images.length > 0 && (
+                    <div className="ReviewExam__imageWrapper">
+                        {question.images.map((imgUrl, idx) => (
+                            <img key={idx} src={imgUrl} alt={`q-img-${idx}`} className="ReviewExam__image" />
+                        ))}
+                    </div>
+                )}
+                {question.audio && (
+                    <audio controls src={question.audio} style={{ marginTop: 10, width: '100%' }} />
+                )}
+            </div>
+        );
     };
 
     return (
@@ -112,43 +223,25 @@ export default function ReviewExam() {
                             className="ReviewExam__tabs"
                         >
                             {Object.entries(grouped).map(([part, groups]) => {
-                                const isScrollableImage = part === "7";
+                                const isScrollableImage = part === "7" || part === "6";
+
                                 return (
                                     <TabPane tab={`Part ${part}`} key={part}>
-                                        {Object.values(groups).map((group, idx) => {
-                                            const firstQuestion = group[0];
-                                            const sharedImage = firstQuestion.image;
-                                            const sharedAudio = firstQuestion.audio;
+                                        {Object.entries(groups).map(([groupKey, groupData]) => {
+                                            const { groupId, questions: groupQuestions } = groupData;
+                                            const isGroup = !!groupId;
 
                                             return (
                                                 <Card
-                                                    key={`group-${idx}`}
+                                                    key={groupKey}
                                                     className="ReviewExam__questionGroup"
                                                     style={{ marginBottom: 24 }}
                                                 >
-                                                    {(sharedImage || sharedAudio) && (
-                                                        <div
-                                                            className={
-                                                                isScrollableImage
-                                                                    ? "ReviewExam__imageWrapper--scrollable"
-                                                                    : "ReviewExam__imageWrapper"
-                                                            }
-                                                        >
-                                                            {sharedImage && (
-                                                                <img
-                                                                    src={sharedImage}
-                                                                    alt="group"
-                                                                    className={`ReviewExam__image ${isScrollableImage ? "scrollable" : ""
-                                                                        }`}
-                                                                />
-                                                            )}
-                                                            {sharedAudio && (
-                                                                <audio controls src={sharedAudio} style={{ marginTop: 10 }} />
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    {/* Render group media nếu là group question */}
+                                                    {isGroup && renderGroupMedia(groupData, isScrollableImage)}
 
-                                                    {group.map((q) => (
+                                                    {/* Render từng câu hỏi trong group */}
+                                                    {groupQuestions.map((q) => (
                                                         <Card
                                                             key={q.indexNumber}
                                                             title={`Câu ${q.indexNumber}`}
@@ -156,9 +249,15 @@ export default function ReviewExam() {
                                                             ref={(el) => (questionRefs[q.indexNumber] = el)}
                                                             style={{ marginBottom: 16 }}
                                                         >
+                                                            {/* Single question media (nếu không phải group) */}
+                                                            {!isGroup && renderSingleMedia(q)}
+
+                                                            {/* Question detail */}
                                                             {q.detail && <p className="q-detail">{q.detail}</p>}
+
+                                                            {/* Options với highlight đúng/sai */}
                                                             <div className="ReviewExam__options">
-                                                                {q.options.map((opt) => {
+                                                                {q.options && q.options.map((opt) => {
                                                                     const isUser =
                                                                         q.userAnswer !== null && opt.mark === q.userAnswer;
                                                                     const isCorrect = opt.mark === q.correctAnswer;
@@ -175,6 +274,14 @@ export default function ReviewExam() {
                                                                     );
                                                                 })}
                                                             </div>
+
+                                                            {/* Clarify/Giải thích (nếu có) */}
+                                                            {q.clarify && (
+                                                                <div className="ReviewExam__clarify">
+                                                                    <strong>Giải thích:</strong>
+                                                                    <p>{q.clarify}</p>
+                                                                </div>
+                                                            )}
                                                         </Card>
                                                     ))}
                                                 </Card>
@@ -206,22 +313,33 @@ export default function ReviewExam() {
                             <div key={part} className="SidePart">
                                 <h4 className="PracticeExam__title-part">Part {part}</h4>
                                 {Object.values(groups)
-                                    .flat()
-                                    .map((q) => (
-                                        <Button
-                                            key={q.indexNumber}
-                                            className={`NumBtn ${activeQuestionIndex === q.indexNumber ? "active" : ""} ${q.userAnswer !== null ? "answered" : ""
-                                                }`}
-                                            onClick={() => {
-                                                setActiveTab(String(part));
-                                                setActiveQuestionIndex(q.indexNumber);
-                                                setPendingScrollIndex(q.indexNumber);
-                                                setTimeout(() => scrollToQuestion(q.indexNumber), 80);
-                                            }}
-                                        >
-                                            {q.indexNumber}
-                                        </Button>
-                                    ))}
+                                    .flatMap(g => g.questions)
+                                    .map((q) => {
+                                        // Xác định trạng thái của câu hỏi
+                                        let statusClass = "";
+                                        if (q.userAnswer === null) {
+                                            statusClass = "skipped";
+                                        } else if (q.isCorrect) {
+                                            statusClass = "correct";
+                                        } else {
+                                            statusClass = "incorrect";
+                                        }
+
+                                        return (
+                                            <Button
+                                                key={q.indexNumber}
+                                                className={`NumBtn ${activeQuestionIndex === q.indexNumber ? "active" : ""} ${statusClass}`}
+                                                onClick={() => {
+                                                    setActiveTab(String(part));
+                                                    setActiveQuestionIndex(q.indexNumber);
+                                                    setPendingScrollIndex(q.indexNumber);
+                                                    setTimeout(() => scrollToQuestion(q.indexNumber), 80);
+                                                }}
+                                            >
+                                                {q.indexNumber}
+                                            </Button>
+                                        );
+                                    })}
                             </div>
                         ))}
                     </div>

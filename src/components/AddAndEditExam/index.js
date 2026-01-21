@@ -33,19 +33,6 @@ export default function AddAndEditExam(props) {
 
   console.log("Check listtestTypes", listTestTypes);
   console.log("Check initial", initialValues);
-  // Reset form & file khi initialValues đổi (mở modal mới)
-  // useEffect(() => {
-  //   setSelectedFile(null);
-  //   form.resetFields();
-  //   form.setFieldsValue({
-  //     title: initialValues?.title || "",
-  //     collection: initialValues?.collection || "",
-  //     duration: initialValues?.duration || "",
-  //     type: initialValues?.type || "",
-  //     year: initialValues?.year || "",
-  //     file: initialValues?.file || null,
-  //   });
-  // }, [initialValues, form]);
 
   useEffect(() => {
     const getDetail = async () => {
@@ -102,6 +89,7 @@ export default function AddAndEditExam(props) {
         duration: values?.duration,
         type: values?.type,
         year: values?.year,
+        isRandom: false
       };
       const result = await CreateExam(examData);
       if (!result) {
@@ -138,6 +126,7 @@ export default function AddAndEditExam(props) {
         duration: values?.duration,
         type: values?.type,
         year: values?.year,
+        isRandom: false
       };
       const result = await UpdateExam(examData, initialValues.id);
       if (!result) {

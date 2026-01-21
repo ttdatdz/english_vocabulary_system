@@ -6,15 +6,15 @@ export const GetAllBlogs = async () => {
   return result;
 };
 export const DeleteBlog = async (id) => {
-  const result = await del(`api/blog/delete/${id}`);
+  const result = await del(`api/blog/admin/delete/${id}`);
   return result;
 };
 export const UpdateBlog = async (value, id) => {
-  const result = await putFormData(`api/blog/update/${id}`, value);
+  const result = await putFormData(`api/blog/admin/update/${id}`, value);
   return result;
 };
 export const CreateBlog = async (value) => {
-  const result = await postFormData("api/blog/create", value);
+  const result = await postFormData("api/blog/admin/create", value);
   return result;
 };
 // export const GetBlogById = async (id) => {

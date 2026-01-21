@@ -5,14 +5,14 @@ export const GetAllTestSets = async () => {
   return result;
 };
 export const DeleteTestSet = async (id) => {
-  const result = await del(`api/exam/collection/delete/${id}`);
+  const result = await del(`api/exam/admin/collection/delete/${id}`);
   return result;
 };
 export const UpdateTestSet = async (value, id) => {
-  const result = await put(value, `api/exam/collection/update/${id}`);
+  const result = await put(value, `api/exam/admin/collection/update/${id}`);
   return result;
 };
 export const CreateTestSet = async (value) => {
-  const result = await post(value, "api/exam/collection/create", true);
+  const result = await post(value, "api/exam/admin/collection/create", true);
   return result;
 };

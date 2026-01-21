@@ -33,9 +33,15 @@ export default function AddAndEditTestSet(props) {
   }, [open, form]);
   const onFinish = async (values) => {
     // Nếu không có initialValues, nghĩa là đang thêm mới
+    const payload = {
+      ...values,
+      isRandom: false,
+    }
+    console.log("==========================================================");
+    console.log(payload);
     if (!initialValues) {
       setConfirmLoading(true); // Bật loading NGAY khi bắt đầu
-      const result = await CreateTestSet(values);
+      const result = await CreateTestSet(payload);
 
       setTimeout(() => {
         setConfirmLoading(false); // Tắt loading sau 2s
