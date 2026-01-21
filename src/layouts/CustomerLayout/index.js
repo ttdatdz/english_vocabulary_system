@@ -34,7 +34,7 @@ function CustomerLayout() {
     try {
       // nếu bạn đang dùng window.__toeicExamData để cache, xoá luôn cho sạch
       if (window.__toeicExamData) delete window.__toeicExamData;
-    } catch (_) { }
+    } catch (_) {}
   };
 
   const isCreateToeicExamPath = (p) => p === "/CreateToeicExam";
@@ -165,7 +165,10 @@ function CustomerLayout() {
             {user ? (
               <AccountAvatar />
             ) : (
-              <Button className="Header-Customer__btnLogin" onClick={handleLogin}>
+              <Button
+                className="Header-Customer__btnLogin"
+                onClick={handleLogin}
+              >
                 Đăng nhập
               </Button>
             )}
@@ -208,40 +211,40 @@ function CustomerLayout() {
 
       <Content ref={contentRef} className="Content-Customer">
         <Outlet />
-      </Content>
 
-      <Footer className="Footer-Customer">
-        <div className="MainContainer">
-          <div className="Header-Customer__logo">
-            <img src={Logo} alt="Logo" className="Header-Customer__imgLogo" />
-          </div>
-          <div className="Footer-Customer__aboutUs">
-            <h2 className="Footer-Customer__aboutUs-title">Về chúng tôi</h2>
-            <Link className="Footer-Customer__aboutUs-item">Giới thiệu</Link>
-            <Link className="Footer-Customer__aboutUs-item">Liên hệ</Link>
-          </div>
-          <div className="Footer-Customer__policies">
-            <h2 className="Footer-Customer__policies-title">Chính sách</h2>
-            <Link className="Footer-Customer__policies-item">Điều khoản</Link>
-            <Link className="Footer-Customer__policies-item">
-              Quyền riêng tư
-            </Link>
-          </div>
-          <div className="Footer-Customer__contactUs">
-            <h2 className="Footer-Customer__contactUs-title">
-              Liên hệ với chúng tôi
-            </h2>
-            <div className="Footer-Customer__Container-contactUs-item">
-              <Link className="Footer-Customer__contactUs-item">
-                <FaFacebookSquare className="Footer-Customer__iconFB" />
-              </Link>
-              <Link className="Footer-Customer__contactUs-item">
-                <SiGmail style={{ color: "red" }} />
+        <Footer className="Footer-Customer">
+          <div className="MainContainer">
+            <div className="Header-Customer__logo">
+              <img src={Logo} alt="Logo" className="Header-Customer__imgLogo" />
+            </div>
+            <div className="Footer-Customer__aboutUs">
+              <h2 className="Footer-Customer__aboutUs-title">Về chúng tôi</h2>
+              <Link className="Footer-Customer__aboutUs-item">Giới thiệu</Link>
+              <Link className="Footer-Customer__aboutUs-item">Liên hệ</Link>
+            </div>
+            <div className="Footer-Customer__policies">
+              <h2 className="Footer-Customer__policies-title">Chính sách</h2>
+              <Link className="Footer-Customer__policies-item">Điều khoản</Link>
+              <Link className="Footer-Customer__policies-item">
+                Quyền riêng tư
               </Link>
             </div>
+            <div className="Footer-Customer__contactUs">
+              <h2 className="Footer-Customer__contactUs-title">
+                Liên hệ với chúng tôi
+              </h2>
+              <div className="Footer-Customer__Container-contactUs-item">
+                <Link className="Footer-Customer__contactUs-item">
+                  <FaFacebookSquare className="Footer-Customer__iconFB" />
+                </Link>
+                <Link className="Footer-Customer__contactUs-item">
+                  <SiGmail style={{ color: "red" }} />
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
-      </Footer>
+        </Footer>
+      </Content>
     </Layout>
   );
 }

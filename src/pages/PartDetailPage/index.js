@@ -5,6 +5,14 @@ import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
 import CreateToeicQuestion from "../../components/CreateToeicQuestion";
 import QuestionBank from "../../components/QuestionBank";
+import { Checkbox, Button } from "antd";
+import ContributeBar from "../../components/ContributeBar";
+import { ContributeSingle } from "../../services/Exam/contributeBank";
+import {
+  confirmBasic,
+  showSuccess,
+  showWaringMessage,
+} from "../../utils/alertHelper";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
 
@@ -49,6 +57,7 @@ function mapToeicQuestionResponseToLocal(q) {
 
     // ✅ Track bank question ID (nếu có)
     bankQuestionId: q.bankQuestionId || null,
+    isContribute: q.isContribute,
   };
 }
 
@@ -109,12 +118,74 @@ export default function PartDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [showQuestionBank, setShowQuestionBank] = useState(false);
+  const [checkedQuestionIds, setCheckedQuestionIds] = useState([]);
 
+  const allQuestionIds = useMemo(
+    () =>
+      questions
+        .filter((q) => q.bankQuestionId == null && q.isContribute !== true)
+        .map((q) => q.id)
+        .filter(Boolean),
+    [questions],
+  );
+
+  const checkAll =
+    checkedQuestionIds.length === allQuestionIds.length &&
+    allQuestionIds.length > 0;
+
+  const indeterminate =
+    checkedQuestionIds.length > 0 &&
+    checkedQuestionIds.length < allQuestionIds.length;
+
+  const handleCheckQuestion = (questionId, checked) => {
+    setCheckedQuestionIds((prev) => {
+      if (checked) return [...prev, questionId];
+      return prev.filter((id) => id !== questionId);
+    });
+  };
+
+  const handleContributeToBank = async () => {
+    if (checkedQuestionIds.length === 0) return;
+
+    const confirmed = await confirmBasic(
+      "Bạn muốn đóng góp các câu hỏi đã chọn vào ngân hàng đề?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const validIds = questions
+        .filter(
+          (q) => q.bankQuestionId == null && checkedQuestionIds.includes(q.id),
+        )
+        .map((q) => q.id);
+
+      if (validIds.length === 0) {
+        showWaringMessage("Không có câu hợp lệ để đóng góp");
+        return;
+      }
+
+      const payload = {
+        questionIds: validIds,
+      };
+      const result = await ContributeSingle(payload);
+      console.log("Contribute result:", result);
+
+      showSuccess("Đóng góp thành công vào ngân hàng đề!");
+
+      setCheckedQuestionIds([]);
+      await reloadPartQuestions();
+    } catch (err) {
+      console.error(err);
+      alert(err?.message || "Đóng góp thất bại");
+    }
+  };
+  console.log("Check questions:", questions);
   // ===== Tính toán danh sách bank question IDs đã dùng =====
   const usedBankQuestionIds = useMemo(() => {
     return questions
-      .filter(q => q.bankQuestionId != null)
-      .map(q => q.bankQuestionId);
+      .filter((q) => q.bankQuestionId != null)
+      .map((q) => q.bankQuestionId);
   }, [questions]);
 
   // ===== Load câu hỏi từ API =====
@@ -130,7 +201,7 @@ export default function PartDetailPage() {
           : [];
 
         const partQuestions = list.filter(
-          (q) => String(q.part) === String(partNumber)
+          (q) => String(q.part) === String(partNumber),
         );
 
         const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
@@ -160,7 +231,7 @@ export default function PartDetailPage() {
       const list = Array.isArray(examData?.questions) ? examData.questions : [];
 
       const partQuestions = list.filter(
-        (q) => String(q.part) === String(partNumber)
+        (q) => String(q.part) === String(partNumber),
       );
 
       const mapped = partQuestions.map(mapToeicQuestionResponseToLocal);
@@ -213,7 +284,7 @@ export default function PartDetailPage() {
 
   // ===== QUESTION BANK HANDLERS =====
   const handleOpenQuestionBank = () => {
-    // ✅ Đóng form tạo câu hỏi nếu đang mở
+    // Đóng form tạo câu hỏi nếu đang mở
     if (showQuestionModal) {
       setShowQuestionModal(false);
       setCreatingNew(false);
@@ -228,10 +299,14 @@ export default function PartDetailPage() {
     setShowQuestionBank(false);
   };
 
-  // ✅ Callback khi thêm câu hỏi từ bank thành công
+  // Callback khi thêm câu hỏi từ bank thành công
   const handleQuestionsAddedFromBank = async () => {
     // Reload lại danh sách câu hỏi
     await reloadPartQuestions();
+  };
+
+  const handleCheckAllChange = (e) => {
+    setCheckedQuestionIds(e.target.checked ? allQuestionIds : []);
   };
 
   const handleDeleteQuestion = async (id) => {
@@ -249,7 +324,7 @@ export default function PartDetailPage() {
     try {
       await del(`/api/toeic-question/${id}`, true);
 
-      // ✅ reload lại toàn bộ part từ server
+      // reload lại toàn bộ part từ server
       await reloadPartQuestions();
 
       if (expandedId === id) setExpandedId(null);
@@ -370,7 +445,7 @@ export default function PartDetailPage() {
 
       const newFiles = (prev.imageFiles || []).filter((_, i) => i !== idx);
       const newPreviews = (prev.imagePreviews || []).filter(
-        (_, i) => i !== idx
+        (_, i) => i !== idx,
       );
 
       return { ...prev, imageFiles: newFiles, imagePreviews: newPreviews };
@@ -384,7 +459,7 @@ export default function PartDetailPage() {
     }
 
     const trimmedOptions = (draftQuestion.options || []).map((o) =>
-      (o || "").trim()
+      (o || "").trim(),
     );
     const filled = trimmedOptions.filter(Boolean);
     if (filled.length < 2) {
@@ -435,7 +510,7 @@ export default function PartDetailPage() {
       const existingAudioKey = draftQuestion.audioKey || null;
 
       const allImageKeys = [...existingImageKeys, ...uploadedImageKeys].filter(
-        Boolean
+        Boolean,
       );
 
       const imagesPayload = allImageKeys.map((key) => ({ url: key }));
@@ -469,7 +544,7 @@ export default function PartDetailPage() {
         await put(
           basePayload,
           `/api/toeic-question/${editingQuestionId}`,
-          true
+          true,
         );
       } else {
         await post(basePayload, "/api/toeic-question", true);
@@ -518,7 +593,7 @@ export default function PartDetailPage() {
 
     try {
       const hasInvalidId = nextQuestions.some(
-        (q) => q.id == null || Number.isNaN(Number(q.id))
+        (q) => q.id == null || Number.isNaN(Number(q.id)),
       );
       if (hasInvalidId) return;
 
@@ -537,9 +612,13 @@ export default function PartDetailPage() {
   const handleDragEnd = () => setDraggingId(null);
 
   const renderQuestionCard = (q, index) => {
+    console.log("Rendering question:", q);
     const isExpanded = expandedId === q.id && editingQuestionId !== q.id;
     const isDragging = draggingId === q.id;
     const isFromBank = q.bankQuestionId != null;
+    const isContributed = q.isContribute === true;
+
+    const disableCheckbox = isFromBank || isContributed;
 
     return (
       <div
@@ -549,8 +628,7 @@ export default function PartDetailPage() {
           (isExpanded
             ? " question-card--expanded"
             : " question-card--collapsed") +
-          (isDragging ? " question-card--dragging" : "") +
-          (isFromBank ? " question-card--from-bank" : "")
+          (isDragging ? " question-card--dragging" : "")
         }
         draggable={true}
         onDragStart={() => handleDragStart(q.id)}
@@ -566,13 +644,27 @@ export default function PartDetailPage() {
           <div className="question-card__title">
             {`Câu ${index + 1} - `}
             <span className="question-card__part-name">Part {partNumber}</span>
-            {isFromBank && (
-              <span className="question-card__bank-badge" title="Từ ngân hàng câu hỏi">
-                📚 Bank
+            {q.bankQuestionId && (
+              <span
+                className="question-badge question-badge--bank"
+                title="Sử dụng từ ngân hàng đề"
+              >
+                Sử dụng từ ngân hàng đề
+              </span>
+            )}
+            {q.isContribute === true && (
+              <span
+                className="question-badge question-badge--contributed"
+                title="Đã đóng góp"
+              >
+                Đã đóng góp
               </span>
             )}
           </div>
-          <div className="question-card__actions">
+          <div
+            className="question-card__actions"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="question-card__btn question-card__btn--ghost"
               onClick={(e) => {
@@ -582,6 +674,7 @@ export default function PartDetailPage() {
             >
               Chỉnh sửa
             </button>
+
             <button
               className="question-card__btn question-card__btn--ghost question-card__btn--danger"
               onClick={(e) => {
@@ -591,6 +684,14 @@ export default function PartDetailPage() {
             >
               Xoá
             </button>
+            <Checkbox
+              checked={checkedQuestionIds.includes(q.id)}
+              disabled={disableCheckbox}
+              onChange={(e) => {
+                if (disableCheckbox) return;
+                handleCheckQuestion(q.id, e.target.checked);
+              }}
+            />
           </div>
         </div>
 
@@ -759,6 +860,16 @@ export default function PartDetailPage() {
         usedBankQuestionIds={usedBankQuestionIds}
         usedBankGroupIds={[]}
       />
+      {questions.length > 0 && (
+        <ContributeBar
+          totalCount={questions.length}
+          checkedCount={checkedQuestionIds.length}
+          checkAll={checkAll}
+          indeterminate={indeterminate}
+          onCheckAllChange={handleCheckAllChange}
+          onContribute={handleContributeToBank}
+        />
+      )}
     </div>
   );
 }

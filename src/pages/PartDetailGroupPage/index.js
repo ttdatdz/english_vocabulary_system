@@ -5,6 +5,14 @@ import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
 import CreateGroupToeicQuestion from "../../components/CreateGroupToeicQuestion";
 import QuestionBank from "../../components/QuestionBank";
+import { Checkbox } from "antd";
+import ContributeBar from "../../components/ContributeBar";
+import {
+  confirmBasic,
+  showSuccess,
+  showWaringMessage,
+} from "../../utils/alertHelper";
+import { ContributeGroup } from "../../services/Exam/contributeBank";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
 
@@ -70,6 +78,8 @@ function mapGroupQuestionResponseToLocal(group) {
     imagePreviews: [],
     audioFiles: [],
     audioPreviews: [],
+
+    isContribute: group.isContribute,
     bankGroupId: group.bankGroupId || null,
     questions: Array.isArray(group.questions)
       ? group.questions.map(mapToeicQuestionResponseToLocal)
@@ -153,6 +163,7 @@ export default function PartDetailGroupPage() {
   const navigate = useNavigate();
 
   const [examTitle, setExamTitle] = useState(routeState.examName || "");
+  const [checkedGroupIds, setCheckedGroupIds] = useState([]);
   const [groups, setGroups] = useState([]);
   const [expandedGroupId, setExpandedGroupId] = useState(null);
   const [editingGroupId, setEditingGroupId] = useState(null);
@@ -166,6 +177,30 @@ export default function PartDetailGroupPage() {
   const [draggingGroupId, setDraggingGroupId] = useState(null);
   const [showQuestionBank, setShowQuestionBank] = useState(false);
 
+  const allGroupIds = useMemo(
+    () =>
+      groups
+        .filter((g) => g.bankGroupId == null && g.isContribute !== true)
+        .map((g) => g.id)
+        .filter(Boolean),
+    [groups],
+  );
+
+  const handleCheckGroup = (groupId, checked) => {
+    setCheckedGroupIds((prev) =>
+      checked ? [...prev, groupId] : prev.filter((id) => id !== groupId),
+    );
+  };
+
+  const handleCheckAllGroups = (e) => {
+    if (e.target.checked) setCheckedGroupIds(allGroupIds);
+    else setCheckedGroupIds([]);
+  };
+
+  const isCheckAll =
+    checkedGroupIds.length === allGroupIds.length && allGroupIds.length > 0;
+  const isIndeterminate =
+    checkedGroupIds.length > 0 && checkedGroupIds.length < allGroupIds.length;
   const usedBankGroupIds = useMemo(() => {
     return groups
       .filter((g) => g.bankGroupId != null)
@@ -451,12 +486,12 @@ export default function PartDetailGroupPage() {
         const tempGroups = groups.map((g) =>
           g.id === editingGroupId
             ? {
-              ...g,
-              content: draftGroup.content.trim(),
-              imageKeys: allImageKeys,
-              audioKeys: allAudioKeys,
-              questions: currentGroup.questions,
-            }
+                ...g,
+                content: draftGroup.content.trim(),
+                imageKeys: allImageKeys,
+                audioKeys: allAudioKeys,
+                questions: currentGroup.questions,
+              }
             : g,
         );
         const recalculated = recalculateAllGroups(tempGroups);
@@ -827,11 +862,14 @@ export default function PartDetailGroupPage() {
   };
 
   const renderGroupCard = (group, index) => {
+    console.log("Rendering group", group);
     const isExpanded =
       expandedGroupId === group.id && editingGroupId !== group.id;
     const isEditing = editingGroupId === group.id;
     const isDragging = draggingGroupId === group.id;
     const isFromBank = group.bankGroupId != null;
+    const isContributed = group.isContribute === true;
+    const disableCheckbox = isFromBank || isContributed;
 
     return (
       <div
@@ -863,16 +901,27 @@ export default function PartDetailGroupPage() {
                 ({group.questionRange})
               </span>
             )}
-            {isFromBank && (
+            {group.bankGroupId && (
               <span
-                className="group-card__bank-badge"
-                title="Từ ngân hàng câu hỏi"
+                className="group-card__badge group-card__badge--bank"
+                title="Sử dụng từ ngân hàng đề"
               >
-                📚 Bank
+                Sử dụng từ ngân hàng đề
+              </span>
+            )}
+            {group.isContribute === true && (
+              <span
+                className="group-card__badge group-card__badge--contributed"
+                title="Đã đóng góp"
+              >
+                Đã đóng góp
               </span>
             )}
           </div>
-          <div className="group-card__actions">
+          <div
+            className="group-card__actions"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="group-card__btn group-card__btn--ghost"
               onClick={(e) => {
@@ -891,6 +940,22 @@ export default function PartDetailGroupPage() {
             >
               Xoá
             </button>
+            <Checkbox
+              checked={checkedGroupIds.includes(group.id)}
+              disabled={disableCheckbox}
+              onChange={(e) => {
+                if (disableCheckbox) return;
+                e.stopPropagation();
+                handleCheckGroup(group.id, e.target.checked);
+              }}
+              title={
+                isContributed
+                  ? "Nhóm đã được đóng góp"
+                  : isFromBank
+                    ? "Nhóm lấy từ ngân hàng đề"
+                    : undefined
+              }
+            />
           </div>
         </div>
         {isExpanded && (
@@ -1138,7 +1203,36 @@ export default function PartDetailGroupPage() {
   };
 
   const showGroupForm = creatingNewGroup || editingGroupId != null;
+  const handleContributeGroups = async () => {
+    if (checkedGroupIds.length === 0) return;
 
+    const confirmed = await confirmBasic(
+      "Bạn muốn đóng góp các nhóm đã chọn vào ngân hàng đề?",
+    );
+    if (!confirmed) return;
+
+    try {
+      const validIds = groups
+        .filter((g) => g.bankGroupId == null && checkedGroupIds.includes(g.id))
+        .map((g) => g.id);
+
+      if (validIds.length === 0) {
+        showWaringMessage("Không có nhóm hợp lệ để đóng góp");
+        return;
+      }
+      const payload = {
+        questionIds: validIds,
+      };
+      const result = await ContributeGroup(payload);
+
+      showSuccess("Đóng góp nhóm câu hỏi thành công!");
+      setCheckedGroupIds([]);
+      await reloadGroups();
+    } catch (err) {
+      console.error(err);
+      alert(err?.message || "Đóng góp thất bại");
+    }
+  };
   return (
     <div className="part-detail-group">
       <div className="part-detail-group__hero">
@@ -1226,6 +1320,14 @@ export default function PartDetailGroupPage() {
         onQuestionsAdded={handleQuestionsAddedFromBank}
         usedBankQuestionIds={[]}
         usedBankGroupIds={usedBankGroupIds}
+      />
+      <ContributeBar
+        totalCount={groups.length}
+        checkedCount={checkedGroupIds.length}
+        checkAll={isCheckAll}
+        indeterminate={isIndeterminate}
+        onCheckAllChange={handleCheckAllGroups}
+        onContribute={handleContributeGroups}
       />
     </div>
   );

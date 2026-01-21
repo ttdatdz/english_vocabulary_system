@@ -53,7 +53,7 @@ async function apiFetch(path, options = {}, requireAuth = false) {
   }
 
   let res = await fetch(url, fetchOpts);
-
+  console.log("Check res in apiFetch:", res);
   if (requireAuth && res.status === 401) {
     const ok = await silentRenew();
     if (ok) {
@@ -61,7 +61,7 @@ async function apiFetch(path, options = {}, requireAuth = false) {
         options.headers || buildHeaders(method, requireAuth, options.body);
       if (retryHeaders.Authorization) {
         retryHeaders.Authorization = `Bearer ${localStorage.getItem(
-          "accessToken"
+          "accessToken",
         )}`;
       }
       res = await fetch(url, { ...fetchOpts, headers: retryHeaders });
@@ -96,7 +96,10 @@ async function apiFetch(path, options = {}, requireAuth = false) {
     err.raw = json;
     throw err;
   }
-
+  // if (json.status === 400) {
+  //   const err = new Error(json.message);
+  //   throw err;
+  // }
   return json ? json.data : null;
 }
 
@@ -138,8 +141,9 @@ export const post = async (values, path, auth = false) => {
     const data = await apiFetch(
       path,
       { method: "POST", body: JSON.stringify(values) },
-      auth
+      auth,
     );
+    // console.log("Check data in request:", data);
     return data;
   } catch (error) {
     setTimeout(() => showErrorMessage(error.message), 1000);
@@ -203,7 +207,7 @@ export const putFormData = async (path, formData, auth = true) => {
     const result = await apiFetch(
       path,
       { method: "PUT", body: formData },
-      auth
+      auth,
     );
     return result;
   } catch (error) {

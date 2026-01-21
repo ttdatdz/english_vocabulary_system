@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { IoCloseSharp } from "react-icons/io5";
-import { IoMdSearch, IoMdInformationCircle, IoMdCheckmarkCircle } from "react-icons/io";
+import {
+  IoMdSearch,
+  IoMdInformationCircle,
+  IoMdCheckmarkCircle,
+} from "react-icons/io";
 import { get, post } from "../../utils/request";
 import PreviewToeicQuestion from "../PreviewToeicQuestion";
 import PreviewGroupToeicQuestion from "../PreviewGroupToeicQuestion";
@@ -8,7 +12,7 @@ import "./QuestionBank.scss";
 
 /**
  * QuestionBank Component
- * 
+ *
  * Props:
  * - open: boolean - hiển thị modal
  * - onClose: () => void - đóng modal
@@ -33,7 +37,7 @@ const QuestionBank = ({
   // State
   const [searchText, setSearchText] = useState("");
   const [selectedPart, setSelectedPart] = useState(
-    partNumber ? String(partNumber) : "all"
+    partNumber ? String(partNumber) : "all",
   );
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(10);
@@ -53,9 +57,24 @@ const QuestionBank = ({
   // Tạo Set để check nhanh
   const usedIdsSet = new Set(
     isGroupPart
-      ? usedBankGroupIds.map(id => Number(id))
-      : usedBankQuestionIds.map(id => Number(id))
+      ? usedBankGroupIds.map((id) => Number(id))
+      : usedBankQuestionIds.map((id) => Number(id)),
   );
+
+  // Helper: detect items that were contributed FROM this exam
+  const isContributedFromThisExam = (item) => {
+    if (!item) return false;
+    if (item.isContribute !== true) return false;
+    // backend might use different field names for original exam id
+    const possibleFields = [
+      item.sourceExamId,
+      item.fromExamId,
+      item.contributedFromExamId,
+      item.originExamId,
+      item.examId,
+    ];
+    return possibleFields.some((v) => Number(v) === Number(examId));
+  };
 
   // Fetch questions từ bank
   const fetchQuestions = useCallback(async () => {
@@ -67,7 +86,7 @@ const QuestionBank = ({
     try {
       // Build search params
       const searchParams = [];
-      
+
       // Filter theo part (nếu không phải "all")
       if (selectedPart && selectedPart !== "all") {
         searchParams.push(`part:${selectedPart}`);
@@ -85,9 +104,12 @@ const QuestionBank = ({
       });
 
       // Thêm search params
-      searchParams.forEach(s => params.append("search", s));
+      searchParams.forEach((s) => params.append("search", s));
 
-      const response = await get(`/api/question-bank?${params.toString()}`, true);
+      const response = await get(
+        `/api/question-bank?${params.toString()}`,
+        true,
+      );
 
       if (response) {
         setQuestions(response.items || []);
@@ -136,8 +158,10 @@ const QuestionBank = ({
   };
 
   const handleToggleQuestion = (questionId) => {
-    // Không cho chọn câu đã dùng
-    if (usedIdsSet.has(Number(questionId))) return;
+    // Không cho chọn câu đã dùng hoặc đã được đóng góp từ chính đề thi này
+    const q = questions.find((x) => Number(x.id) === Number(questionId));
+    if (usedIdsSet.has(Number(questionId)) || isContributedFromThisExam(q))
+      return;
 
     const newSelected = new Set(selectedIds);
     if (newSelected.has(questionId)) {
@@ -151,15 +175,18 @@ const QuestionBank = ({
   const handleSelectAll = () => {
     // Lọc bỏ những câu đã dùng
     const selectableQuestions = questions.filter(
-      q => !usedIdsSet.has(Number(q.id))
+      (q) => !usedIdsSet.has(Number(q.id)) && !isContributedFromThisExam(q),
     );
 
-    if (selectedIds.size === selectableQuestions.length && selectableQuestions.length > 0) {
+    if (
+      selectedIds.size === selectableQuestions.length &&
+      selectableQuestions.length > 0
+    ) {
       // Deselect all
       setSelectedIds(new Set());
     } else {
       // Select all (chỉ những câu chưa dùng)
-      setSelectedIds(new Set(selectableQuestions.map(q => q.id)));
+      setSelectedIds(new Set(selectableQuestions.map((q) => q.id)));
     }
   };
 
@@ -187,6 +214,24 @@ const QuestionBank = ({
     try {
       const ids = Array.from(selectedIds);
 
+      // If any selected item was contributed from this exam, block and show error
+      const conflicted = ids
+        .map((id) => questions.find((q) => Number(q.id) === Number(id)))
+        .some((q) => isContributedFromThisExam(q));
+
+      if (conflicted) {
+        if (isGroupPart) {
+          setError(
+            "Các nhóm câu hỏi được chọn lọc từ bài kiểm tra này và không thể được sử dụng lại trong cùng một bài kiểm tra.",
+          );
+        } else {
+          setError(
+            "Các câu hỏi được đóng góp từ đề thi này không thể được sử dụng lại trong cùng một đề thi.",
+          );
+        }
+        return;
+      }
+
       const endpoint = isGroupPart
         ? "/api/question-bank/group"
         : "/api/question-bank/single";
@@ -206,10 +251,10 @@ const QuestionBank = ({
       onClose();
     } catch (err) {
       console.error("Add questions from bank error:", err);
-      
+
       // Handle specific error messages
       const errorMsg = err?.message || err?.response?.data?.message || "";
-      
+
       if (errorMsg.includes("already exist")) {
         setError("Một số câu hỏi đã tồn tại trong đề thi này");
       } else {
@@ -235,7 +280,7 @@ const QuestionBank = ({
     clarify: q.clarify,
     images: q.images || [],
     audio: q.audio,
-    options: (q.options || []).map(o => ({
+    options: (q.options || []).map((o) => ({
       mark: o.mark,
       detail: o.detail,
     })),
@@ -250,20 +295,21 @@ const QuestionBank = ({
     content: g.content,
     images: g.images || [],
     audios: g.audios || [],
-    questions: (g.questions || []).map(q => ({
+    questions: (g.questions || []).map((q) => ({
       id: q.id,
       indexNumber: q.indexNumber,
       detail: q.detail,
       result: q.result,
       clarify: q.clarify,
-      options: (q.options || []).map(o => ({
+      options: (q.options || []).map((o) => ({
         mark: o.mark,
         detail: o.detail,
       })),
     })),
-    questionRange: g.questions?.length > 0
-      ? `${g.questions[0]?.indexNumber || 1}-${g.questions[g.questions.length - 1]?.indexNumber || g.questions.length}`
-      : "",
+    questionRange:
+      g.questions?.length > 0
+        ? `${g.questions[0]?.indexNumber || 1}-${g.questions[g.questions.length - 1]?.indexNumber || g.questions.length}`
+        : "",
   });
 
   // Render pagination
@@ -301,7 +347,9 @@ const QuestionBank = ({
             >
               1
             </button>
-            {startPage > 1 && <span className="question-bank__page-ellipsis">...</span>}
+            {startPage > 1 && (
+              <span className="question-bank__page-ellipsis">...</span>
+            )}
           </>
         )}
 
@@ -319,7 +367,9 @@ const QuestionBank = ({
 
         {endPage < totalPages - 1 && (
           <>
-            {endPage < totalPages - 2 && <span className="question-bank__page-ellipsis">...</span>}
+            {endPage < totalPages - 2 && (
+              <span className="question-bank__page-ellipsis">...</span>
+            )}
             <button
               onClick={() => handlePageChange(totalPages - 1)}
               className="question-bank__page-btn"
@@ -341,7 +391,9 @@ const QuestionBank = ({
   };
 
   // Count selectable questions
-  const selectableCount = questions.filter(q => !usedIdsSet.has(Number(q.id))).length;
+  const selectableCount = questions.filter(
+    (q) => !usedIdsSet.has(Number(q.id)) && !isContributedFromThisExam(q),
+  ).length;
 
   if (!open) return null;
 
@@ -443,7 +495,10 @@ const QuestionBank = ({
                   <th className="question-bank__table-header question-bank__table-header--checkbox">
                     <input
                       type="checkbox"
-                      checked={selectedIds.size === selectableCount && selectableCount > 0}
+                      checked={
+                        selectedIds.size === selectableCount &&
+                        selectableCount > 0
+                      }
                       onChange={handleSelectAll}
                       className="question-bank__checkbox"
                       disabled={selectableCount === 0}
@@ -489,7 +544,7 @@ const QuestionBank = ({
                           checked={isSelected}
                           onChange={() => handleToggleQuestion(q.id)}
                           className="question-bank__checkbox"
-                          disabled={isUsed}
+                          disabled={isUsed || isContributedFromThisExam(q)}
                         />
                       </td>
                       <td className="question-bank__table-cell question-bank__table-cell--id">
@@ -501,9 +556,16 @@ const QuestionBank = ({
                       <td className="question-bank__table-cell question-bank__table-cell--content">
                         <div className="question-bank__content-preview">
                           {isGroupPart
-                            ? (q.content || "Chưa có nội dung").substring(0, 100)
-                            : (q.detail || "Chưa có nội dung").substring(0, 100)}
-                          {((isGroupPart ? q.content : q.detail) || "").length > 100 && "..."}
+                            ? (q.content || "Chưa có nội dung").substring(
+                                0,
+                                100,
+                              )
+                            : (q.detail || "Chưa có nội dung").substring(
+                                0,
+                                100,
+                              )}
+                          {((isGroupPart ? q.content : q.detail) || "").length >
+                            100 && "..."}
                         </div>
                       </td>
                       {isGroupPart && (
@@ -545,7 +607,8 @@ const QuestionBank = ({
         {/* Footer Actions */}
         <div className="question-bank__footer">
           <span className="question-bank__footer-text">
-            Đã chọn: <strong>{selectedIds.size}</strong> {isGroupPart ? "nhóm" : "câu hỏi"}
+            Đã chọn: <strong>{selectedIds.size}</strong>{" "}
+            {isGroupPart ? "nhóm" : "câu hỏi"}
           </span>
           <div className="question-bank__footer-actions">
             <button
