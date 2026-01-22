@@ -9,6 +9,7 @@ import { Checkbox } from "antd";
 import ContributeBar from "../../components/ContributeBar";
 import {
   confirmBasic,
+  showErrorMessage,
   showSuccess,
   showWaringMessage,
 } from "../../utils/alertHelper";
@@ -444,7 +445,7 @@ export default function PartDetailGroupPage() {
 
   const handleSaveGroup = async () => {
     if (!draftGroup?.content?.trim()) {
-      alert("Vui lòng nhập nội dung nhóm câu hỏi");
+      showErrorMessage("Vui lòng nhập nội dung nhóm câu hỏi");
       return;
     }
     setUploading(true);
@@ -559,7 +560,7 @@ export default function PartDetailGroupPage() {
       setExpandedGroupId(null);
     } catch (err) {
       console.error("Save group error", err);
-      alert(err?.message || "Lưu nhóm câu hỏi thất bại");
+      showErrorMessage(err?.message || "Lưu nhóm câu hỏi thất bại");
     } finally {
       setUploading(false);
     }
@@ -597,7 +598,7 @@ export default function PartDetailGroupPage() {
       }
     } catch (err) {
       console.error("Delete group error", err);
-      alert(err?.message || "Xoá nhóm thất bại");
+      showErrorMessage(err?.message || "Xoá nhóm thất bại");
     } finally {
       setUploading(false);
     }
@@ -734,19 +735,19 @@ export default function PartDetailGroupPage() {
 
   const handleSaveQuestion = async () => {
     if (!draftQuestion?.detail?.trim()) {
-      alert("Vui lòng nhập nội dung câu hỏi");
+      showErrorMessage("Vui lòng nhập nội dung câu hỏi");
       return;
     }
     const trimmedOptions = (draftQuestion.options || []).map((o) =>
       (o || "").trim(),
     );
     if (trimmedOptions.filter(Boolean).length < 2) {
-      alert("Vui lòng nhập ít nhất 2 đáp án");
+      showErrorMessage("Vui lòng nhập ít nhất 2 đáp án");
       return;
     }
     const idx = draftQuestion.correctOptionIndex;
     if (idx == null || idx < 0 || !trimmedOptions[idx]) {
-      alert("Vui lòng chọn đáp án đúng");
+      showErrorMessage("Vui lòng chọn đáp án đúng");
       return;
     }
     setUploading(true);
@@ -819,7 +820,7 @@ export default function PartDetailGroupPage() {
       handleCloseQuestionModal();
     } catch (err) {
       console.error("Save question error", err);
-      alert(err?.message || "Lưu câu hỏi thất bại");
+      showErrorMessage(err?.message || "Lưu câu hỏi thất bại");
     } finally {
       setUploading(false);
     }
@@ -855,7 +856,7 @@ export default function PartDetailGroupPage() {
       if (editingQuestionId === questionId) handleCloseQuestionModal();
     } catch (err) {
       console.error("Delete question error", err);
-      alert(err?.message || "Xoá câu hỏi thất bại");
+      showErrorMessage(err?.message || "Xoá câu hỏi thất bại");
     } finally {
       setUploading(false);
     }
@@ -1230,7 +1231,7 @@ export default function PartDetailGroupPage() {
       await reloadGroups();
     } catch (err) {
       console.error(err);
-      alert(err?.message || "Đóng góp thất bại");
+      showErrorMessage(err?.message || "Đóng góp thất bại");
     }
   };
   return (

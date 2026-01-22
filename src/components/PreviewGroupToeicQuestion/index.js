@@ -15,21 +15,21 @@ export default function PreviewGroupToeicQuestion({
   const groupImageUrls = Array.isArray(groupQuestion.imageUrls)
     ? groupQuestion.imageUrls
     : Array.isArray(groupQuestion.imagePreviews)
-    ? groupQuestion.imagePreviews
-    : Array.isArray(groupQuestion.images)
-    ? groupQuestion.images
-    : [];
+      ? groupQuestion.imagePreviews
+      : Array.isArray(groupQuestion.images)
+        ? groupQuestion.images
+        : [];
 
   // Support multiple audio naming conventions
   const groupAudioUrls = Array.isArray(groupQuestion.audioUrls)
     ? groupQuestion.audioUrls
     : groupQuestion.audioUrl
-    ? [groupQuestion.audioUrl]
-    : groupQuestion.audioPreview
-    ? [groupQuestion.audioPreview]
-    : Array.isArray(groupQuestion.audios)
-    ? groupQuestion.audios
-    : [];
+      ? [groupQuestion.audioUrl]
+      : groupQuestion.audioPreview
+        ? [groupQuestion.audioPreview]
+        : Array.isArray(groupQuestion.audios)
+          ? groupQuestion.audios
+          : [];
 
   const questions = Array.isArray(groupQuestion.questions)
     ? groupQuestion.questions
@@ -41,8 +41,7 @@ export default function PreviewGroupToeicQuestion({
       onCancel={onClose}
       title={
         <div className="preview-group__modal-title">
-          <span className="preview-group__modal-title-icon">📚</span>
-          Xem chi tiết nhóm -{" "}
+          Xem chi tiết -{" "}
           {groupQuestion.title || `Part ${groupQuestion.part || "?"}`}
           {groupQuestion.questionRange && (
             <span className="preview-group__modal-title-range">
@@ -58,21 +57,18 @@ export default function PreviewGroupToeicQuestion({
           {/* Thông tin nhóm */}
           <div className="preview-group__info-bar">
             <div className="preview-group__info-item">
-              <span className="preview-group__info-icon">🆔</span>
               <span className="preview-group__info-label">ID:</span>
               <span className="preview-group__info-value">
                 {groupQuestion.id || "N/A"}
               </span>
             </div>
             <div className="preview-group__info-item">
-              <span className="preview-group__info-icon">📑</span>
               <span className="preview-group__info-label">Part:</span>
               <span className="preview-group__info-value">
                 {groupQuestion.part || "N/A"}
               </span>
             </div>
             <div className="preview-group__info-item">
-              <span className="preview-group__info-icon">❓</span>
               <span className="preview-group__info-label">Số câu:</span>
               <span className="preview-group__info-value">
                 {questions.length}
@@ -80,7 +76,6 @@ export default function PreviewGroupToeicQuestion({
             </div>
             {groupQuestion.contributor && (
               <div className="preview-group__info-item">
-                <span className="preview-group__info-icon">👤</span>
                 <span className="preview-group__info-label">Người tạo:</span>
                 <span className="preview-group__info-value">
                   {groupQuestion.contributor}
@@ -92,7 +87,6 @@ export default function PreviewGroupToeicQuestion({
           {/* Nội dung (hội thoại / đoạn văn) */}
           <div className="preview-group__section">
             <div className="preview-group__section-header">
-              <span className="preview-group__section-icon">📝</span>
               <label className="preview-group__label">
                 Nội dung (hội thoại / đoạn văn)
               </label>
@@ -107,7 +101,6 @@ export default function PreviewGroupToeicQuestion({
           {/* Tệp đính kèm của nhóm */}
           <div className="preview-group__section">
             <div className="preview-group__section-header">
-              <span className="preview-group__section-icon">📎</span>
               <label className="preview-group__label">
                 Tệp đính kèm của nhóm
               </label>
@@ -117,7 +110,6 @@ export default function PreviewGroupToeicQuestion({
               {/* Audio */}
               <div className="preview-group__attachment">
                 <div className="preview-group__attachment-header">
-                  <span className="preview-group__attachment-icon">🔊</span>
                   <span className="preview-group__attachment-label">
                     Âm thanh ({groupAudioUrls.length})
                   </span>
@@ -140,7 +132,6 @@ export default function PreviewGroupToeicQuestion({
                     </div>
                   ) : (
                     <div className="preview-group__no-media">
-                      <span className="preview-group__no-media-icon">🔇</span>
                       Không có âm thanh
                     </div>
                   )}
@@ -150,7 +141,6 @@ export default function PreviewGroupToeicQuestion({
               {/* Images */}
               <div className="preview-group__attachment">
                 <div className="preview-group__attachment-header">
-                  <span className="preview-group__attachment-icon">🖼️</span>
                   <span className="preview-group__attachment-label">
                     Hình ảnh ({groupImageUrls.length})
                   </span>
@@ -173,7 +163,6 @@ export default function PreviewGroupToeicQuestion({
                     </div>
                   ) : (
                     <div className="preview-group__no-media">
-                      <span className="preview-group__no-media-icon">🖼️</span>
                       Không có hình ảnh
                     </div>
                   )}
@@ -185,7 +174,6 @@ export default function PreviewGroupToeicQuestion({
           {/* Danh sách câu hỏi */}
           <div className="preview-group__section preview-group__section--questions">
             <div className="preview-group__section-header">
-              <span className="preview-group__section-icon">❓</span>
               <label className="preview-group__label">
                 Danh sách câu hỏi ({questions.length})
               </label>
@@ -203,8 +191,8 @@ export default function PreviewGroupToeicQuestion({
                   const qImageUrls = Array.isArray(q.imageUrls)
                     ? q.imageUrls
                     : Array.isArray(q.imagePreviews)
-                    ? q.imagePreviews
-                    : [];
+                      ? q.imagePreviews
+                      : [];
 
                   return (
                     <div key={qIdx} className="preview-group__question-card">
@@ -325,7 +313,6 @@ export default function PreviewGroupToeicQuestion({
               </div>
             ) : (
               <div className="preview-group__no-questions">
-                <span className="preview-group__no-questions-icon">📭</span>
                 <span>Nhóm này chưa có câu hỏi nào</span>
               </div>
             )}

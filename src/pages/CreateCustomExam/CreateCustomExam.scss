@@ -1,0 +1,474 @@
+// // ============================================================================
+// // Create Custom Exam - BEM Structure
+// // ============================================================================
+
+// // Variables
+// $color-primary: #f97316;
+// $color-primary-dark: #ea580c;
+// $color-primary-light: #fb923c;
+// $color-white: #ffffff;
+// $color-gray-50: #f9fafb;
+// $color-gray-100: #f3f4f6;
+// $color-gray-200: #e5e7eb;
+// $color-gray-300: #d1d5db;
+// $color-gray-600: #4b5563;
+// $color-gray-700: #374151;
+// $color-gray-900: #111827;
+// $color-success: #16a34a;
+// $color-success-light: #ecfdf5;
+// $color-success-border: #bbf7d0;
+
+// $gradient-primary: linear-gradient(135deg, #ff8a56 0%, #ff6b9d 100%);
+// $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+// $shadow-md:
+//   0 4px 6px -1px rgba(0, 0, 0, 0.1),
+//   0 2px 4px -1px rgba(0, 0, 0, 0.06);
+// $shadow-lg:
+//   0 10px 15px -3px rgba(0, 0, 0, 0.1),
+//   0 4px 6px -2px rgba(0, 0, 0, 0.05);
+// $shadow-xl:
+//   0 20px 25px -5px rgba(0, 0, 0, 0.1),
+//   0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// $transition-base: all 0.2s ease;
+// $transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// $border-radius-sm: 8px;
+// $border-radius-md: 12px;
+// $border-radius-lg: 16px;
+// $border-radius-full: 9999px;
+
+// // ============================================================================
+// // Main Block
+// // ============================================================================
+
+// .create-custom-exam {
+//   background: $color-gray-50;
+//   min-height: 100vh;
+//   padding-bottom: 40px;
+
+//   // ============================================================================
+//   // Hero Section
+//   // ============================================================================
+
+//   &__hero {
+//     background: $gradient-primary;
+//     padding: 24px 0;
+//     box-shadow: $shadow-lg;
+//     position: sticky;
+//     top: 65px;
+//     z-index: 30;
+//     backdrop-filter: blur(8px);
+//   }
+
+//   &__hero-container {
+//     max-width: 1400px;
+//     margin: 0 auto;
+//     padding: 0 32px;
+//     display: flex;
+//     align-items: center;
+//     justify-content: space-between;
+//     gap: 24px;
+
+//     @media (max-width: 1024px) {
+//       flex-wrap: wrap;
+//       gap: 16px;
+//     }
+//   }
+
+//   &__hero-left {
+//     flex: 0 0 auto;
+//   }
+
+//   &__hero-center {
+//     flex: 1;
+//     display: flex;
+
+//     align-items: center;
+//     gap: 12px;
+//     min-width: 0;
+//   }
+
+//   &__hero-actions {
+//     display: flex;
+//     align-items: center;
+//     gap: 12px;
+//     flex-wrap: wrap;
+
+//     @media (max-width: 768px) {
+//       width: 100%;
+//       justify-content: center;
+//     }
+//   }
+
+//   // ============================================================================
+//   // Title & Duration Inputs
+//   // ============================================================================
+
+//   &__title-input {
+//     width: 100%;
+//     max-width: 350px;
+//     min-width: 200px;
+//     background: rgba(255, 255, 255, 0.15);
+//     backdrop-filter: blur(10px);
+//     border: 2px solid rgba(255, 255, 255, 0.3);
+//     border-radius: $border-radius-md;
+//     color: $color-white;
+//     font-size: 15px;
+//     font-weight: 700;
+//     text-align: center;
+//     padding: 10px 15px;
+//     transition: $transition-smooth;
+
+//     &::placeholder {
+//       color: rgba(255, 255, 255, 0.7);
+//     }
+
+//     &:hover {
+//       background: rgba(255, 255, 255, 0.2);
+//       border-color: rgba(255, 255, 255, 0.5);
+//     }
+
+//     &:focus {
+//       outline: none;
+//       background: rgba(255, 255, 255, 0.25);
+//       border-color: $color-white;
+//       box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+//     }
+//   }
+
+//   &__subtitle {
+//     display: flex;
+//     align-items: center;
+//     gap: 15px;
+//     font-size: 15px;
+//     font-weight: 600;
+//     color: rgba(255, 255, 255, 0.95);
+//     margin: 0;
+//   }
+
+//   &__duration-input {
+//     width: 90px;
+//     padding: 8px 16px;
+//     border-radius: $border-radius-sm;
+//     border: 2px solid rgba(255, 255, 255, 0.3);
+//     background: rgba(255, 255, 255, 0.15);
+//     backdrop-filter: blur(10px);
+//     font-size: 15px;
+//     font-weight: 700;
+//     color: $color-white;
+//     text-align: center;
+//     transition: $transition-smooth;
+
+//     &:hover {
+//       border-color: rgba(255, 255, 255, 0.5);
+//       background: rgba(255, 255, 255, 0.2);
+//     }
+
+//     &:focus {
+//       outline: none;
+//       border-color: $color-white;
+//       background: rgba(255, 255, 255, 0.25);
+//       box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+//     }
+
+//     // Remove number input arrows
+//     &::-webkit-inner-spin-button,
+//     &::-webkit-outer-spin-button {
+//       -webkit-appearance: none;
+//       margin: 0;
+//     }
+//     -moz-appearance: textfield;
+//   }
+
+//   // ============================================================================
+//   // Buttons
+//   // ============================================================================
+
+//   &__btn {
+//     display: inline-flex;
+//     align-items: center;
+//     justify-content: center;
+//     gap: 8px;
+//     padding: 10px 15px;
+//     border-radius: $border-radius-md;
+//     font-size: 15px;
+//     font-weight: 600;
+//     cursor: pointer;
+//     border: 2px solid transparent;
+//     transition: $transition-smooth;
+//     white-space: nowrap;
+//     box-shadow: $shadow-sm;
+
+//     &:active {
+//       transform: translateY(1px);
+//     }
+
+//     // Ghost variant
+//     &--ghost {
+//       background: rgba(255, 255, 255, 0.15);
+//       backdrop-filter: blur(10px);
+//       color: $color-white;
+//       border-color: rgba(255, 255, 255, 0.3);
+
+//       &:hover {
+//         background: rgba(255, 255, 255, 0.25);
+//         border-color: rgba(255, 255, 255, 0.5);
+//         box-shadow: $shadow-md;
+//       }
+//     }
+
+//     // Outlined variant
+//     &--outlined {
+//       background: $color-white;
+//       color: $color-primary;
+//       border-color: $color-white;
+
+//       &:hover {
+//         background: $color-gray-50;
+//         transform: translateY(-2px);
+//         box-shadow: $shadow-lg;
+//       }
+//     }
+
+//     // Solid variant
+//     &--solid {
+//       background: $color-primary-dark;
+//       color: $color-white;
+//       border-color: $color-primary-dark;
+
+//       &:hover {
+//         background: darken($color-primary-dark, 5%);
+//         transform: translateY(-2px);
+//         box-shadow: $shadow-xl;
+//       }
+//     }
+//   }
+
+//   // ============================================================================
+//   // Content Area
+//   // ============================================================================
+
+//   &__content {
+//     max-width: 1200px;
+//     margin: 32px auto 120px;
+//     padding: 0 32px;
+//   }
+
+//   &__list {
+//     display: flex;
+//     flex-direction: column;
+//     gap: 16px;
+//   }
+
+//   // ============================================================================
+//   // List Items
+//   // ============================================================================
+
+//   &__item {
+//     display: flex;
+//     align-items: flex-start;
+//     gap: 16px;
+//     background: $color-white;
+//     border: 2px solid $color-gray-200;
+//     border-radius: $border-radius-md;
+//     padding: 20px;
+//     transition: $transition-smooth;
+//     box-shadow: $shadow-sm;
+
+//     &:hover {
+//       border-color: $color-primary-light;
+//       box-shadow: $shadow-md;
+//       transform: translateY(-2px);
+//     }
+
+//     &--group {
+//       border-left: 4px solid $color-primary;
+//     }
+
+//     &--single {
+//       border-left: 4px solid #3b82f6;
+//     }
+//   }
+
+//   &__item-left {
+//     flex: 0 0 auto;
+//     margin-top: 2px;
+
+//     .ant-checkbox-wrapper {
+//       .ant-checkbox {
+//         .ant-checkbox-inner {
+//           width: 20px;
+//           height: 20px;
+//           border-radius: 6px;
+//           border-width: 2px;
+//           transition: $transition-base;
+//         }
+
+//         &:hover .ant-checkbox-inner {
+//           border-color: $color-primary;
+//         }
+
+//         &.ant-checkbox-checked .ant-checkbox-inner {
+//           background-color: $color-primary;
+//           border-color: $color-primary;
+//         }
+//       }
+//     }
+//   }
+
+//   &__item-body {
+//     flex: 1;
+//     min-width: 0;
+//   }
+
+//   &__item-title {
+//     font-size: 16px;
+//     font-weight: 600;
+//     color: $color-gray-900;
+//     margin-bottom: 8px;
+//     line-height: 1.5;
+//     word-wrap: break-word;
+//   }
+
+//   &__item-meta {
+//     display: flex;
+//     align-items: center;
+//     gap: 12px;
+//     flex-wrap: wrap;
+//     font-size: 14px;
+//     color: $color-gray-600;
+//     font-weight: 500;
+//     justify-content: space-between;
+//   }
+
+//   &__item-actions {
+//     display: flex;
+//     gap: 8px;
+//     margin-left: 12px;
+//   }
+
+//   &__item-btn {
+//     padding: 6px 10px;
+//     border-radius: 8px;
+//     font-size: 13px;
+//     font-weight: 600;
+//     cursor: pointer;
+//     border: 1px solid transparent;
+//     background: transparent;
+//   }
+
+//   &__item-btn--ghost {
+//     color: $color-gray-700;
+//     border-color: rgba(0, 0, 0, 0.04);
+//   }
+
+//   &__item-btn--danger {
+//     color: #dc2626;
+//     border-color: rgba(220, 38, 38, 0.08);
+//   }
+
+//   // ============================================================================
+//   // Badges
+//   // ============================================================================
+
+//   &__badge {
+//     &--contributed {
+//       display: inline-flex;
+//       align-items: center;
+//       gap: 6px;
+//       background: $color-success-light;
+//       color: $color-success;
+//       border: 2px solid $color-success-border;
+//       padding: 4px 12px;
+//       border-radius: $border-radius-full;
+//       font-weight: 700;
+//       font-size: 12px;
+//       text-transform: uppercase;
+//       letter-spacing: 0.5px;
+//       box-shadow: $shadow-sm;
+
+//       &::before {
+//         content: "✓";
+//         font-weight: bold;
+//       }
+//     }
+//   }
+
+//   // ============================================================================
+//   // Empty State
+//   // ============================================================================
+
+//   &__empty {
+//     display: flex;
+//     flex-direction: column;
+//     align-items: center;
+//     justify-content: center;
+//     gap: 16px;
+//     padding: 80px 40px;
+//     text-align: center;
+//     color: $color-gray-600;
+//     background: $color-white;
+//     border-radius: $border-radius-lg;
+//     border: 2px dashed $color-gray-300;
+//     font-size: 16px;
+//     font-weight: 500;
+//   }
+// }
+
+// // ============================================================================
+// // Responsive Design
+// // ============================================================================
+
+// @media (max-width: 768px) {
+//   .create-custom-exam {
+//     &__hero-container {
+//       padding: 0 16px;
+//     }
+
+//     &__content {
+//       padding: 0 16px;
+//       margin-bottom: 100px;
+//     }
+
+//     &__title-input {
+//       font-size: 18px;
+//       max-width: 300px;
+//     }
+
+//     &__btn {
+//       padding: 10px 18px;
+//       font-size: 14px;
+//     }
+
+//     &__item {
+//       padding: 16px;
+//     }
+//   }
+// }
+
+// // ============================================================================
+// // Animations
+// // ============================================================================
+
+// @keyframes fadeInUp {
+//   from {
+//     opacity: 0;
+//     transform: translateY(20px);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: translateY(0);
+//   }
+// }
+
+// .create-custom-exam__item {
+//   animation: fadeInUp 0.3s ease-out;
+//   animation-fill-mode: both;
+
+//   @for $i from 1 through 20 {
+//     &:nth-child(#{$i}) {
+//       animation-delay: #{$i * 0.05}s;
+//     }
+//   }
+// }

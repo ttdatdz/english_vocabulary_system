@@ -19,10 +19,10 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
   const imageUrls = Array.isArray(question.imageUrls)
     ? question.imageUrls
     : Array.isArray(question.imagePreviews)
-    ? question.imagePreviews
-    : Array.isArray(question.images)
-    ? question.images
-    : [];
+      ? question.imagePreviews
+      : Array.isArray(question.images)
+        ? question.images
+        : [];
 
   const options = Array.isArray(question.options) ? question.options : [];
 
@@ -37,7 +37,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
       onCancel={onClose}
       title={
         <div className="preview-question__modal-title">
-          <span className="preview-question__modal-title-icon">👁️</span>
           Xem chi tiết - Câu {question.indexNumber || question.id || "?"} - Part{" "}
           {question.part || "?"}
         </div>
@@ -49,7 +48,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
           {/* Câu hỏi */}
           <div className="preview-question__section">
             <div className="preview-question__section-header">
-              <span className="preview-question__section-icon">📝</span>
               <label className="preview-question__label">Câu hỏi</label>
             </div>
             <div className="preview-question__text-box">
@@ -64,7 +62,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
           {/* Tệp đính kèm */}
           <div className="preview-question__section">
             <div className="preview-question__section-header">
-              <span className="preview-question__section-icon">📎</span>
               <label className="preview-question__label">Tệp đính kèm</label>
             </div>
 
@@ -72,7 +69,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
               {/* Audio */}
               <div className="preview-question__attachment">
                 <div className="preview-question__attachment-header">
-                  <span className="preview-question__attachment-icon">🔊</span>
                   <span className="preview-question__attachment-label">
                     Âm thanh
                   </span>
@@ -86,9 +82,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
                     />
                   ) : (
                     <div className="preview-question__no-media">
-                      <span className="preview-question__no-media-icon">
-                        🔇
-                      </span>
                       Không có âm thanh
                     </div>
                   )}
@@ -98,7 +91,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
               {/* Images */}
               <div className="preview-question__attachment">
                 <div className="preview-question__attachment-header">
-                  <span className="preview-question__attachment-icon">🖼️</span>
                   <span className="preview-question__attachment-label">
                     Hình ảnh
                   </span>
@@ -121,9 +113,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
                     </div>
                   ) : (
                     <div className="preview-question__no-media">
-                      <span className="preview-question__no-media-icon">
-                        🖼️
-                      </span>
                       Không có hình ảnh
                     </div>
                   )}
@@ -135,7 +124,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
           {/* Đáp án */}
           <div className="preview-question__section">
             <div className="preview-question__section-header">
-              <span className="preview-question__section-icon">✅</span>
               <label className="preview-question__label">
                 Đáp án ({options.length}/5)
               </label>
@@ -184,7 +172,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
           {/* Giải thích */}
           <div className="preview-question__section">
             <div className="preview-question__section-header">
-              <span className="preview-question__section-icon">💡</span>
               <label className="preview-question__label">Giải thích</label>
             </div>
             <div className="preview-question__text-box preview-question__text-box--clarify">
@@ -199,7 +186,6 @@ export default function PreviewToeicQuestion({ open, onClose, question }) {
           {/* Thông tin bổ sung */}
           <div className="preview-question__section">
             <div className="preview-question__section-header">
-              <span className="preview-question__section-icon">ℹ️</span>
               <label className="preview-question__label">Thông tin khác</label>
             </div>
             <div className="preview-question__meta">

@@ -10,6 +10,7 @@ import ContributeBar from "../../components/ContributeBar";
 import { ContributeSingle } from "../../services/Exam/contributeBank";
 import {
   confirmBasic,
+  showErrorMessage,
   showSuccess,
   showWaringMessage,
 } from "../../utils/alertHelper";
@@ -177,7 +178,7 @@ export default function PartDetailPage() {
       await reloadPartQuestions();
     } catch (err) {
       console.error(err);
-      alert(err?.message || "Đóng góp thất bại");
+      showErrorMessage(err?.message || "Đóng góp thất bại");
     }
   };
   console.log("Check questions:", questions);
@@ -331,7 +332,7 @@ export default function PartDetailPage() {
       if (editingQuestionId === id) setEditingQuestionId(null);
     } catch (err) {
       console.error("Delete question error:", err);
-      alert(err?.message || "Xoá câu hỏi thất bại");
+      showErrorMessage(err?.message || "Xoá câu hỏi thất bại");
     } finally {
       setUploading(false);
     }
@@ -454,7 +455,7 @@ export default function PartDetailPage() {
 
   const handleSaveDraftQuestionToState = async () => {
     if (!draftQuestion?.detail?.trim()) {
-      alert("Vui lòng nhập nội dung câu hỏi");
+      showErrorMessage("Vui lòng nhập nội dung câu hỏi");
       return;
     }
 
@@ -463,13 +464,13 @@ export default function PartDetailPage() {
     );
     const filled = trimmedOptions.filter(Boolean);
     if (filled.length < 2) {
-      alert("Vui lòng nhập ít nhất 2 đáp án");
+      showErrorMessage("Vui lòng nhập ít nhất 2 đáp án");
       return;
     }
 
     const idx = draftQuestion.correctOptionIndex;
     if (idx == null || idx < 0 || !trimmedOptions[idx]) {
-      alert("Vui lòng chọn đáp án đúng");
+      showErrorMessage("Vui lòng chọn đáp án đúng");
       return;
     }
 
@@ -559,7 +560,7 @@ export default function PartDetailPage() {
       setShowQuestionModal(false);
     } catch (err) {
       console.error("Save question error", err);
-      alert(err?.message || "Lưu câu hỏi thất bại");
+      showErrorMessage(err?.message || "Lưu câu hỏi thất bại");
     } finally {
       setUploading(false);
     }

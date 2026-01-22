@@ -5,7 +5,7 @@ import CanvasExamGuide from "../../canvas/CanvasExamGuide";
 import cloudSave from "../../assets/images/check.png";
 import { post, get, del, put } from "../../utils/request";
 import { useLocation } from "react-router-dom";
-import { showSuccess } from "../../utils/alertHelper";
+import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 const defaultParts = [
   { id: 1, label: "Part 1", questionCount: 0 },
@@ -80,7 +80,7 @@ export default function CreateToeicExam() {
 
         localStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify({ id: res.id, title: res.title || "New Toeic Exam" })
+          JSON.stringify({ id: res.id, title: res.title || "New Toeic Exam" }),
         );
 
         lastSavedRef.current = {
@@ -157,7 +157,7 @@ export default function CreateToeicExam() {
         prevParts.map((p) => ({
           ...p,
           questionCount: questionCountByPart[String(p.id)] || 0,
-        }))
+        })),
       );
 
       window.__toeicExamData = examData;
@@ -262,7 +262,7 @@ export default function CreateToeicExam() {
       // cũng đảm bảo đóng overlay nếu lỗi
       setOverlay({ open: false, text: "" });
 
-      alert("Huỷ draft thất bại, kiểm tra console.");
+      showErrorMessage("Huỷ draft thất bại, kiểm tra console.");
     }
   };
 
@@ -273,13 +273,13 @@ export default function CreateToeicExam() {
 
     const examData = window.__toeicExamData || {};
     const partQuestions = (examData.questions || []).filter(
-      (q) => String(q.part) === String(part.id)
+      (q) => String(q.part) === String(part.id),
     );
 
     if (isGroupPart) {
       // ✅ Truyền thêm groupQuestions
       const partGroups = (examData.groupQuestions || []).filter(
-        (g) => String(g.part) === String(part.id)
+        (g) => String(g.part) === String(part.id),
       );
 
       navigate(`/PartDetailGroup/${data.id}/parts/${part.id}/group`, {

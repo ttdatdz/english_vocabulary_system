@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import {
   IoMdSearch,
@@ -45,6 +45,8 @@ const QuestionBank = ({
 
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Show a visible loading overlay before calling the API
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -79,7 +81,6 @@ const QuestionBank = ({
   // Fetch questions từ bank
   const fetchQuestions = useCallback(async () => {
     if (!open) return;
-
     setLoading(true);
     setError(null);
 
@@ -94,7 +95,11 @@ const QuestionBank = ({
 
       // Search theo keyword (nếu có)
       if (searchText.trim()) {
-        searchParams.push(`detail:${searchText.trim()}`);
+        if (isGroupPart) {
+          searchParams.push(`content:${searchText.trim()}`);
+        } else {
+          searchParams.push(`detail:${searchText.trim()}`);
+        }
       }
 
       const params = new URLSearchParams({
@@ -122,13 +127,87 @@ const QuestionBank = ({
       setLoading(false);
     }
   }, [open, currentPage, pageSize, selectedPart, searchText, isGroupPart]);
+  // Timers to control indicator and delayed fetch
+  const fetchTimerRef = useRef(null);
+  const searchTimerRef = useRef(null);
+  const MIN_DELAY_MS = 500; // show loading first, then call API after this delay
 
-  // Fetch khi mở modal hoặc thay đổi filter
+  // When modal opens or filters/page changes, show loading then fetch after a short delay
+  // NOTE: exclude `searchText` here so typing is handled by a separate debounced effect
+  // useEffect(() => {
+  //   if (!open) return;
+
+  //   if (fetchTimerRef.current) {
+  //     clearTimeout(fetchTimerRef.current);
+  //     fetchTimerRef.current = null;
+  //   }
+
+  //   setShowLoadingIndicator(true);
+
+  //   fetchTimerRef.current = setTimeout(() => {
+  //     fetchQuestions();
+  //     fetchTimerRef.current = null;
+  //   }, MIN_DELAY_MS);
+
+  //   return () => {
+  //     if (fetchTimerRef.current) {
+  //       clearTimeout(fetchTimerRef.current);
+  //       fetchTimerRef.current = null;
+  //     }
+  //   };
+  // }, [open, currentPage, selectedPart, fetchQuestions]);
+
+  // // Debounce typing into search input: only call API when user stops typing for 800ms
+  // useEffect(() => {
+  //   if (!open) return;
+
+  //   if (searchTimerRef.current) {
+  //     clearTimeout(searchTimerRef.current);
+  //     searchTimerRef.current = null;
+  //   }
+
+  //   // if searchText is empty, we still want to fetch (so user can clear search)
+  //   const DELAY_MS = 800;
+
+  //   searchTimerRef.current = setTimeout(() => {
+  //     // show loading overlay and call fetch
+  //     setShowLoadingIndicator(true);
+  //     fetchQuestions();
+  //     searchTimerRef.current = null;
+  //   }, DELAY_MS);
+
+  //   return () => {
+  //     if (searchTimerRef.current) {
+  //       clearTimeout(searchTimerRef.current);
+  //       searchTimerRef.current = null;
+  //     }
+  //   };
+  // }, [searchText, open, fetchQuestions]);
+  const debounceRef = useRef(null);
+
   useEffect(() => {
-    if (open) {
-      fetchQuestions();
+    if (!open) return;
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
     }
-  }, [open, fetchQuestions]);
+
+    setShowLoadingIndicator(true);
+
+    debounceRef.current = setTimeout(() => {
+      fetchQuestions();
+    }, 600); // debounce chung cho filter + search + page
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [open, currentPage, selectedPart, searchText, fetchQuestions]);
+  // Hide our visible indicator once the actual fetch/loading state finishes
+  useEffect(() => {
+    if (!loading) {
+      setShowLoadingIndicator(false);
+    }
+  }, [loading]);
 
   // Reset state khi đóng modal
   useEffect(() => {
@@ -141,13 +220,14 @@ const QuestionBank = ({
   }, [open]);
 
   // Reset page khi đổi filter
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [selectedPart, searchText]);
+  // useEffect(() => {
+  //   setCurrentPage(0);
+  // }, [selectedPart, searchText]);
 
   // Handlers
   const handleSearch = () => {
     setCurrentPage(0);
+    setShowLoadingIndicator(true);
     fetchQuestions();
   };
 
@@ -424,9 +504,12 @@ const QuestionBank = ({
             <div className="question-bank__search-input-wrapper">
               <input
                 type="text"
-                placeholder="Tìm câu hỏi theo nội dung..."
+                placeholder="Tìm câu hỏi theo nội dung câu hỏi, hoặc đoạn hội thoại..."
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setCurrentPage(0);
+                }}
                 onKeyPress={handleKeyPress}
                 className="question-bank__search-input"
               />
@@ -445,7 +528,10 @@ const QuestionBank = ({
             <span className="question-bank__filter-label">Part:</span>
             <select
               value={selectedPart}
-              onChange={(e) => setSelectedPart(e.target.value)}
+              onChange={(e) => {
+                setSelectedPart(e.target.value);
+                setCurrentPage(0);
+              }}
               className="question-bank__select"
             >
               <option value="all">Tất cả</option>
@@ -466,7 +552,9 @@ const QuestionBank = ({
             </select>
 
             <span className="question-bank__filter-info">
-              {loading ? "Đang tải..." : `${questions.length} câu hỏi`}
+              {showLoadingIndicator || loading
+                ? "Đang tải..."
+                : `${questions.length} câu hỏi`}
             </span>
           </div>
         </div>
@@ -480,7 +568,14 @@ const QuestionBank = ({
 
         {/* Table */}
         <div className="question-bank__table-wrapper">
-          {loading ? (
+          {showLoadingIndicator && (
+            <div className="question-bank__table-loading-overlay">
+              <div className="question-bank__loading">
+                <span>Đang tải danh sách câu hỏi...</span>
+              </div>
+            </div>
+          )}
+          {loading && questions.length === 0 ? (
             <div className="question-bank__loading">
               <span>Đang tải danh sách câu hỏi...</span>
             </div>

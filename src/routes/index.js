@@ -40,6 +40,7 @@ import CreateToeicExam from "../pages/CreateToeicExam";
 import PartDetailPage from "../pages/PartDetailPage";
 import PartDetailGroupPage from "../pages/PartDetailGroupPage";
 import DetailCustomToeicExam from "../pages/DetailToeicCustomExam";
+import CreateCustomExam from "../pages/CreateCustomExam";
 
 function MainRoutes() {
   useEffect(() => {
@@ -107,11 +108,21 @@ function MainRoutes() {
           </Route>
           <Route path="PracticeFlashCard" element={<PracticeFlashCard />} />
           <Route path="PracticeExam/:examId" element={<PracticeExam />} />
-          
-          <Route path="CreateToeicExam" element={<CreateToeicExam/>}/>
-          <Route path="PartDetail/:examId/parts/:partNumber/single" element={<PartDetailPage/>}/>
-          <Route path="PartDetailGroup/:examId/parts/:partNumber/group" element={<PartDetailGroupPage/>}/>
-          <Route path="DetailToeicCustomExam/:id" element={<DetailCustomToeicExam/>}/>
+
+          <Route path="CreateToeicExam" element={<CreateToeicExam />} />
+          <Route path="CreateCustomExam" element={<CreateCustomExam />} />
+          <Route
+            path="PartDetail/:examId/parts/:partNumber/single"
+            element={<PartDetailPage />}
+          />
+          <Route
+            path="PartDetailGroup/:examId/parts/:partNumber/group"
+            element={<PartDetailGroupPage />}
+          />
+          <Route
+            path="DetailToeicCustomExam/:id"
+            element={<DetailCustomToeicExam />}
+          />
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>
