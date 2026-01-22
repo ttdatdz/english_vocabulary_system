@@ -100,7 +100,7 @@ export default function PracticeFlashCard() {
 
   const handleBackToList = () => {
     navigate(
-      `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`
+      `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`,
     );
   };
 
@@ -115,7 +115,7 @@ export default function PracticeFlashCard() {
           flashCardID: flashcardId,
           level: newLevel,
         },
-        `api/card/update/detail/${currentCard.id}`
+        `api/card/update/detail/${currentCard.id}`,
       );
 
       showSuccess("Cập nhật mức độ thành công!");
@@ -126,8 +126,8 @@ export default function PracticeFlashCard() {
       // ✅ Đồng bộ lại trong danh sách practiceList
       setPracticeList((prev) =>
         prev.map((c) =>
-          c.id === currentCard.id ? { ...c, level: newLevel } : c
-        )
+          c.id === currentCard.id ? { ...c, level: newLevel } : c,
+        ),
       );
     } catch (e) {
       showErrorMessage("Lỗi khi cập nhật mức độ!");
@@ -201,7 +201,7 @@ export default function PracticeFlashCard() {
       message.success("Reset danh sách " + flashcard.title);
       await loadDataList();
       navigate(
-        `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/DetailListFlashCard/${flashcardId}`,
       );
     } catch (err) {
       showErrorMessage("Lỗi khi reset danh sách");
@@ -216,11 +216,11 @@ export default function PracticeFlashCard() {
         .format("YYYY-MM-DD");
       await put(
         { reviewDate: nexReview, id: flashcardId },
-        "api/flashcard/updateFlashCard"
+        "api/flashcard/updateFlashCard",
       );
       showSuccess("Rất tốt. Thời gian ôn lại được cập nhật.");
       navigate(
-        `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`
+        `/VocabularyTopics/DetailTopic/${topicId}/DetailListFlashCard/${flashcardId}`,
       );
     } catch (err) {
       showErrorMessage("Lỗi khi hoàn thành ôn tập");
@@ -269,12 +269,12 @@ export default function PracticeFlashCard() {
                   >
                     Hoàn thành ôn tập
                   </Button>
-                  <Button
+                  {/* <Button
                     onClick={handleResetAllCards}
                     className="PracticeFlashCard__btn PracticeFlashCard__btn--Stop"
                   >
                     Dừng học list này
-                  </Button>
+                  </Button> */}
                 </div>
               )}
             </div>
