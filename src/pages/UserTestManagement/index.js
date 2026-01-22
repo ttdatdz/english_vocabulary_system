@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import BaseModal from "../../components/BaseModal";
-import "./ToeicTestManagement.scss";
+import "./UserTestManagement.scss";
 import { Button, Input, Select } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { IoEye } from "react-icons/io5";
@@ -12,12 +12,17 @@ import {
   showSuccess,
 } from "../../utils/alertHelper";
 import AddAndEditExam from "../../components/AddAndEditExam";
-import { DeleteExam, GetAllExams } from "../../services/Exam/examService";
+import {
+  DeleteExam,
+  GetAllExams,
+  GetAllUserExams,
+} from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
 import { removeVietnameseTones } from "../../utils/formatData";
 import { get } from "../../utils/request";
+import { useNavigate } from "react-router-dom";
 
-export default function ToeicTestManagement() {
+export default function UserTestManagement() {
   const [open, setOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [detailingExam, setDetailingExam] = useState(null);
@@ -29,6 +34,8 @@ export default function ToeicTestManagement() {
   const [selectedYear, setSelectedYear] = useState("All");
   const [selectedCollection, setSelectedCollection] = useState("All");
   const [searchValue, setSearchValue] = useState("");
+  const navigate = useNavigate();
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 6,
@@ -45,7 +52,7 @@ export default function ToeicTestManagement() {
   };
 
   const reloadExams = async () => {
-    const res = await GetAllExams();
+    const res = await GetAllUserExams();
     const examsWithKey = res.map((exam) => ({
       ...exam,
       key: exam.id,
@@ -66,7 +73,7 @@ export default function ToeicTestManagement() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await GetAllExams();
+        const res = await GetAllUserExams();
         const usersWithKey = res.map((exam) => ({
           ...exam,
           key: exam.id,
@@ -99,13 +106,12 @@ export default function ToeicTestManagement() {
     const fetchTestTypes = async () => {
       try {
         const res = await get("api/exam/type/getAll");
-        if (res != null)
-          setListTestTypes(res);
+        if (res != null) setListTestTypes(res);
       } catch (error) {
         showErrorMessage("Lỗi khi lấy danh sách loại đề thi");
         console.error("Lỗi khi lấy danh sách loại đề thi:", error);
       }
-    }
+    };
     fetchTestTypes();
     fetchTestSets();
   }, []);
@@ -133,20 +139,20 @@ export default function ToeicTestManagement() {
 
     if (selectedCollection !== "All") {
       filtered = filtered.filter(
-        (exam) => exam.collection === selectedCollection
+        (exam) => exam.collection === selectedCollection,
       );
     }
 
     if (selectedYear !== "All") {
       filtered = filtered.filter(
-        (exam) => Number(exam.year) === Number(selectedYear)
+        (exam) => Number(exam.year) === Number(selectedYear),
       );
     }
 
     if (searchValue) {
       const keyword = removeVietnameseTones(searchValue.trim());
       filtered = filtered.filter((exam) =>
-        removeVietnameseTones(exam.title || "").includes(keyword)
+        removeVietnameseTones(exam.title || "").includes(keyword),
       );
     }
     setPagination((prev) => ({ ...prev, current: 1 })); // Luôn reset về trang 1
@@ -171,21 +177,14 @@ export default function ToeicTestManagement() {
       render: (value) => value + " phút",
     },
     {
-      title: "Bộ đề",
-      dataIndex: "collection",
-      key: "collection",
-    },
-    {
-      title: "Năm",
-      dataIndex: "year",
-      key: "year",
-    },
-    {
       title: "Action",
       key: "action",
       render: (_, record) => (
         <div className="Action">
-          <IoEye className="Action__Detail" onClick={() => showModal(record)} />
+          <IoEye
+            className="Action__Detail"
+            onClick={() => navigate(`/ViewDetailToeicCustomExam/${record.id}`)}
+          />
           <MdDelete
             className="Action__Delete"
             onClick={() => handleDelete(record.id)}
@@ -219,7 +218,7 @@ export default function ToeicTestManagement() {
   };
   return (
     <div className="ToeicTestManagement">
-      <h2 className="PageTitle">Toiec test Management</h2>
+      <h2 className="PageTitle">User Test Management</h2>
       <div className="ToeicTestManagement__header">
         <div className="FindInformation">
           <Input
@@ -229,7 +228,7 @@ export default function ToeicTestManagement() {
             allowClear
             onChange={handleSearch}
           />
-          <Select
+          {/* <Select
             defaultValue="All"
             placeholder="Lọc theo bộ đề"
             onChange={(val) => setSelectedCollection(val)}
@@ -248,15 +247,8 @@ export default function ToeicTestManagement() {
             onChange={(val) => setSelectedYear(val)}
             options={yearOptions}
             className="filter"
-          />
+          /> */}
         </div>
-        <Button
-          type="primary"
-          className="create-topic-button create-topic-button--size"
-          onClick={() => showModal(null)}
-        >
-          + Thêm
-        </Button>
       </div>
       <BaseTable
         columns={columns}

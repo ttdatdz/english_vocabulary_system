@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import "./PartDetailGroupPage.scss";
 import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
@@ -177,7 +182,12 @@ export default function PartDetailGroupPage() {
   const [uploading, setUploading] = useState(false);
   const [draggingGroupId, setDraggingGroupId] = useState(null);
   const [showQuestionBank, setShowQuestionBank] = useState(false);
+  const [searchParams] = useSearchParams();
 
+  const isAdminView =
+    location.state?.readOnly === true ||
+    location.state?.isAdmin === true ||
+    searchParams.get("admin") === "true";
   const allGroupIds = useMemo(
     () =>
       groups
@@ -882,10 +892,10 @@ export default function PartDetailGroupPage() {
           (isDragging ? " group-card--dragging" : "") +
           (isFromBank ? " group-card--from-bank" : "")
         }
-        draggable={!isEditing}
-        onDragStart={() => handleDragStartGroup(group.id)}
-        onDragOver={handleDragOverGroup}
-        onDrop={() => handleDropOnGroup(group.id)}
+        draggable={!isEditing && !isAdminView}
+        onDragStart={() => !isAdminView && handleDragStartGroup(group.id)}
+        onDragOver={(e) => !isAdminView && handleDragOverGroup(e)}
+        onDrop={() => !isAdminView && handleDropOnGroup(group.id)}
         onDragEnd={handleDragEndGroup}
       >
         <div
@@ -919,45 +929,47 @@ export default function PartDetailGroupPage() {
               </span>
             )}
           </div>
-          <div
-            className="group-card__actions"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="group-card__btn group-card__btn--ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditGroup(group);
-              }}
+          {!isAdminView && (
+            <div
+              className="group-card__actions"
+              onClick={(e) => e.stopPropagation()}
             >
-              Chỉnh sửa
-            </button>
-            <button
-              className="group-card__btn group-card__btn--ghost group-card__btn--danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteGroup(group.id);
-              }}
-            >
-              Xoá
-            </button>
-            <Checkbox
-              checked={checkedGroupIds.includes(group.id)}
-              disabled={disableCheckbox}
-              onChange={(e) => {
-                if (disableCheckbox) return;
-                e.stopPropagation();
-                handleCheckGroup(group.id, e.target.checked);
-              }}
-              title={
-                isContributed
-                  ? "Nhóm đã được đóng góp"
-                  : isFromBank
-                    ? "Nhóm lấy từ ngân hàng đề"
-                    : undefined
-              }
-            />
-          </div>
+              <button
+                className="group-card__btn group-card__btn--ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditGroup(group);
+                }}
+              >
+                Chỉnh sửa
+              </button>
+              <button
+                className="group-card__btn group-card__btn--ghost group-card__btn--danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteGroup(group.id);
+                }}
+              >
+                Xoá
+              </button>
+              <Checkbox
+                checked={checkedGroupIds.includes(group.id)}
+                disabled={disableCheckbox}
+                onChange={(e) => {
+                  if (disableCheckbox) return;
+                  e.stopPropagation();
+                  handleCheckGroup(group.id, e.target.checked);
+                }}
+                title={
+                  isContributed
+                    ? "Nhóm đã được đóng góp"
+                    : isFromBank
+                      ? "Nhóm lấy từ ngân hàng đề"
+                      : undefined
+                }
+              />
+            </div>
+          )}
         </div>
         {isExpanded && (
           <div className="group-card__body">
@@ -1000,12 +1012,14 @@ export default function PartDetailGroupPage() {
             <div className="group-card__questions">
               <div className="group-card__questions-header">
                 <strong>Câu hỏi ({group.questions?.length || 0})</strong>
-                <button
-                  className="group-card__btn group-card__btn--solid"
-                  onClick={() => handleStartCreateQuestion(group.id)}
-                >
-                  + Thêm câu hỏi
-                </button>
+                {!isAdminView && (
+                  <button
+                    className="group-card__btn group-card__btn--solid"
+                    onClick={() => handleStartCreateQuestion(group.id)}
+                  >
+                    + Thêm câu hỏi
+                  </button>
+                )}
               </div>
               {group.questions?.length > 0 && (
                 <div className="group-card__question-list">
@@ -1016,20 +1030,24 @@ export default function PartDetailGroupPage() {
                     >
                       <div className="question-mini-card__header">
                         <span>Câu {q.indexNumber || qIdx + 1}</span>
-                        <div className="question-mini-card__actions">
-                          <button
-                            className="question-mini-card__btn"
-                            onClick={() => handleEditQuestion(group.id, q)}
-                          >
-                            Sửa
-                          </button>
-                          <button
-                            className="question-mini-card__btn question-mini-card__btn--danger"
-                            onClick={() => handleDeleteQuestion(group.id, q.id)}
-                          >
-                            Xoá
-                          </button>
-                        </div>
+                        {!isAdminView && (
+                          <div className="question-mini-card__actions">
+                            <button
+                              className="question-mini-card__btn"
+                              onClick={() => handleEditQuestion(group.id, q)}
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              className="question-mini-card__btn question-mini-card__btn--danger"
+                              onClick={() =>
+                                handleDeleteQuestion(group.id, q.id)
+                              }
+                            >
+                              Xoá
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <p className="question-mini-card__text">
                         {q.detail || "Chưa có nội dung"}
@@ -1253,21 +1271,23 @@ export default function PartDetailGroupPage() {
             </span>
           </p>
         </div>
-        <div className="part-detail-group__hero-actions">
-          <button
-            className="part-detail-group__btn part-detail-group__btn--outlined"
-            onClick={handleOpenQuestionBank}
-          >
-            <img src={crown} className="crown-icon" alt="crown-icon" />
-            Ngân hàng câu hỏi
-          </button>
-          <button
-            className="part-detail-group__btn part-detail-group__btn--solid"
-            onClick={handleStartCreateGroup}
-          >
-            + Thêm nhóm câu hỏi
-          </button>
-        </div>
+        {!isAdminView && (
+          <div className="part-detail-group__hero-actions">
+            <button
+              className="part-detail-group__btn part-detail-group__btn--outlined"
+              onClick={handleOpenQuestionBank}
+            >
+              <img src={crown} className="crown-icon" alt="crown-icon" />
+              Ngân hàng câu hỏi
+            </button>
+            <button
+              className="part-detail-group__btn part-detail-group__btn--solid"
+              onClick={handleStartCreateGroup}
+            >
+              + Thêm nhóm câu hỏi
+            </button>
+          </div>
+        )}
       </div>
       <div className="part-detail-group__content">
         <div className="part-detail-group__left">
@@ -1322,14 +1342,16 @@ export default function PartDetailGroupPage() {
         usedBankQuestionIds={[]}
         usedBankGroupIds={usedBankGroupIds}
       />
-      <ContributeBar
-        totalCount={groups.length}
-        checkedCount={checkedGroupIds.length}
-        checkAll={isCheckAll}
-        indeterminate={isIndeterminate}
-        onCheckAllChange={handleCheckAllGroups}
-        onContribute={handleContributeGroups}
-      />
+      {!isAdminView && (
+        <ContributeBar
+          totalCount={groups.length}
+          checkedCount={checkedGroupIds.length}
+          checkAll={isCheckAll}
+          indeterminate={isIndeterminate}
+          onCheckAllChange={handleCheckAllGroups}
+          onContribute={handleContributeGroups}
+        />
+      )}
     </div>
   );
 }

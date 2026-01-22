@@ -5,7 +5,7 @@ import { Route, Routes } from "react-router-dom";
 import DashBoard from "../pages/DashBoard";
 import UserManagement from "../pages/UserManagement";
 import BlogManagement from "../pages/BlogManagement";
-import ToeicTestManagement from "../pages/ToeicTestManagement";
+import ToeicTestManagement from "../pages/ServerTestManagement";
 import PersonalInformation from "../pages/PersonalInformation";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
@@ -41,6 +41,9 @@ import PartDetailPage from "../pages/PartDetailPage";
 import PartDetailGroupPage from "../pages/PartDetailGroupPage";
 import DetailCustomToeicExam from "../pages/DetailToeicCustomExam";
 import CreateCustomExam from "../pages/CreateCustomExam";
+import ServerTestManagement from "../pages/ServerTestManagement";
+import UserTestManagement from "../pages/UserTestManagement";
+import ViewDetailToeicCustomExam from "../pages/ViewDetailToeicCustomExam";
 
 function MainRoutes() {
   useEffect(() => {
@@ -123,6 +126,10 @@ function MainRoutes() {
             path="DetailToeicCustomExam/:id"
             element={<DetailCustomToeicExam />}
           />
+          <Route
+            path="ViewDetailToeicCustomExam/:id"
+            element={<ViewDetailToeicCustomExam />}
+          />
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>
@@ -130,7 +137,12 @@ function MainRoutes() {
           <Route path="DashBoard" element={<DashBoard />} />
           <Route path="UserManagement" element={<UserManagement />} />
           <Route path="BlogManagement" element={<BlogManagement />} />
-          <Route path="ToeicTestManagement" element={<ToeicTestManagement />} />
+          <Route
+            path="ServerTestManagement"
+            element={<ServerTestManagement />}
+          />
+          <Route path="UserTestManagement" element={<UserTestManagement />} />
+
           <Route path="PersonalInformation" element={<PersonalInformation />} />
           <Route
             path="BlogCategoryManagement"

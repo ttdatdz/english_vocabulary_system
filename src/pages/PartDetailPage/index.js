@@ -1,5 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import "./PartDetailPage.scss";
 import crown from "../../assets/images/crown.png";
 import { postFormData, post, put, get, del } from "../../utils/request";
@@ -104,7 +109,10 @@ export default function PartDetailPage() {
   const location = useLocation();
   const routeState = location.state || {};
   const { examId, partNumber } = useParams();
+  const [searchParams] = useSearchParams();
 
+  const isAdminView =
+    location.state?.isAdmin === true || searchParams.get("admin") === "true";
   const navigate = useNavigate();
   const [examTitle, setExamTitle] = useState(routeState.examName || "");
   const [duration, setDuration] = useState(routeState.durationMinutes || 120);
@@ -631,10 +639,10 @@ export default function PartDetailPage() {
             : " question-card--collapsed") +
           (isDragging ? " question-card--dragging" : "")
         }
-        draggable={true}
-        onDragStart={() => handleDragStart(q.id)}
-        onDragOver={handleDragOver}
-        onDrop={() => handleDropOn(q.id)}
+        draggable={!isAdminView}
+        onDragStart={() => !isAdminView && handleDragStart(q.id)}
+        onDragOver={(e) => !isAdminView && handleDragOver(e)}
+        onDrop={() => !isAdminView && handleDropOn(q.id)}
         onDragEnd={handleDragEnd}
       >
         <div
@@ -662,38 +670,40 @@ export default function PartDetailPage() {
               </span>
             )}
           </div>
-          <div
-            className="question-card__actions"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="question-card__btn question-card__btn--ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditQuestion(q);
-              }}
+          {!isAdminView && (
+            <div
+              className="question-card__actions"
+              onClick={(e) => e.stopPropagation()}
             >
-              Chỉnh sửa
-            </button>
+              <button
+                className="question-card__btn question-card__btn--ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditQuestion(q);
+                }}
+              >
+                Chỉnh sửa
+              </button>
 
-            <button
-              className="question-card__btn question-card__btn--ghost question-card__btn--danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteQuestion(q.id);
-              }}
-            >
-              Xoá
-            </button>
-            <Checkbox
-              checked={checkedQuestionIds.includes(q.id)}
-              disabled={disableCheckbox}
-              onChange={(e) => {
-                if (disableCheckbox) return;
-                handleCheckQuestion(q.id, e.target.checked);
-              }}
-            />
-          </div>
+              <button
+                className="question-card__btn question-card__btn--ghost question-card__btn--danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteQuestion(q.id);
+                }}
+              >
+                Xoá
+              </button>
+              <Checkbox
+                checked={checkedQuestionIds.includes(q.id)}
+                disabled={disableCheckbox}
+                onChange={(e) => {
+                  if (disableCheckbox) return;
+                  handleCheckQuestion(q.id, e.target.checked);
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="question-card__body">
@@ -789,22 +799,23 @@ export default function PartDetailPage() {
           <p>{examTitle} -</p>
           <span className="part-detail__part-name">Part {partNumber}</span>
         </div>
-
-        <div className="part-detail__hero-actions">
-          <button
-            className="part-detail__btn part-detail__btn--outlined"
-            onClick={handleOpenQuestionBank}
-          >
-            <img src={crown} className="crown-icon" alt="crown-icon" />
-            Ngân hàng câu hỏi
-          </button>
-          <button
-            className="part-detail__btn part-detail__btn--solid"
-            onClick={handleStartCreate}
-          >
-            + Thêm câu hỏi
-          </button>
-        </div>
+        {!isAdminView && (
+          <div className="part-detail__hero-actions">
+            <button
+              className="part-detail__btn part-detail__btn--outlined"
+              onClick={handleOpenQuestionBank}
+            >
+              <img src={crown} className="crown-icon" alt="crown-icon" />
+              Ngân hàng câu hỏi
+            </button>
+            <button
+              className="part-detail__btn part-detail__btn--solid"
+              onClick={handleStartCreate}
+            >
+              + Thêm câu hỏi
+            </button>
+          </div>
+        )}
       </div>
 
       {/* CONTENT */}
@@ -861,7 +872,7 @@ export default function PartDetailPage() {
         usedBankQuestionIds={usedBankQuestionIds}
         usedBankGroupIds={[]}
       />
-      {questions.length > 0 && (
+      {!isAdminView && questions.length > 0 && (
         <ContributeBar
           totalCount={questions.length}
           checkedCount={checkedQuestionIds.length}

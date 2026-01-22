@@ -22,8 +22,18 @@ export default function MenuSider(props) {
     },
     {
       key: "sub3",
-      label: <Link to={"ToeicTestManagement"}>Toeic Test Management</Link>,
+      label: "Test Management",
       icon: <HiOutlineServerStack />,
+      children: [
+        {
+          key: "sub3-1",
+          label: <Link to={"ServerTestManagement"}>System Test</Link>,
+        },
+        {
+          key: "sub3-2",
+          label: <Link to={"UserTestManagement"}>User Test</Link>,
+        },
+      ],
     },
     {
       key: "sub4",
