@@ -90,7 +90,7 @@ export default function ToiecTests() {
         if (res?.hasValidPayment) {
           setIsVip(true);
         } else {
-          setIsVip(true);
+          setIsVip(false);
         }
       } catch (error) {
         showErrorMessage("Lỗi khi check expiration:", error);
@@ -128,20 +128,20 @@ export default function ToiecTests() {
 
     if (selectedCollection !== "All") {
       filtered = filtered.filter(
-        (exam) => exam.collection === selectedCollection
+        (exam) => exam.collection === selectedCollection,
       );
     }
 
     if (selectedYear !== "All") {
       filtered = filtered.filter(
-        (exam) => Number(exam.year) === Number(selectedYear)
+        (exam) => Number(exam.year) === Number(selectedYear),
       );
     }
 
     if (searchValue) {
       const keyword = removeVietnameseTones(searchValue.trim());
       filtered = filtered.filter((exam) =>
-        removeVietnameseTones(exam.title || "").includes(keyword)
+        removeVietnameseTones(exam.title || "").includes(keyword),
       );
     }
 
@@ -162,7 +162,7 @@ export default function ToiecTests() {
     if (searchValue) {
       const keyword = removeVietnameseTones(searchValue.trim());
       filtered = filtered.filter((exam) =>
-        removeVietnameseTones(exam.title || "").includes(keyword)
+        removeVietnameseTones(exam.title || "").includes(keyword),
       );
     }
 
@@ -311,7 +311,6 @@ export default function ToiecTests() {
                 options={yearOptions}
                 width={"220px"}
               />
-        
             </div>
           )}
 
@@ -354,8 +353,9 @@ export default function ToiecTests() {
                 currentItems?.map((item, index) => (
                   <div
                     key={item.id}
-                    className={`Test-item ${activeTab === "custom" ? "Test-item--custom" : ""
-                      }`}
+                    className={`Test-item ${
+                      activeTab === "custom" ? "Test-item--custom" : ""
+                    }`}
                     onClick={() =>
                       activeTab === "system"
                         ? handleClick(item.id)
