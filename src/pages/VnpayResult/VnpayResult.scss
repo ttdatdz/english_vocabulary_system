@@ -283,20 +283,59 @@ $highlight: #fef3c7;
       }
     }
   }
-
   &__actions {
-    margin-top: 32px;
     display: flex;
-    justify-content: flex-end;
     gap: 12px;
-    padding-top: 24px;
-    border-top: 1px solid $border;
+    justify-content: end;
+    margin-top: 24px;
+    flex-wrap: wrap;
 
-    button {
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    // Style chung cho tất cả button
+    .ant-btn {
+      border-radius: 10px;
+      height: 42px;
+      padding: 0 18px;
+      font-weight: 500;
+      transition: all 0.25s ease;
+
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    // Button default → cũng thành màu cam
+    .ant-btn-default {
+      color: #ff6b3d;
+      border-color: #ff6b3d;
+      background: #fff;
+
+      &:hover,
+      &:focus {
+        color: #fff !important;
+        background: #ff6b3d !important;
+        border-color: #ff6b3d !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 61, 0.35);
+        transform: translateY(-1px);
       }
+    }
+
+    // Button primary → cam đậm hơn chút
+    .ant-btn-primary {
+      background: #ff6b3d;
+      border-color: #ff6b3d;
+
+      &:hover,
+      &:focus {
+        background: #ff835d !important;
+        border-color: #ff835d !important;
+        box-shadow: 0 4px 14px rgba(255, 107, 61, 0.45);
+        transform: translateY(-1px);
+      }
+    }
+
+    // Icon cũng đổi màu theo text
+    .anticon {
+      font-size: 15px;
     }
   }
 }
