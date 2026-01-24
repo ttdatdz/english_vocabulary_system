@@ -1,7 +1,7 @@
 import { del, get, post, postFormData, put } from "../../utils/request";
 
 export const GetAllExams = async () => {
-  const result = await get("api/exam/system/filter");
+  const result = await get("api/exam/filter");
   return result;
 };
 export const GetAllUserExams = async () => {
@@ -13,7 +13,6 @@ export const GetAllClientExams = async () => {
   const result = await get("api/exam/filter");
   return result;
 };
-
 
 export const DeleteExam = async (id) => {
   const result = await del(`api/exam/admin/delete/${id}`);
@@ -41,7 +40,7 @@ export const SubmitExam = async (value) => {
   return result;
 };
 
-export const GetCustomExams = async()=>{
+export const GetCustomExams = async () => {
   const result = await get("api/exam/custom-exams", true);
   return result;
 };
