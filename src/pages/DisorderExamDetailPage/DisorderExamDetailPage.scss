@@ -1,0 +1,255 @@
+/**
+ * DisorderExamDetailPage.scss
+ * 
+ * UI: Background trắng, điểm nhấn cam sáng, không gradient
+ */
+
+$primary-orange: #ff7a45;
+$primary-orange-light: #fff7e6;
+$primary-orange-hover: #ff9c6e;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #999;
+$border-color: #e8e8e8;
+$bg-light: #f5f5f5;
+
+.disorder-detail {
+    min-height: 100vh;
+    background: $bg-light;
+    padding-bottom: 40px;
+
+    // ==================== Loading State ====================
+    &--loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 16px;
+        color: $text-medium;
+    }
+
+    // ==================== Header ====================
+    &__header {
+        background: #fff;
+        padding: 16px 24px;
+        border-bottom: 1px solid $border-color;
+
+        .back-btn {
+            color: $text-medium;
+            padding: 0;
+            height: auto;
+
+            &:hover {
+                color: $primary-orange;
+            }
+        }
+    }
+
+    // ==================== Content ====================
+    &__content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    // ==================== Exam Info Card ====================
+    .exam-info-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 24px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+        &__title {
+            font-size: 24px;
+            font-weight: 600;
+            color: $text-dark;
+            margin: 0 0 24px 0;
+        }
+
+        &__stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-bottom: 32px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            &__icon {
+                font-size: 28px;
+                color: $primary-orange;
+            }
+
+            &__content {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            &__value {
+                font-size: 24px;
+                font-weight: 600;
+                color: $text-dark;
+                line-height: 1.2;
+            }
+
+            &__label {
+                font-size: 13px;
+                color: $text-light;
+            }
+        }
+
+        .start-exam-btn {
+            background: $primary-orange;
+            border-color: $primary-orange;
+            height: 48px;
+            padding: 0 40px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+
+            &:hover {
+                background: $primary-orange-hover;
+                border-color: $primary-orange-hover;
+            }
+
+            &:disabled {
+                background: #d9d9d9;
+                border-color: #d9d9d9;
+            }
+        }
+
+        .no-questions-warning {
+            margin-top: 16px;
+            color: $text-light;
+            font-size: 14px;
+        }
+    }
+
+    // ==================== Results Section ====================
+    .results-section {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+        &__title {
+            font-size: 18px;
+            font-weight: 600;
+            color: $text-dark;
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid $border-color;
+        }
+
+        &__loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        &__empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: $text-light;
+
+            p {
+                margin: 0;
+            }
+        }
+    }
+
+    // ==================== Results Table ====================
+    .results-table {
+        .ant-table-thead>tr>th {
+            background: $bg-light;
+            color: $text-medium;
+            font-weight: 600;
+            border-bottom: 1px solid $border-color;
+        }
+
+        .ant-table-tbody>tr>td {
+            border-bottom: 1px solid $border-color;
+        }
+
+        .ant-table-tbody>tr:hover>td {
+            background: $primary-orange-light;
+        }
+
+        .score-cell {
+            font-weight: 600;
+            color: $primary-orange;
+        }
+
+        .view-detail-btn {
+            color: $primary-orange;
+            padding: 0;
+
+            &:hover {
+                color: $primary-orange-hover;
+            }
+        }
+
+        // Pagination
+        .ant-pagination {
+            margin-top: 16px;
+
+            .ant-pagination-item-active {
+                border-color: $primary-orange;
+
+                a {
+                    color: $primary-orange;
+                }
+            }
+        }
+    }
+}
+
+// ==================== Responsive ====================
+@media (max-width: 576px) {
+    .disorder-detail {
+        &__content {
+            padding: 16px;
+        }
+
+        .exam-info-card {
+            padding: 24px 16px;
+
+            &__title {
+                font-size: 20px;
+            }
+
+            &__stats {
+                gap: 24px;
+            }
+
+            .stat-item {
+                &__icon {
+                    font-size: 24px;
+                }
+
+                &__value {
+                    font-size: 20px;
+                }
+            }
+
+            .start-exam-btn {
+                width: 100%;
+            }
+        }
+
+        .results-section {
+            padding: 16px;
+
+            &__title {
+                font-size: 16px;
+            }
+        }
+    }
+}

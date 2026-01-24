@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button, Radio, Spin, Modal, Progress } from "antd";
 import {
     ArrowLeftOutlined,
@@ -8,18 +8,27 @@ import {
     ClockCircleOutlined,
     MenuOutlined,
     CloseOutlined,
+    CheckCircleFilled,
+    CloseCircleFilled,
 } from "@ant-design/icons";
 import "./DisorderPracticePage.scss";
-import { get } from "../../utils/request";
+import { get, post } from "../../utils/request";
 import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 
 /**
- * Trang làm bài cho đề thi Disorder (isRandom = true)
- * UI: Background trắng, điểm nhấn cam sáng, không gradient
+ * Trang làm bài / xem đáp án cho đề thi Disorder
+ * 
+ * Modes:
+ * - "practice": Làm bài thi (mặc định)
+ * - "review": Xem đáp án (sau khi submit hoặc từ lịch sử)
  */
 export default function DisorderPracticePage() {
-    const { examId } = useParams();
+    const { examId, reviewId } = useParams();
+    const location = useLocation();
     const navigate = useNavigate();
+
+    // Xác định mode dựa vào URL
+    const isReviewMode = location.pathname.includes("/review/") && reviewId;
 
     // Exam data
     const [examTitle, setExamTitle] = useState("");
@@ -31,9 +40,13 @@ export default function DisorderPracticePage() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState({});
     const [timeLeft, setTimeLeft] = useState(0);
+    const [startTime, setStartTime] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showResult, setShowResult] = useState(false);
     const [result, setResult] = useState(null);
+
+    // Review state (from API)
+    const [reviewData, setReviewData] = useState(null);
 
     // Timer & Sidebar
     const [timerActive, setTimerActive] = useState(false);
@@ -42,9 +55,16 @@ export default function DisorderPracticePage() {
     // ==================== LOAD DATA ====================
 
     useEffect(() => {
-        loadExamDetail();
-    }, [examId]);
+        if (isReviewMode) {
+            loadReviewData();
+        } else {
+            loadExamDetail();
+        }
+    }, [examId, reviewId, isReviewMode]);
 
+    /**
+     * Load exam detail for practice mode
+     */
     const loadExamDetail = async () => {
         setLoading(true);
         try {
@@ -55,6 +75,7 @@ export default function DisorderPracticePage() {
                 setTimeLeft((res.duration || 60) * 60);
                 setItems(res.items || []);
                 setTimerActive(true);
+                setStartTime(Date.now());
             }
         } catch (err) {
             console.error("Load exam error:", err);
@@ -64,10 +85,60 @@ export default function DisorderPracticePage() {
         }
     };
 
+    /**
+     * Load review data for review mode
+     */
+    const loadReviewData = async () => {
+        setLoading(true);
+        try {
+            // Load review result
+            const reviewRes = await get(`/api/exam/result/id/${reviewId}`, true);
+            if (reviewRes) {
+                setReviewData(reviewRes);
+                setExamTitle(reviewRes.examTitle || "Đề thi");
+
+                // Build answers map from review
+                const answersMap = {};
+                (reviewRes.questionReviews || []).forEach((qr) => {
+                    if (qr.userAnswer) {
+                        answersMap[qr.questionId] = qr.userAnswer;
+                    }
+                });
+                setAnswers(answersMap);
+
+                // Build result for display
+                setResult({
+                    correct: reviewRes.correctAnswers,
+                    total: reviewRes.totalQuestions,
+                    percentage: Math.round((reviewRes.correctAnswers / reviewRes.totalQuestions) * 100),
+                    timeTaken: reviewRes.duration,
+                    details: (reviewRes.questionReviews || []).map((qr) => ({
+                        questionId: qr.questionId,
+                        userAnswer: qr.userAnswer,
+                        correctAnswer: qr.correctAnswer,
+                        isCorrect: qr.correct,
+                        clarify: qr.clarify,
+                    })),
+                });
+            }
+
+            // Load exam items for display
+            const examRes = await get(`/api/disorder-exam/${examId}`, true);
+            if (examRes) {
+                setItems(examRes.items || []);
+            }
+        } catch (err) {
+            console.error("Load review error:", err);
+            showErrorMessage("Không thể tải dữ liệu bài làm");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // ==================== TIMER ====================
 
     useEffect(() => {
-        if (!timerActive || timeLeft <= 0) return;
+        if (!timerActive || timeLeft <= 0 || isReviewMode) return;
 
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
@@ -81,7 +152,7 @@ export default function DisorderPracticePage() {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timerActive]);
+    }, [timerActive, isReviewMode]);
 
     const formatTime = (seconds) => {
         const h = Math.floor(seconds / 3600);
@@ -155,6 +226,9 @@ export default function DisorderPracticePage() {
     // ==================== ANSWER ====================
 
     const handleSelectAnswer = (questionId, mark) => {
+        // Không cho chọn trong review mode
+        if (isReviewMode || showResult) return;
+
         setAnswers((prev) => ({
             ...prev,
             [questionId]: mark,
@@ -168,7 +242,7 @@ export default function DisorderPracticePage() {
     // ==================== SUBMIT ====================
 
     const handleSubmit = async () => {
-        if (isSubmitting) return;
+        if (isSubmitting || isReviewMode) return;
 
         const unanswered = totalQuestions - getAnsweredCount();
         if (unanswered > 0 && timeLeft > 0) {
@@ -189,30 +263,44 @@ export default function DisorderPracticePage() {
         setTimerActive(false);
 
         try {
-            let correct = 0;
-            const details = flatQuestions.map((q) => {
-                const userAnswer = answers[q.questionId] || null;
-                const isCorrect = userAnswer === q.result;
-                if (isCorrect) correct++;
-                return {
+            // Tính thời gian làm bài
+            const durationSeconds = startTime
+                ? Math.floor((Date.now() - startTime) / 1000)
+                : (examDuration * 60) - timeLeft;
+
+            // Build request
+            const submitRequest = {
+                examID: parseInt(examId),
+                selectedPart: "ALL",
+                duration: durationSeconds,
+                answers: flatQuestions.map((q) => ({
                     questionId: q.questionId,
-                    userAnswer,
-                    correctAnswer: q.result,
-                    isCorrect,
-                    clarify: q.clarify,
-                };
-            });
+                    answer: answers[q.questionId] || null,
+                })),
+            };
 
-            setResult({
-                correct,
-                total: totalQuestions,
-                percentage: Math.round((correct / totalQuestions) * 100),
-                timeTaken: (examDuration * 60) - timeLeft,
-                details,
-            });
+            // Call API
+            const response = await post(submitRequest, "/api/exam/submit", true);
 
-            setShowResult(true);
-            showSuccess("Nộp bài thành công!");
+            if (response) {
+                // Build result from API response
+                setResult({
+                    reviewId: response.reviewId,
+                    correct: response.correctAnswers,
+                    total: response.totalQuestions,
+                    percentage: Math.round((response.correctAnswers / response.totalQuestions) * 100),
+                    timeTaken: response.duration,
+                    details: (response.questionReviews || []).map((qr) => ({
+                        questionId: qr.questionId,
+                        userAnswer: qr.userAnswer,
+                        correctAnswer: qr.correctAnswer,
+                        isCorrect: qr.correct,
+                    })),
+                });
+
+                setShowResult(true);
+                showSuccess("Nộp bài thành công!");
+            }
         } catch (err) {
             console.error("Submit error:", err);
             showErrorMessage("Nộp bài thất bại");
@@ -221,18 +309,59 @@ export default function DisorderPracticePage() {
         }
     };
 
+    // ==================== REVIEW HELPERS ====================
+
+    /**
+     * Lấy thông tin đáp án cho câu hỏi hiện tại
+     */
+    const getQuestionResult = (questionId) => {
+        if (!result || !result.details) return null;
+        return result.details.find((d) => d.questionId === questionId);
+    };
+
+    /**
+     * Kiểm tra option có phải đáp án đúng không
+     */
+    const isCorrectOption = (questionId, mark) => {
+        const qResult = getQuestionResult(questionId);
+        return qResult && qResult.correctAnswer === mark;
+    };
+
+    /**
+     * Kiểm tra option có phải đáp án user chọn không
+     */
+    const isUserSelectedOption = (questionId, mark) => {
+        return answers[questionId] === mark;
+    };
+
+    /**
+     * Lấy class cho option trong review mode
+     */
+    const getOptionClass = (questionId, mark) => {
+        if (!isReviewMode && !showResult) return "";
+
+        const isCorrect = isCorrectOption(questionId, mark);
+        const isSelected = isUserSelectedOption(questionId, mark);
+
+        if (isCorrect && isSelected) return "option--correct-selected";
+        if (isCorrect) return "option--correct";
+        if (isSelected) return "option--incorrect-selected";
+        return "";
+    };
+
     // ==================== RENDER ====================
 
     if (loading) {
         return (
             <div className="disorder-practice disorder-practice--loading">
                 <Spin size="large" />
-                <p>Đang tải đề thi...</p>
+                <p>Đang tải {isReviewMode ? "bài làm" : "đề thi"}...</p>
             </div>
         );
     }
 
-    if (showResult && result) {
+    // Result screen after submit (not in review mode from history)
+    if (showResult && result && !isReviewMode) {
         return (
             <div className="disorder-practice disorder-practice--result">
                 <div className="result-card">
@@ -243,7 +372,11 @@ export default function DisorderPracticePage() {
                             percent={result.percentage}
                             format={() => `${result.correct}/${result.total}`}
                             size={140}
-                            strokeColor={result.percentage >= 70 ? "#52c41a" : result.percentage >= 50 ? "#fa8c16" : "#ff4d4f"}
+                            strokeColor={
+                                result.percentage >= 70 ? "#52c41a"
+                                    : result.percentage >= 50 ? "#fa8c16"
+                                        : "#ff4d4f"
+                            }
                         />
                     </div>
                     <div className="result-card__stats">
@@ -261,11 +394,18 @@ export default function DisorderPracticePage() {
                         </div>
                     </div>
                     <div className="result-card__actions">
-                        <Button onClick={() => navigate(-1)}>Quay lại</Button>
-                        <Button type="primary" onClick={() => {
-                            setShowResult(false);
-                            setCurrentIndex(0);
-                        }}>
+                        <Button onClick={() => navigate(`/disorder-exam/${examId}/detail`)}>
+                            Quay lại
+                        </Button>
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                // Chuyển sang review mode với reviewId
+                                if (result.reviewId) {
+                                    navigate(`/disorder-exam/${examId}/review/${result.reviewId}`);
+                                }
+                            }}
+                        >
                             Xem đáp án
                         </Button>
                     </div>
@@ -275,34 +415,41 @@ export default function DisorderPracticePage() {
     }
 
     return (
-        <div className="disorder-practice">
+        <div className={`disorder-practice ${isReviewMode ? "disorder-practice--review" : ""}`}>
             {/* HEADER */}
             <div className="disorder-practice__header">
                 <div className="header-left">
                     <Button
                         type="text"
                         icon={<ArrowLeftOutlined />}
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate(`/disorder-exam/${examId}/detail`)}
                         className="back-btn"
                     >
-                        Thoát
+                        {isReviewMode ? "Quay lại" : "Thoát"}
                     </Button>
                     <h2 className="exam-title">{examTitle}</h2>
+                    {isReviewMode && (
+                        <span className="review-badge">Xem đáp án</span>
+                    )}
                 </div>
                 <div className="header-right">
-                    <div className={`timer ${timeLeft < 300 ? "timer--warning" : ""}`}>
-                        <ClockCircleOutlined />
-                        <span>{formatTime(timeLeft)}</span>
-                    </div>
-                    <Button
-                        type="primary"
-                        icon={<CheckOutlined />}
-                        onClick={handleSubmit}
-                        loading={isSubmitting}
-                        className="submit-btn"
-                    >
-                        Nộp bài
-                    </Button>
+                    {!isReviewMode && (
+                        <>
+                            <div className={`timer ${timeLeft < 300 ? "timer--warning" : ""}`}>
+                                <ClockCircleOutlined />
+                                <span>{formatTime(timeLeft)}</span>
+                            </div>
+                            <Button
+                                type="primary"
+                                icon={<CheckOutlined />}
+                                onClick={handleSubmit}
+                                loading={isSubmitting}
+                                className="submit-btn"
+                            >
+                                Nộp bài
+                            </Button>
+                        </>
+                    )}
                     <Button
                         type="text"
                         icon={sidebarOpen ? <CloseOutlined /> : <MenuOutlined />}
@@ -374,37 +521,39 @@ export default function DisorderPracticePage() {
                                     <Radio.Group
                                         value={answers[currentQuestion.questionId] || null}
                                         onChange={(e) => handleSelectAnswer(currentQuestion.questionId, e.target.value)}
+                                        disabled={isReviewMode || showResult}
                                     >
-                                        {currentQuestion.options.map((opt, idx) => (
-                                            <Radio key={idx} value={opt.mark} className="option-item">
-                                                <span className="option-item__mark">{opt.mark}.</span>
-                                                <span className="option-item__detail">{opt.detail}</span>
-                                            </Radio>
-                                        ))}
+                                        {currentQuestion.options.map((opt, idx) => {
+                                            const optionClass = getOptionClass(currentQuestion.questionId, opt.mark);
+                                            const isCorrect = isCorrectOption(currentQuestion.questionId, opt.mark);
+                                            const isSelected = isUserSelectedOption(currentQuestion.questionId, opt.mark);
+
+                                            return (
+                                                <Radio
+                                                    key={idx}
+                                                    value={opt.mark}
+                                                    className={`option-item ${optionClass}`}
+                                                >
+                                                    <span className="option-item__mark">{opt.mark}.</span>
+                                                    <span className="option-item__detail">{opt.detail}</span>
+
+                                                    {/* Icons for review mode */}
+                                                    {(isReviewMode || showResult) && isCorrect && (
+                                                        <CheckCircleFilled className="option-item__icon option-item__icon--correct" />
+                                                    )}
+                                                    {(isReviewMode || showResult) && isSelected && !isCorrect && (
+                                                        <CloseCircleFilled className="option-item__icon option-item__icon--incorrect" />
+                                                    )}
+                                                </Radio>
+                                            );
+                                        })}
                                     </Radio.Group>
                                 </div>
 
-                                {/* Result after submit */}
-                                {showResult && result && (
-                                    <div className="question__result">
-                                        {(() => {
-                                            const detail = result.details.find(d => d.questionId === currentQuestion.questionId);
-                                            return (
-                                                <>
-                                                    <div className={`result-status ${detail?.isCorrect ? "result-status--correct" : "result-status--incorrect"}`}>
-                                                        {detail?.isCorrect ? "✓ Đúng" : "✗ Sai"}
-                                                    </div>
-                                                    <div className="result-answer">
-                                                        Đáp án đúng: <strong>{detail?.correctAnswer}</strong>
-                                                    </div>
-                                                    {currentQuestion.clarify && (
-                                                        <div className="result-clarify">
-                                                            <strong>Giải thích:</strong> {currentQuestion.clarify}
-                                                        </div>
-                                                    )}
-                                                </>
-                                            );
-                                        })()}
+                                {/* Clarify (explanation) in review mode */}
+                                {(isReviewMode || showResult) && currentQuestion.clarify && (
+                                    <div className="question__clarify">
+                                        <strong>Giải thích:</strong> {currentQuestion.clarify}
                                     </div>
                                 )}
                             </div>
@@ -438,23 +587,32 @@ export default function DisorderPracticePage() {
                     <div className="sidebar">
                         <div className="sidebar__header">
                             <span>Danh sách câu hỏi</span>
-                            <span className="sidebar__progress">
-                                {getAnsweredCount()}/{totalQuestions}
-                            </span>
+                            {!isReviewMode && (
+                                <span className="sidebar__progress">
+                                    {getAnsweredCount()}/{totalQuestions}
+                                </span>
+                            )}
+                            {isReviewMode && result && (
+                                <span className="sidebar__progress">
+                                    {result.correct}/{result.total}
+                                </span>
+                            )}
                         </div>
                         <div className="sidebar__grid">
                             {flatQuestions.map((q, idx) => {
                                 const isAnswered = answers[q.questionId] != null;
                                 const isCurrent = idx === currentIndex;
+
                                 let resultClass = "";
-                                if (showResult && result) {
-                                    const detail = result.details.find(d => d.questionId === q.questionId);
-                                    resultClass = detail?.isCorrect ? "item--correct" : "item--incorrect";
+                                if (isReviewMode || showResult) {
+                                    const qResult = getQuestionResult(q.questionId);
+                                    resultClass = qResult?.isCorrect ? "item--correct" : "item--incorrect";
                                 }
+
                                 return (
                                     <button
                                         key={q.questionId}
-                                        className={`sidebar__item ${isCurrent ? "item--current" : ""} ${isAnswered ? "item--answered" : ""} ${resultClass}`}
+                                        className={`sidebar__item ${isCurrent ? "item--current" : ""} ${!isReviewMode && !showResult && isAnswered ? "item--answered" : ""} ${resultClass}`}
                                         onClick={() => handleJumpTo(idx)}
                                     >
                                         {idx + 1}
@@ -463,15 +621,19 @@ export default function DisorderPracticePage() {
                             })}
                         </div>
                         <div className="sidebar__legend">
-                            <div className="legend-item">
-                                <span className="legend-dot legend-dot--answered"></span>
-                                <span>Đã trả lời</span>
-                            </div>
-                            <div className="legend-item">
-                                <span className="legend-dot"></span>
-                                <span>Chưa trả lời</span>
-                            </div>
-                            {showResult && (
+                            {!isReviewMode && !showResult && (
+                                <>
+                                    <div className="legend-item">
+                                        <span className="legend-dot legend-dot--answered"></span>
+                                        <span>Đã trả lời</span>
+                                    </div>
+                                    <div className="legend-item">
+                                        <span className="legend-dot"></span>
+                                        <span>Chưa trả lời</span>
+                                    </div>
+                                </>
+                            )}
+                            {(isReviewMode || showResult) && (
                                 <>
                                     <div className="legend-item">
                                         <span className="legend-dot legend-dot--correct"></span>

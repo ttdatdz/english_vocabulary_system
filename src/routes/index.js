@@ -46,6 +46,7 @@ import ServerTestManagement from "../pages/ServerTestManagement";
 import UserTestManagement from "../pages/UserTestManagement";
 import ViewDetailToeicCustomExam from "../pages/ViewDetailToeicCustomExam";
 import DisorderPracticePage from "../pages/DisorderPracticePage";
+import DisorderExamDetailPage from "../pages/DisorderExamDetailPage";
 
 function MainRoutes() {
   useEffect(() => {
@@ -132,14 +133,18 @@ function MainRoutes() {
             path="ViewDetailToeicCustomExam/:id"
             element={<ViewDetailToeicCustomExam />}
           />
-          
-          <Route path="CreateToeicExam" element={<CreateToeicExam/>}/>
-          <Route path="PartDetail/:examId/parts/:partNumber/single" element={<PartDetailPage/>}/>
-          <Route path="PartDetailGroup/:examId/parts/:partNumber/group" element={<PartDetailGroupPage/>}/>
-          <Route path="DetailToeicCustomExam/:id" element={<DetailCustomToeicExam/>}/>
-          
+
+          <Route path="CreateToeicExam" element={<CreateToeicExam />} />
+          <Route path="PartDetail/:examId/parts/:partNumber/single" element={<PartDetailPage />} />
+          <Route path="PartDetailGroup/:examId/parts/:partNumber/group" element={<PartDetailGroupPage />} />
+          <Route path="DetailToeicCustomExam/:id" element={<DetailCustomToeicExam />} />
+
           <Route path="/disorder-exam/:examId" element={<DisorderExamPage />} />
-          <Route path="/disorder-exam/:examId/practice" element={<DisorderPracticePage/>} />
+          <Route path="/disorder-exam/:examId/practice" element={<DisorderPracticePage />} />
+
+          <Route path="/disorder-exam/:examId/detail" element={<DisorderExamDetailPage />} />
+
+          <Route path="/disorder-exam/:examId/review/:reviewId" element={<DisorderPracticePage />} />
         </Route>
         {/* Layout quản trị viên */}
         <Route path="/admin" element={<AdminLayout />}>

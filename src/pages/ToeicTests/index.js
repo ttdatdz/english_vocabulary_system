@@ -274,23 +274,38 @@ export default function ToiecTests() {
     }
   };
 
+
+  /**
+   * Xử lý click vào đề custom (để xem chi tiết / làm bài)
+   * - Disorder → Trang detail (hiển thị lịch sử + nút làm bài)
+   * - TOEIC → DetailExam như cũ
+   */
   const handleCustomExamClick = (exam) => {
     console.log("Click exam:", exam, "isRandom:", exam.isRandom);
 
     if (exam.isRandom === true) {
-      navigate(`/disorder-exam/${exam.id}/practice`);
+      // ✅ UPDATED: Đổi từ /practice sang /detail
+      navigate(`/disorder-exam/${exam.id}/detail`);
     } else {
       navigate(`/DetailExam/${exam.id}`);
     }
   };
 
+
+
+  /**
+   * Xử lý nút làm bài (Play icon)
+   * - Disorder → Trang detail (để xem lịch sử trước khi làm)
+   * - TOEIC → DetailExam
+   */
   const handlePracticeCustomExam = (e, exam) => {
     e.stopPropagation();
 
     console.log("Practice exam:", exam, "isRandom:", exam.isRandom);
 
     if (exam.isRandom === true) {
-      navigate(`/disorder-exam/${exam.id}/practice`);
+      // ✅ UPDATED: Đổi từ /practice sang /detail
+      navigate(`/disorder-exam/${exam.id}/detail`);
     } else {
       navigate(`/DetailExam/${exam.id}`);
     }
