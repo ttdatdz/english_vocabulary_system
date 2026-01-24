@@ -8,6 +8,13 @@ export const GetAllUserExams = async () => {
   const result = await get("api/exam/user/filter");
   return result;
 };
+
+export const GetAllClientExams = async () => {
+  const result = await get("api/exam/filter");
+  return result;
+};
+
+
 export const DeleteExam = async (id) => {
   const result = await del(`api/exam/admin/delete/${id}`);
   return result;
@@ -34,7 +41,7 @@ export const SubmitExam = async (value) => {
   return result;
 };
 
-export const GetCustomExams = async () => {
-  const result = await get("api/exam/get-custom", true);
+export const GetCustomExams = async()=>{
+  const result = await get("api/exam/custom-exams", true);
   return result;
 };

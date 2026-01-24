@@ -1,0 +1,608 @@
+/**
+ * DisorderPracticePage.scss
+ * 
+ * UI: Background trắng, điểm nhấn cam sáng, không gradient, đơn giản
+ */
+
+$primary-orange: #ff7a45;
+$primary-orange-light: #fff7e6;
+$primary-orange-hover: #ff9c6e;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #999;
+$border-color: #e8e8e8;
+$bg-light: #f5f5f5;
+$success: #52c41a;
+$error: #ff4d4f;
+$warning: #fa8c16;
+
+.disorder-practice {
+    min-height: 100vh;
+    background: #fff;
+    color: $text-dark;
+
+    // ==================== Loading State ====================
+    &--loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 16px;
+        color: $text-medium;
+    }
+
+    // ==================== Result State ====================
+    &--result {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        min-height: 100vh;
+        background: $bg-light;
+    }
+
+    // ==================== HEADER ====================
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 24px;
+        background: #fff;
+        border-bottom: 1px solid $border-color;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .back-btn {
+                color: $text-medium;
+
+                &:hover {
+                    color: $primary-orange;
+                }
+            }
+
+            .exam-title {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: $text-dark;
+            }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .timer {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                color: $text-dark;
+                padding: 6px 12px;
+                background: $bg-light;
+                border-radius: 6px;
+
+                &--warning {
+                    color: $error;
+                    background: #fff2f0;
+                    animation: pulse 1s infinite;
+                }
+            }
+
+            .submit-btn {
+                background: $primary-orange;
+                border-color: $primary-orange;
+
+                &:hover {
+                    background: $primary-orange-hover;
+                    border-color: $primary-orange-hover;
+                }
+            }
+
+            .toggle-sidebar-btn {
+                color: $text-medium;
+
+                &:hover {
+                    color: $primary-orange;
+                }
+            }
+        }
+    }
+
+    // ==================== BODY ====================
+    &__body {
+        display: flex;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+        gap: 24px;
+    }
+
+    // ==================== QUESTION PANEL ====================
+    .question-panel {
+        flex: 1;
+        background: #fff;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        padding: 24px;
+        min-height: calc(100vh - 140px);
+
+        &--full {
+            max-width: 100%;
+        }
+    }
+
+    .group-info {
+        margin-bottom: 24px;
+        padding: 20px;
+        background: $primary-orange-light;
+        border-radius: 8px;
+        border-left: 4px solid $primary-orange;
+
+        &__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: $primary-orange;
+            margin-bottom: 12px;
+        }
+
+        &__content {
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-family: inherit;
+                font-size: 14px;
+                line-height: 1.7;
+                color: $text-dark;
+                margin: 0;
+                background: transparent;
+            }
+        }
+
+        &__audios {
+            margin-top: 16px;
+
+            audio {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+
+        &__images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+
+            img {
+                max-width: 300px;
+                max-height: 200px;
+                object-fit: contain;
+                border-radius: 8px;
+                border: 1px solid $border-color;
+            }
+        }
+    }
+
+    .question {
+        &__header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        &__number {
+            font-size: 18px;
+            font-weight: 600;
+            color: $primary-orange;
+        }
+
+        &__badge {
+            padding: 4px 10px;
+            background: $bg-light;
+            border-radius: 4px;
+            font-size: 12px;
+            color: $text-medium;
+        }
+
+        &__detail {
+            font-size: 16px;
+            line-height: 1.7;
+            color: $text-dark;
+            margin-bottom: 16px;
+        }
+
+        &__audio {
+            margin-bottom: 16px;
+
+            audio {
+                width: 100%;
+            }
+        }
+
+        &__images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+
+            img {
+                max-width: 250px;
+                max-height: 180px;
+                object-fit: contain;
+                border-radius: 8px;
+                border: 1px solid $border-color;
+            }
+        }
+
+        &__options {
+            .ant-radio-group {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .option-item {
+                display: flex;
+                align-items: flex-start;
+                padding: 14px 16px;
+                background: $bg-light;
+                border-radius: 8px;
+                border: 2px solid transparent;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: $primary-orange-light;
+                }
+
+                &.ant-radio-wrapper-checked {
+                    background: $primary-orange-light;
+                    border-color: $primary-orange;
+                }
+
+                .ant-radio {
+                    margin-top: 2px;
+                }
+
+                &__mark {
+                    font-weight: 600;
+                    margin-right: 8px;
+                    min-width: 20px;
+                    color: $text-dark;
+                }
+
+                &__detail {
+                    color: $text-dark;
+                }
+            }
+        }
+
+        &__result {
+            margin-top: 24px;
+            padding: 16px;
+            background: $bg-light;
+            border-radius: 8px;
+
+            .result-status {
+                display: inline-block;
+                padding: 6px 16px;
+                border-radius: 4px;
+                font-weight: 600;
+                margin-bottom: 12px;
+
+                &--correct {
+                    background: #f6ffed;
+                    color: $success;
+                    border: 1px solid $success;
+                }
+
+                &--incorrect {
+                    background: #fff2f0;
+                    color: $error;
+                    border: 1px solid $error;
+                }
+            }
+
+            .result-answer {
+                margin-bottom: 8px;
+                color: $text-dark;
+
+                strong {
+                    color: $success;
+                }
+            }
+
+            .result-clarify {
+                color: $text-medium;
+                font-size: 14px;
+                line-height: 1.6;
+                padding-top: 8px;
+                border-top: 1px solid $border-color;
+                margin-top: 8px;
+            }
+        }
+    }
+
+    // ==================== NAVIGATION ====================
+    .question-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid $border-color;
+
+        &__progress {
+            color: $text-medium;
+            font-weight: 500;
+        }
+
+        button {
+            &:hover {
+                color: $primary-orange;
+                border-color: $primary-orange;
+            }
+        }
+    }
+
+    // ==================== SIDEBAR ====================
+    .sidebar {
+        width: 280px;
+        background: #fff;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        padding: 20px;
+        height: fit-content;
+        position: sticky;
+        top: 88px;
+
+        &__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-weight: 600;
+            color: $text-dark;
+        }
+
+        &__progress {
+            color: $primary-orange;
+        }
+
+        &__grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        &__item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: 1px solid $border-color;
+            background: #fff;
+            color: $text-dark;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &:hover {
+                border-color: $primary-orange;
+                color: $primary-orange;
+            }
+
+            &.item--current {
+                border-color: $primary-orange;
+                background: $primary-orange-light;
+                color: $primary-orange;
+                font-weight: 600;
+            }
+
+            &.item--answered {
+                background: $primary-orange;
+                border-color: $primary-orange;
+                color: #fff;
+            }
+
+            &.item--correct {
+                background: $success;
+                border-color: $success;
+                color: #fff;
+            }
+
+            &.item--incorrect {
+                background: $error;
+                border-color: $error;
+                color: #fff;
+            }
+        }
+
+        &__legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 16px;
+            border-top: 1px solid $border-color;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: $text-medium;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid $border-color;
+            background: #fff;
+
+            &--answered {
+                background: $primary-orange;
+                border-color: $primary-orange;
+            }
+
+            &--correct {
+                background: $success;
+                border-color: $success;
+            }
+
+            &--incorrect {
+                background: $error;
+                border-color: $error;
+            }
+        }
+    }
+
+    // ==================== RESULT CARD ====================
+    .result-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 48px;
+        text-align: center;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+        &__title {
+            margin: 0 0 32px;
+            font-size: 24px;
+            font-weight: 600;
+            color: $text-dark;
+        }
+
+        &__score {
+            margin-bottom: 32px;
+        }
+
+        &__stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 32px;
+
+            .stat-item {
+                text-align: center;
+
+                &__label {
+                    display: block;
+                    font-size: 13px;
+                    color: $text-light;
+                    margin-bottom: 4px;
+                }
+
+                &__value {
+                    display: block;
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: $text-dark;
+                }
+            }
+        }
+
+        &__actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+
+            .ant-btn-primary {
+                background: $primary-orange;
+                border-color: $primary-orange;
+
+                &:hover {
+                    background: $primary-orange-hover;
+                    border-color: $primary-orange-hover;
+                }
+            }
+        }
+    }
+}
+
+// ==================== ANIMATIONS ====================
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+// ==================== RESPONSIVE ====================
+@media (max-width: 992px) {
+    .disorder-practice {
+        &__body {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            position: relative;
+            top: 0;
+            order: -1;
+            margin-bottom: 16px;
+        }
+
+        .sidebar__grid {
+            grid-template-columns: repeat(8, 1fr);
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .disorder-practice {
+        &__header {
+            padding: 12px 16px;
+
+            .exam-title {
+                font-size: 16px;
+            }
+
+            .timer {
+                font-size: 14px;
+            }
+        }
+
+        &__body {
+            padding: 16px;
+        }
+
+        .question-panel {
+            padding: 16px;
+        }
+
+        .sidebar__grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .result-card {
+            padding: 24px;
+
+            &__stats {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    }
+}

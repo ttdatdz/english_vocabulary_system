@@ -1,17 +1,19 @@
-import { Button, Input, Pagination, Tabs } from "antd";
+import { Button, Input, Pagination, Tabs, Spin, Select } from "antd";
 import "./ToeicTest.scss";
 import {
   SearchOutlined,
   InfoCircleOutlined,
   EditOutlined,
+  PlayCircleOutlined,
 } from "@ant-design/icons";
 import SelectField from "../../components/SelectField";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { GetAllExams, GetCustomExams } from "../../services/Exam/examService";
+import { GetAllClientExams, GetCustomExams } from "../../services/Exam/examService";
 import { GetAllTestSets } from "../../services/Exam/testSetService";
-import { showErrorMessage } from "../../utils/alertHelper";
+import { showErrorMessage, showSuccess } from "../../utils/alertHelper";
 import { removeVietnameseTones } from "../../utils/formatData";
+import { post } from "../../utils/request";
 
 import BaseModal from "../../components/BaseModal";
 import { RiVipCrownFill } from "react-icons/ri";
@@ -29,6 +31,9 @@ export default function ToiecTests() {
   const [customExams, setCustomExams] = useState([]);
   const [filteredCustomExams, setFilteredCustomExams] = useState([]);
 
+  // ✅ NEW: Filter cho tab custom
+  const [customExamTypeFilter, setCustomExamTypeFilter] = useState("all"); // "all" | "toeic" | "disorder"
+
   // Common state
   const [listTestSets, setListTestSets] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -37,6 +42,7 @@ export default function ToiecTests() {
   const [selectedExamType, setSelectedExamType] = useState("TOEIC");
   const [currentPage, setCurrentPage] = useState(1);
   const [isVip, setIsVip] = useState(false);
+  const [creatingExam, setCreatingExam] = useState(false);
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
@@ -46,7 +52,12 @@ export default function ToiecTests() {
   useEffect(() => {
     const fetchSystemExams = async () => {
       try {
-        const res = await GetAllExams();
+        const res = await GetAllClientExams();
+        if (res == null) {
+          showErrorMessage("Load đề thi thất bại!");
+          return;
+        }
+        console.log("System exams loaded:", res);
         const examsWithKey = res.map((exam) => ({
           ...exam,
           key: exam.id,
@@ -64,18 +75,38 @@ export default function ToiecTests() {
     const fetchCustomExams = async () => {
       try {
         const res = await GetCustomExams();
-        const examsWithKey = (res || []).map((exam) => ({
-          ...exam,
-          key: exam.id,
-        }));
+
+        // DEBUG: Log để kiểm tra response từ API
+        console.log("=== DEBUG Custom Exams API ===");
+        console.log("Raw response:", res);
+        if (res && res.length > 0) {
+          console.log("First exam object:", res[0]);
+          console.log("All keys:", Object.keys(res[0]));
+        }
+
+        // Normalize field name (backend có thể trả về `random` thay vì `isRandom`)
+        const examsWithKey = (res || []).map((exam) => {
+          const isRandomValue = exam.isRandom !== undefined ? exam.isRandom
+            : exam.random !== undefined ? exam.random
+              : false;
+
+          return {
+            ...exam,
+            key: exam.id,
+            isRandom: isRandomValue,
+          };
+        });
+
+        console.log("Processed exams:", examsWithKey);
+
         setCustomExams(examsWithKey);
         setFilteredCustomExams(examsWithKey);
       } catch (error) {
-        showErrorMessage("Lỗi khi lấy danh sách đề của bạn:", error);
+        console.error("Error fetching custom exams:", error);
+        showErrorMessage("Lỗi khi lấy danh sách đề của bạn");
       }
     };
 
-    // Chỉ fetch khi đã đăng nhập
     if (localStorage.getItem("accessToken")) {
       fetchCustomExams();
     }
@@ -93,7 +124,7 @@ export default function ToiecTests() {
           setIsVip(false);
         }
       } catch (error) {
-        showErrorMessage("Lỗi khi check expiration:", error);
+        console.error("Lỗi khi check expiration:", error);
       }
     };
     checkVipStatus();
@@ -155,10 +186,18 @@ export default function ToiecTests() {
     selectedYear,
   ]);
 
-  // Lọc đề thi custom (chỉ theo search)
+  // ✅ UPDATED: Lọc đề thi custom (theo search + loại đề)
   useEffect(() => {
     let filtered = customExams;
 
+    // Filter theo loại đề
+    if (customExamTypeFilter === "toeic") {
+      filtered = filtered.filter((exam) => exam.isRandom !== true);
+    } else if (customExamTypeFilter === "disorder") {
+      filtered = filtered.filter((exam) => exam.isRandom === true);
+    }
+
+    // Filter theo search
     if (searchValue) {
       const keyword = removeVietnameseTones(searchValue.trim());
       filtered = filtered.filter((exam) =>
@@ -168,7 +207,7 @@ export default function ToiecTests() {
 
     setFilteredCustomExams(filtered);
     setCurrentPage(1);
-  }, [customExams, searchValue]);
+  }, [customExams, searchValue, customExamTypeFilter]);
 
   // Generate options
   const typeSet = new Set();
@@ -211,14 +250,50 @@ export default function ToiecTests() {
     })),
   ];
 
+  // ✅ NEW: Options cho filter loại đề custom
+  const customTypeOptions = [
+    { label: "Tất cả", value: "all" },
+    { label: "TOEIC Format", value: "toeic" },
+    { label: "Tự do", value: "disorder" },
+  ];
+
   // Handlers
   const handleClick = (id) => {
     navigate(`/DetailExam/${id}`);
   };
 
-  const handleEditCustomExam = (e, id) => {
-    e.stopPropagation(); // Ngăn click vào item cha
-    navigate(`/DetailToeicCustomExam/${id}`);
+  const handleEditCustomExam = (e, exam) => {
+    e.stopPropagation();
+
+    console.log("Edit exam:", exam, "isRandom:", exam.isRandom);
+
+    if (exam.isRandom === true) {
+      navigate(`/disorder-exam/${exam.id}`);
+    } else {
+      navigate(`/DetailToeicCustomExam/${exam.id}`);
+    }
+  };
+
+  const handleCustomExamClick = (exam) => {
+    console.log("Click exam:", exam, "isRandom:", exam.isRandom);
+
+    if (exam.isRandom === true) {
+      navigate(`/disorder-exam/${exam.id}/practice`);
+    } else {
+      navigate(`/DetailExam/${exam.id}`);
+    }
+  };
+
+  const handlePracticeCustomExam = (e, exam) => {
+    e.stopPropagation();
+
+    console.log("Practice exam:", exam, "isRandom:", exam.isRandom);
+
+    if (exam.isRandom === true) {
+      navigate(`/disorder-exam/${exam.id}/practice`);
+    } else {
+      navigate(`/DetailExam/${exam.id}`);
+    }
   };
 
   const handlePageChange = (page) => {
@@ -229,6 +304,7 @@ export default function ToiecTests() {
     setActiveTab(key);
     setCurrentPage(1);
     setSearchValue("");
+    setCustomExamTypeFilter("all"); // Reset filter khi đổi tab
   };
 
   // Pagination
@@ -246,13 +322,43 @@ export default function ToiecTests() {
     }
   }
 
-  const handleSelectType = (type) => {
+  const handleSelectType = async (type) => {
     if (type === "toeic") {
+      setOpenExamCreateOption(false);
       navigate("/CreateToeicExam");
     }
+
     if (type === "custom") {
-      navigate("/CreateCustomExam");
+      setCreatingExam(true);
+      try {
+        const result = await post({}, "/api/disorder-exam/create", true);
+        if (result?.id) {
+          setOpenExamCreateOption(false);
+          navigate(`/disorder-exam/${result.id}`);
+        } else {
+          showErrorMessage("Tạo đề thất bại", "Không nhận được ID đề thi");
+        }
+      } catch (error) {
+        showErrorMessage("Tạo đề thất bại", error?.message || "Có lỗi xảy ra");
+      } finally {
+        setCreatingExam(false);
+      }
     }
+  };
+
+  // Helper functions
+  const getExamTypeLabel = (exam) => {
+    if (exam.isRandom === true) {
+      return "Tự do";
+    }
+    return "TOEIC";
+  };
+
+  const getExamBadgeClass = (exam) => {
+    if (exam.isRandom === true) {
+      return "Test-item__badge--random";
+    }
+    return "Test-item__badge--toeic";
   };
 
   // Tab items
@@ -287,7 +393,7 @@ export default function ToiecTests() {
             items={tabItems}
           />
 
-          {/* Filters - chỉ hiển thị cho tab Hệ thống */}
+          {/* Filters - Tab Hệ thống */}
           {activeTab === "system" && (
             <div className="ToeicTests-page__ContainerSelect">
               <SelectField
@@ -314,9 +420,20 @@ export default function ToiecTests() {
             </div>
           )}
 
-          {/* Nút tạo đề cho tab Custom */}
+          {/* ✅ NEW: Filters - Tab Đề của tôi */}
           {activeTab === "custom" && (
             <div className="ToeicTests-page__ContainerSelect ToeicTests-page__ContainerSelect--custom">
+              <div className="ToeicTests-page__custom-filter">
+                <span className="filter-label">Loại đề:</span>
+                <Select
+                  value={customExamTypeFilter}
+                  onChange={(val) => setCustomExamTypeFilter(val)}
+                  options={customTypeOptions}
+                  style={{ width: 150 }}
+                  className="custom-type-select"
+                />
+              </div>
+
               <Button
                 type="primary"
                 className="btn create-toeic-test-btn"
@@ -353,28 +470,55 @@ export default function ToiecTests() {
                 currentItems?.map((item, index) => (
                   <div
                     key={item.id}
-                    className={`Test-item ${
-                      activeTab === "custom" ? "Test-item--custom" : ""
-                    }`}
+                    className={`Test-item ${activeTab === "custom" ? "Test-item--custom" : ""}`}
                     onClick={() =>
                       activeTab === "system"
                         ? handleClick(item.id)
-                        : handleClick(item.id)
+                        : handleCustomExamClick(item)
                     }
                   >
                     <div className="Test-item__index">
                       {startIndex + index + 1}
                     </div>
-                    <div className="Test-item__title">{item.title}</div>
+                    <div className="Test-item__content">
+                      <div className="Test-item__title">{item.title}</div>
+                      {/* Badge và meta info cho đề custom */}
+                      {activeTab === "custom" && (
+                        <div className="Test-item__meta">
+                          <span className={`Test-item__badge ${getExamBadgeClass(item)}`}>
+                            {getExamTypeLabel(item)}
+                          </span>
+                          {item.totalQuestions > 0 && (
+                            <span className="Test-item__questions">
+                              {item.totalQuestions} câu
+                            </span>
+                          )}
+                          {item.duration && (
+                            <span className="Test-item__duration">
+                              {item.duration} phút
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <div className="Test-item__actions">
                       {activeTab === "custom" && (
-                        <Button
-                          type="text"
-                          icon={<EditOutlined />}
-                          className="Test-item__edit-btn"
-                          onClick={(e) => handleEditCustomExam(e, item.id)}
-                          title="Chỉnh sửa đề thi"
-                        />
+                        <>
+                          <Button
+                            type="text"
+                            icon={<PlayCircleOutlined />}
+                            className="Test-item__action-btn"
+                            onClick={(e) => handlePracticeCustomExam(e, item)}
+                            title="Làm bài"
+                          />
+                          <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            className="Test-item__action-btn"
+                            onClick={(e) => handleEditCustomExam(e, item)}
+                            title="Chỉnh sửa đề thi"
+                          />
+                        </>
                       )}
                       <InfoCircleOutlined className="Test-item__info" />
                     </div>
@@ -409,14 +553,16 @@ export default function ToiecTests() {
             className="OptionForm__button"
             type="primary"
             onClick={() => handleSelectType("toeic")}
+            disabled={creatingExam}
           >
             Toeic Exam
           </Button>
           <Button
             className="OptionForm__button"
             onClick={() => handleSelectType("custom")}
+            disabled={creatingExam}
           >
-            Custom Exam
+            {creatingExam ? <Spin size="small" /> : "Custom Exam"}
           </Button>
         </div>
       </BaseModal>
